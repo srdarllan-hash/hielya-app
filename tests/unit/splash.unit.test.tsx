@@ -1,12 +1,14 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SplashScreen } from '../../packages/ui/src/screens/splash/SplashScreen';
 import {
   coerceSplashLocale,
   coerceSplashState,
   nextScreenForSplashState,
 } from '../../packages/ui/src/screens/splash/splash.types';
+
+afterEach(() => cleanup());
 
 describe('C-001 Splash contract', () => {
   it('renders the approved brand lockup and official Spanish tagline', () => {

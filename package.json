@@ -24,6 +24,6 @@
     "prestorybook":"pnpm assets:prepare",
     "prebuild-storybook":"pnpm assets:prepare"
   },
-  "dependencies":{"next":"16.2.7","react":"19.2.7","react-dom":"19.2.7"},
+  "dependencies":{"@fontsource/poppins":"5.3.0","next":"16.2.7","react":"19.2.7","react-dom":"19.2.7"},
   "devDependencies":{"@axe-core/playwright":"4.12.1","@playwright/test":"1.62.0","@storybook/addon-a11y":"10.5.5","@storybook/addon-docs":"10.5.5","@storybook/nextjs-vite":"10.5.5","@storybook/react":"10.5.5","@testing-library/jest-dom":"6.6.3","@testing-library/react":"16.3.0","@types/node":"22.15.30","@types/react":"19.1.6","@types/react-dom":"19.1.6","eslint":"9.39.1","eslint-config-next":"16.2.7","jsdom":"26.1.0","storybook":"10.5.5","typescript":"5.8.3","vitest":"3.2.4"}
 }

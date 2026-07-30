@@ -34,7 +34,7 @@ export function SplashScreen({
   const isRecovery = recoveryStates.has(state);
   const isBusy = busyStates.has(state);
   const isComplete = completedStates.has(state);
-  const isAnimated = (state === 'initial' || state === 'loading') && state !== 'reduced-motion';
+  const isAnimated = state === 'initial' || state === 'loading';
   const statusRole = isRecovery ? 'alert' : 'status';
 
   const retry = () => {

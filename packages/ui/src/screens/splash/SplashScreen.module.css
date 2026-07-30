@@ -30,7 +30,9 @@
   position: absolute;
   top: 42%;
   left: 50%;
+  display: grid;
   width: max-content;
+  justify-items: center;
   transform: translate(-50%, -50%);
 }
 
@@ -61,7 +63,12 @@
 }
 
 .brand :global(.hly-brand__tagline) {
+  display: none;
+}
+
+.tagline {
   max-width: calc(var(--hly-space-64) * 2);
+  margin: var(--hly-space-0);
   color: var(--hly-color-text-primary);
   font-size: var(--hly-font-size-caption);
   line-height: var(--hly-font-line-height-caption);

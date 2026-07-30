@@ -26,6 +26,7 @@ docs/c001/C001_TECHNICAL_PLAN.md
 docs/c001/C001_GATE_CHECKLIST.md
 scripts/audit-c001-scope.mjs
 scripts/audit-c001-manifest.py
+scripts/collect-c001-visual-candidates.mjs
 scripts/generate-c001-gate-manifest.mjs
 .github/workflows/c001-gate.yml
 ```
@@ -36,6 +37,7 @@ scripts/generate-c001-gate-manifest.mjs
 package.json
 packages/ui/src/index.ts
 CHANGELOG.md
+README.md
 ```
 
 Nenhum arquivo em `packages/ui/src/screens/home/`, `manifests/C-005.json`, `tests/**/home*` ou `.github/workflows/c005-gate.yml` pode ser modificado.
@@ -44,8 +46,8 @@ Nenhum arquivo em `packages/ui/src/screens/home/`, `manifests/C-005.json`, `test
 
 - `AppShell`
 - `AppHeader`
-- `ErrorState`
-- `StatusBadge`
+
+O lockup do `AppHeader` é reutilizado sem ações de perfil/carrinho no contexto da Splash, por meio de escopo CSS local. A C-005 e a variante padrão do componente permanecem inalteradas.
 
 ## 4. Componentes novos
 
@@ -106,6 +108,8 @@ Stories obrigatórias:
 - ReadyLocation
 - ReadyHome
 - ReducedMotion
+- EnglishFallbackContract
+- PortugueseContract
 
 ## 8. Testes unitários
 
@@ -116,7 +120,7 @@ Stories obrigatórias:
 - não aponta para C-003 ou C-004;
 - exibe retry em offline/error/timeout;
 - não contém duração fixa/timer;
-- usa chaves de copy com fallback espanhol.
+- usa copy trilíngue com fallback espanhol.
 
 ## 9. Testes Playwright e Axe
 
@@ -124,7 +128,9 @@ Stories obrigatórias:
 
 - rota de cada estado renderiza sem erro de console;
 - estados de saída expõem destino correto;
-- botão retry emite ação controlada sem navegação inventada;
+- botão retry permanece visível e focalizável;
+- C-002 não é renderizada;
+- C-003/C-004 não são destinos;
 - C-005 continua acessível e visualmente intacta no root.
 
 ### Axe
@@ -137,12 +143,14 @@ Stories obrigatórias:
 
 ### Visual e responsivo
 
-- screenshots de todos os estados em 360×800 e 390×844;
-- screenshot ready/loading/error/maintenance em 1170×2532;
+- screenshots de todos os estados nas três resoluções oficiais;
+- captura full-page do estado loading;
 - comparação com referência aprovada para estado loading;
 - sem overflow horizontal;
 - conteúdo central preservado em safe areas;
-- reduced-motion sem animação.
+- reduced-motion sem animação;
+- primeira execução produz hashes candidatos;
+- execução final compara o mesmo conjunto de 30 hashes congelados.
 
 ## 10. Auditoria de escopo
 
@@ -158,10 +166,11 @@ tests/**/home*
 Também falha se houver:
 
 - `TODO`, `FIXME` ou `HACK` no código C-001;
-- cores/spacing hardcoded proibidos no CSS Module;
+- cores hardcoded proibidas no CSS Module;
 - referência a Canva;
 - destino C-003/C-004;
-- raw copy fora de `splash.copy.ts`.
+- timer inventado;
+- implementação de telas bloqueadas.
 
 ## 11. Workflow Gate 1B/C-001
 
@@ -180,10 +189,11 @@ O workflow:
 11. Axe;
 12. funcionais;
 13. screenshots e regressão visual;
-14. auditoria de escopo;
-15. auditoria do manifesto;
-16. gera manifesto, relatório e SHA-256;
-17. publica artefato ligado ao mesmo commit.
+14. coleta hashes visuais;
+15. auditoria de escopo;
+16. auditoria do manifesto;
+17. gera manifesto, relatório e SHA-256;
+18. publica artefato ligado ao mesmo commit.
 
 ## 12. Critérios de congelamento
 

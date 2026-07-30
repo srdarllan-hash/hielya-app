@@ -19,3 +19,14 @@
 - Added reusable component semantic unit-test contracts.
 - Added `.env.example`, final package builder, file index and SHA-256 manifest.
 - Passed source, manifest, browser accessibility, responsive and visual identity audits.
+
+## 1.1.0-c001 — Gate 1B candidate
+
+- Opened branch `hielya/c001-splash-gate1b` from frozen C-005 commit `be61e1168b93d973101496cc66cb54d006aba9cc`.
+- Documented C-001 requirements, gaps, navigation contract, assets and technical plan before implementation.
+- Added code-first C-001 Splash at `/splash` without modifying C-005.
+- Added ten deterministic Splash states and ES/EN/PT copy with Spanish fallback.
+- Reused AppShell and AppHeader without adding a new canonical component.
+- Added Storybook, unit, functional, Axe, responsive and visual-hash tests.
+- Added scope protection, manifest audits and commit-bound Gate evidence workflow.
+- C-002, C-003, C-004 and all other modules remain blocked.

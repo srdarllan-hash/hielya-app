@@ -17,6 +17,9 @@ for (const state of states) {
   test(`C-005 ${state} visual baseline`, async ({ page }, testInfo) => {
     await page.goto(`/?state=${state}`);
     await page.waitForLoadState('networkidle');
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+    });
 
     await expect(page).toHaveScreenshot(`C-005-${state}.png`, {
       animations: 'disabled',
@@ -31,6 +34,9 @@ for (const state of states) {
     });
 
     if (state === 'ready') {
+      await page.locator('.hly-bottom-nav').evaluate((element) => {
+        (element as HTMLElement).style.display = 'none';
+      });
       await page.screenshot({
         path: path.join(directory, 'C-005_HOME_READY_FULLPAGE.png'),
         fullPage: true,

@@ -1,18 +1,23 @@
 name: C-005 Home Gate 1A
+
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [hielya/codefirst-batch01]
+
+concurrency:
+  group: c005-gate-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
+
 jobs:
   gate-c005:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
-      GATE_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-      GATE_SOURCE_BRANCH: ${{ github.head_ref || github.ref_name }}
+      GATE_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+      GATE_SOURCE_BRANCH: ${{ github.head_ref }}
     steps:
       - name: Checkout exact source commit
         uses: actions/checkout@v4

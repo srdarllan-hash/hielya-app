@@ -49,10 +49,12 @@ test('C-001 does not route to phone login or OTP', async ({ page }) => {
   expect(next).not.toBe('C-004');
 });
 
-test.each(['offline', 'error', 'timeout'] as const)('C-001 %s exposes a keyboard reachable retry', async ({ page }, state) => {
-  await page.goto(`/splash?state=${state}`);
-  const retry = page.getByRole('button', { name: 'Intentar de nuevo' });
-  await expect(retry).toBeVisible();
-  await retry.focus();
-  await expect(retry).toBeFocused();
-});
+for (const state of ['offline', 'error', 'timeout'] as const) {
+  test(`C-001 ${state} exposes a keyboard reachable retry`, async ({ page }) => {
+    await page.goto(`/splash?state=${state}`);
+    const retry = page.getByRole('button', { name: 'Intentar de nuevo' });
+    await expect(retry).toBeVisible();
+    await retry.focus();
+    await expect(retry).toBeFocused();
+  });
+}

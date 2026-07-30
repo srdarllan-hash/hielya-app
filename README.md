@@ -7,7 +7,7 @@ Executable, code-first reconstruction of the HIELYA **C-005 Home Master Screen**
 1. HIELYA Foundation Pack V1.1
 2. Frozen Design Tokens V1.1.0
 3. HLY-DS-001 Design System Freeze Decision
-4. HLY-UI-001 approved visual reference policy
+4. HLY-UI-004 Canonical Production Sequence
 
 No business rule was changed.
 
@@ -21,9 +21,11 @@ No business rule was changed.
 ```bash
 corepack enable
 corepack prepare pnpm@10.15.0 --activate
-pnpm install --frozen-lockfile
+pnpm install --no-frozen-lockfile
 pnpm dev
 ```
+
+The pre-dev script creates deterministic local SVG assets in `public/assets`; no external design tool or paid image service is required.
 
 Open `http://localhost:3000`. State examples:
 
@@ -63,7 +65,7 @@ pnpm build-storybook
 - `packages/ui`: reusable React components and C-005 screen.
 - `.storybook`: Storybook configuration and stories.
 - `tests`: Axe, visual and unit tests.
-- `assets-source`: versioned approved asset archive materialized before dev/build.
+- `scripts/materialize-assets.mjs`: deterministic, source-controlled SVG asset generator.
 - `manifests`: traceability and component inventory.
 
 ## Gate status

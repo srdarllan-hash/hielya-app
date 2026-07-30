@@ -40,7 +40,7 @@ jobs:
           echo "GATE_SOURCE_SHA=$GATE_SOURCE_SHA"
           echo "GATE_SOURCE_BRANCH=$GATE_SOURCE_BRANCH"
           test "$(git rev-parse HEAD)" = "$GATE_SOURCE_SHA"
-      - name: Install dependencies
+      - name: Install dependencies and materialize lockfile
         run: pnpm install --no-frozen-lockfile
       - name: Lint
         run: pnpm lint
@@ -71,6 +71,7 @@ jobs:
           name: c005-baseline-candidate-${{ env.GATE_SOURCE_SHA }}
           if-no-files-found: warn
           path: |
+            pnpm-lock.yaml
             playwright-report/
             test-results/
             screenshots/

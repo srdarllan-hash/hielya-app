@@ -20,6 +20,7 @@ jobs:
       GATE_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
       GATE_SOURCE_BRANCH: ${{ github.head_ref }}
       C001_BASE_SHA: be61e1168b93d973101496cc66cb54d006aba9cc
+      LOCKFILE_MODE: bootstrap-candidate
     steps:
       - name: Checkout exact source commit
         uses: actions/checkout@v4
@@ -45,11 +46,12 @@ jobs:
           echo "GATE_SOURCE_SHA=$GATE_SOURCE_SHA"
           echo "GATE_SOURCE_BRANCH=$GATE_SOURCE_BRANCH"
           echo "C001_BASE_SHA=$C001_BASE_SHA"
+          echo "LOCKFILE_MODE=$LOCKFILE_MODE"
           test "$(git rev-parse HEAD)" = "$GATE_SOURCE_SHA"
           git merge-base --is-ancestor "$C001_BASE_SHA" HEAD
 
-      - name: Clean install
-        run: pnpm install --frozen-lockfile
+      - name: Materialize candidate lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Lint
         run: pnpm lint
@@ -94,7 +96,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: c001-gate-${{ env.GATE_SOURCE_SHA }}
+          name: c001-lockfile-and-baseline-candidate-${{ env.GATE_SOURCE_SHA }}
           if-no-files-found: warn
           path: |
             pnpm-lock.yaml

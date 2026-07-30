@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   gate-c001:
@@ -53,50 +53,77 @@ jobs:
       - name: Materialize candidate lockfile
         run: pnpm install --no-frozen-lockfile
 
+      - name: Commit materialized lockfile once
+        id: lockfile
+        run: |
+          if git diff --quiet -- pnpm-lock.yaml; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add pnpm-lock.yaml
+            git commit -m "chore(c001): materializar lockfile do Gate 1B"
+            git push origin "HEAD:$GATE_SOURCE_BRANCH"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Lint
+        if: steps.lockfile.outputs.changed != 'true'
         run: pnpm lint
 
       - name: Type-check
+        if: steps.lockfile.outputs.changed != 'true'
         run: pnpm typecheck
 
       - name: Unit tests
+        if: steps.lockfile.outputs.changed != 'true'
         run: pnpm test:unit
 
       - name: Build Next.js
+        if: steps.lockfile.outputs.changed != 'true'
         run: pnpm build
 
       - name: Build Storybook
+        if: steps.lockfile.outputs.changed != 'true'
         run: pnpm build-storybook
 
       - name: Install Chromium
+        if: steps.lockfile.outputs.changed != 'true'
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Accessibility tests
+        if: steps.lockfile.outputs.changed != 'true'
         run: pnpm test:c001:a11y
 
       - name: Functional and console tests
+        if: steps.lockfile.outputs.changed != 'true'
         run: pnpm test:c001:functional
 
       - name: Visual and responsive tests
+        if: steps.lockfile.outputs.changed != 'true'
         run: pnpm test:c001:visual
 
       - name: Collect visual hashes
+        if: steps.lockfile.outputs.changed != 'true'
         run: pnpm collect:c001:visual
 
       - name: Scope and source audit
+        if: steps.lockfile.outputs.changed != 'true'
         run: pnpm audit:c001:scope
 
       - name: Manifest audit
+        if: steps.lockfile.outputs.changed != 'true'
         run: pnpm audit:c001:manifest
 
       - name: Generate commit-bound Gate evidence
+        if: steps.lockfile.outputs.changed != 'true'
         run: pnpm gate:c001:manifest
 
       - name: Upload Gate evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: c001-lockfile-and-baseline-candidate-${{ env.GATE_SOURCE_SHA }}
+          name: c001-lockfile-bootstrap-${{ env.GATE_SOURCE_SHA }}
           if-no-files-found: warn
           path: |
             pnpm-lock.yaml

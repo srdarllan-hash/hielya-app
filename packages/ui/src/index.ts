@@ -1,5 +1,7 @@
 export * from './screens/home/HomeScreen';
 export * from './screens/home/home.types';
+export * from './screens/splash/SplashScreen';
+export * from './screens/splash/splash.types';
 export * from './components/AppShell';
 export * from './components/AppHeader';
 export * from './components/SearchField';

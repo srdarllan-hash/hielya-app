@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "1.0.0",
+  "screenId": "C-001",
+  "assets": [
+    {
+      "id": "C001-REF-001",
+      "name": "Approved Splash panel in HIELYA Master Board",
+      "status": "ASSET_EXISTS",
+      "reusable": true,
+      "productionUsage": false,
+      "source": "HIELYA_APPROVED_MASTER_BOARD_SOURCE_V1",
+      "format": "PNG",
+      "purpose": "Visual comparison only"
+    },
+    {
+      "id": "C001-CODE-001",
+      "name": "HIELYA textual lockup",
+      "status": "ASSET_EXISTS",
+      "reusable": true,
+      "productionUsage": true,
+      "source": "AppHeader React component",
+      "format": "React/CSS",
+      "purpose": "Executable brand lockup"
+    },
+    {
+      "id": "C001-CODE-002",
+      "name": "Splash progress indicator",
+      "status": "ASSET_NOT_REQUIRED",
+      "reusable": false,
+      "productionUsage": true,
+      "source": "Screen-scoped CSS",
+      "format": "CSS",
+      "purpose": "Bootstrap status indicator"
+    }
+  ],
+  "missingNonBlocking": [
+    {"name": "Official standalone HIELYA SVG logo", "status": "REQUIRES_VALIDATION"},
+    {"name": "PWA icon 512x512", "status": "ASSET_MISSING"},
+    {"name": "Maskable PWA icon 512x512", "status": "ASSET_MISSING"},
+    {"name": "Apple touch icon 180x180", "status": "ASSET_MISSING"},
+    {"name": "Favicons 32x32 and 16x16", "status": "ASSET_MISSING"}
+  ],
+  "generatedPlaceholders": []
+}

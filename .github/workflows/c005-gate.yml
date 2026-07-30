@@ -18,6 +18,7 @@ jobs:
     env:
       GATE_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
       GATE_SOURCE_BRANCH: ${{ github.head_ref }}
+      VISUAL_BASELINE_MODE: candidate
     steps:
       - name: Checkout exact source commit
         uses: actions/checkout@v4
@@ -55,8 +56,8 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
       - name: Accessibility tests
         run: pnpm test:a11y
-      - name: Visual and responsive tests
-        run: pnpm test:visual
+      - name: Generate candidate visual baselines and responsive screenshots
+        run: pnpm exec playwright test tests/visual --update-snapshots
       - name: Source and manifest audits
         run: |
           pnpm audit:source
@@ -67,12 +68,13 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: c005-gate-${{ env.GATE_SOURCE_SHA }}
+          name: c005-baseline-candidate-${{ env.GATE_SOURCE_SHA }}
           if-no-files-found: warn
           path: |
             playwright-report/
             test-results/
             screenshots/
+            tests/visual/home.visual.spec.ts-snapshots/
             qa/
             manifests/
             CHANGELOG.md

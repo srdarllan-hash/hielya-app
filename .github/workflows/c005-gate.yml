@@ -10,23 +10,30 @@ jobs:
   gate-c005:
     runs-on: ubuntu-latest
     timeout-minutes: 35
+    env:
+      GATE_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      GATE_SOURCE_BRANCH: ${{ github.head_ref || github.ref_name }}
     steps:
-      - name: Checkout exact commit
+      - name: Checkout exact source commit
         uses: actions/checkout@v4
-        with: {ref: "${{ github.sha }}"}
+        with:
+          ref: ${{ env.GATE_SOURCE_SHA }}
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with: {version: 10.15.0}
+        with:
+          version: 10.15.0
       - name: Setup Node 24
         uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm
-      - name: Runtime versions
+      - name: Runtime versions and source identity
         run: |
           node --version
           pnpm --version
-          echo "GITHUB_SHA=$GITHUB_SHA"
+          echo "GATE_SOURCE_SHA=$GATE_SOURCE_SHA"
+          echo "GATE_SOURCE_BRANCH=$GATE_SOURCE_BRANCH"
+          test "$(git rev-parse HEAD)" = "$GATE_SOURCE_SHA"
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
       - name: Lint
@@ -55,7 +62,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: c005-gate-${{ github.sha }}
+          name: c005-gate-${{ env.GATE_SOURCE_SHA }}
           if-no-files-found: warn
           path: |
             playwright-report/

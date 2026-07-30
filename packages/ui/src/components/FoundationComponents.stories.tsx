@@ -19,24 +19,89 @@ import { DeliveryQuoteCard } from './DeliveryQuoteCard';
 import { ComponentGallery } from '../screens/lab/ComponentGallery';
 import { asset } from '../lib/assets';
 
-const meta = { title: 'Foundation/Canonical Components', parameters: { layout: 'fullscreen' }, tags: ['autodocs'] } satisfies Meta;
+const meta = {
+  title: 'Foundation/Canonical Components',
+  parameters: { layout: 'fullscreen' },
+  tags: ['autodocs'],
+} satisfies Meta;
+
 export default meta;
 type Story = StoryObj<typeof meta>;
-const frame = (child: React.ReactNode) => <div style={{ maxWidth: 480, margin: '0 auto', padding: 24 }}>{child}</div>;
+const frame = (child: React.ReactNode) => (
+  <div style={{ maxWidth: 480, margin: '0 auto', padding: 24 }}>{child}</div>
+);
+
 export const Gallery: Story = { render: () => <ComponentGallery /> };
-export const AppShellStory: Story = { name: 'AppShell', render: () => <AppShell state="ready">{frame(<p>Contenido de la aplicación</p>)}</AppShell> };
+export const AppShellStory: Story = {
+  name: 'AppShell',
+  render: () => <AppShell state="ready">{frame(<p>Contenido de la aplicación</p>)}</AppShell>,
+};
 export const AppHeaderStory: Story = { name: 'AppHeader', render: () => frame(<AppHeader cartCount={3} />) };
 export const DeliveryQuoteCardStory: Story = { name: 'DeliveryQuoteCard', render: () => frame(<DeliveryQuoteCard />) };
 export const SearchFieldStory: Story = { name: 'SearchField', render: () => frame(<SearchField />) };
-export const CategoryChipStory: Story = { name: 'CategoryChip', render: () => frame(<div style={{ display: 'flex', gap: 12 }}><CategoryChip label="Cervezas" image={asset('categories/victoria.png')} active /><CategoryChip label="Hielo" image={asset('categories/ice-bag.png')} /><CategoryChip label="Snacks" image={asset('categories/lays.png')} disabled /></div>) };
-export const HeroBannerStory: Story = { name: 'HeroBanner', render: () => frame(<HeroBanner image={asset('hero/cold-beer-hero.webp')} />) };
+export const CategoryChipStory: Story = {
+  name: 'CategoryChip',
+  render: () => frame(
+    <div style={{ display: 'flex', gap: 12 }}>
+      <CategoryChip label="Cervezas" image={asset('categories/victoria.svg')} active />
+      <CategoryChip label="Hielo" image={asset('categories/ice-bag.svg')} />
+      <CategoryChip label="Snacks" image={asset('categories/lays.svg')} disabled />
+    </div>,
+  ),
+};
+export const HeroBannerStory: Story = {
+  name: 'HeroBanner',
+  render: () => frame(<HeroBanner image={asset('hero/cold-beer-hero.svg')} />),
+};
 export const SectionHeaderStory: Story = { name: 'SectionHeader', render: () => frame(<SectionHeader title="Más vendidos" />) };
-export const ProductCardStory: Story = { name: 'ProductCard', render: () => frame(<div style={{ width: 120 }}><ProductCard name="Victoria Málaga" size="330 ml" price="€1,40" image={asset('products/victoria.png')} /></div>) };
-export const PackCardStory: Story = { name: 'PackCard', render: () => frame(<PackCard name="Pack Cervecero" description={['12x Estrella Galicia 330 ml', 'Hielo en bolsa 2 kg']} price="€16,80" discount="−7%" image={asset('products/pack-cervecero.png')} />) };
-export const StatusBadgeStory: Story = { name: 'StatusBadge', render: () => frame(<div style={{ display: 'flex', gap: 8 }}><StatusBadge tone="success">Disponible</StatusBadge><StatusBadge tone="warning">Alta demanda</StatusBadge><StatusBadge tone="danger">Bloqueado</StatusBadge><StatusBadge tone="info">Información</StatusBadge></div>) };
-export const IconButtonStory: Story = { name: 'IconButton', render: () => frame(<div style={{ display: 'flex', gap: 8 }}><IconButton icon="user" label="Perfil" /><IconButton icon="cart" label="Carrito" badge={3} /></div>) };
+export const ProductCardStory: Story = {
+  name: 'ProductCard',
+  render: () => frame(
+    <div style={{ width: 120 }}>
+      <ProductCard name="Victoria Málaga" size="330 ml" price="€1,40" image={asset('products/victoria.svg')} />
+    </div>,
+  ),
+};
+export const PackCardStory: Story = {
+  name: 'PackCard',
+  render: () => frame(
+    <PackCard
+      name="Pack Cervecero"
+      description={['12x Estrella Galicia 330 ml', 'Hielo en bolsa 2 kg']}
+      price="€16,80"
+      discount="−7%"
+      image={asset('products/pack-cervecero.svg')}
+    />,
+  ),
+};
+export const StatusBadgeStory: Story = {
+  name: 'StatusBadge',
+  render: () => frame(
+    <div style={{ display: 'flex', gap: 8 }}>
+      <StatusBadge tone="success">Disponible</StatusBadge>
+      <StatusBadge tone="warning">Alta demanda</StatusBadge>
+      <StatusBadge tone="danger">Bloqueado</StatusBadge>
+      <StatusBadge tone="info">Información</StatusBadge>
+    </div>,
+  ),
+};
+export const IconButtonStory: Story = {
+  name: 'IconButton',
+  render: () => frame(
+    <div style={{ display: 'flex', gap: 8 }}>
+      <IconButton icon="user" label="Perfil" />
+      <IconButton icon="cart" label="Carrito" badge={3} />
+    </div>,
+  ),
+};
 export const BottomNavigationStory: Story = { name: 'BottomNavigation', render: () => frame(<BottomNavigation active="Inicio" />) };
 export const LoadingStateStory: Story = { name: 'LoadingState', render: () => frame(<LoadingState />) };
 export const ErrorStateStory: Story = { name: 'ErrorState', render: () => frame(<ErrorState />) };
-export const EmptyStateStory: Story = { name: 'EmptyState', render: () => frame(<EmptyState title="Sin contenido" message="No hay elementos disponibles." action="Volver" />) };
-export const SnackbarStory: Story = { name: 'Snackbar', render: () => frame(<Snackbar message="Producto añadido al carrito" tone="success" />) };
+export const EmptyStateStory: Story = {
+  name: 'EmptyState',
+  render: () => frame(<EmptyState title="Sin contenido" message="No hay elementos disponibles." action="Volver" />),
+};
+export const SnackbarStory: Story = {
+  name: 'Snackbar',
+  render: () => frame(<Snackbar message="Producto añadido al carrito" tone="success" />),
+};

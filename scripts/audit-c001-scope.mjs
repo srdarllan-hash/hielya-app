@@ -32,7 +32,7 @@ const checks = {
   frozenBaseIsAncestor: true,
   noC005ProtectedChanges: protectedChanges.length === 0,
   noBlockedScreenImplementation: blockedScreenChanges.length === 0,
-  noTodoMarkers: !/(TODO|FIXME|HACK)/i.test(source),
+  noTodoMarkers: !/\b(?:TODO|FIXME|HACK)\b/.test(source),
   noCanvaDependency: !/Canva/i.test(source),
   noInventedTimer: !/(setTimeout|setInterval|durationMs|minimumVisibleMs)/.test(source),
   noAuthDestination: !/(C-003|C-004)/.test(

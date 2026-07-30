@@ -1,0 +1,67 @@
+name: C-005 Home Gate 1A
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [hielya/codefirst-batch01]
+permissions:
+  contents: read
+jobs:
+  gate-c005:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@v4
+        with: {ref: "${{ github.sha }}"}
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with: {version: 10.15.0}
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Runtime versions
+        run: |
+          node --version
+          pnpm --version
+          echo "GITHUB_SHA=$GITHUB_SHA"
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+      - name: Lint
+        run: pnpm lint
+      - name: Type-check
+        run: pnpm typecheck
+      - name: Unit tests
+        run: pnpm test:unit
+      - name: Build Next.js
+        run: pnpm build
+      - name: Build Storybook
+        run: pnpm build-storybook
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Accessibility tests
+        run: pnpm test:a11y
+      - name: Visual and responsive tests
+        run: pnpm test:visual
+      - name: Source and manifest audits
+        run: |
+          pnpm audit:source
+          pnpm audit:manifest
+      - name: Generate commit-bound Gate evidence
+        run: pnpm gate:manifest
+      - name: Upload Gate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c005-gate-${{ github.sha }}
+          if-no-files-found: warn
+          path: |
+            playwright-report/
+            test-results/
+            screenshots/
+            qa/
+            manifests/
+            CHANGELOG.md
+            README.md

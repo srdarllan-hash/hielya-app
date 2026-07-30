@@ -1,0 +1,28 @@
+{
+  "name":"hielya-batch-01-foundation-access-home-codefirst",
+  "version":"1.0.0",
+  "private":true,
+  "packageManager":"pnpm@10.15.0",
+  "engines":{"node":">=24 <25"},
+  "scripts":{
+    "dev":"next dev apps/ui-lab",
+    "build":"next build apps/ui-lab",
+    "start":"next start apps/ui-lab",
+    "storybook":"storybook dev -p 6006",
+    "build-storybook":"storybook build",
+    "test:unit":"vitest run",
+    "test:visual":"playwright test tests/visual",
+    "test:a11y":"playwright test tests/accessibility",
+    "lint":"eslint .",
+    "typecheck":"tsc --noEmit",
+    "audit:source":"node scripts/audit-source.mjs",
+    "audit:manifest":"python scripts/audit-manifest.py",
+    "gate:manifest":"node scripts/generate-gate-manifest.mjs",
+    "predev":"node scripts/materialize-assets.mjs",
+    "prebuild":"node scripts/materialize-assets.mjs",
+    "prestorybook":"node scripts/materialize-assets.mjs",
+    "prebuild-storybook":"node scripts/materialize-assets.mjs"
+  },
+  "dependencies":{"next":"16.2.7","react":"19.2.7","react-dom":"19.2.7"},
+  "devDependencies":{"@axe-core/playwright":"4.12.1","@playwright/test":"1.62.0","@storybook/addon-a11y":"10.5.5","@storybook/addon-docs":"10.5.5","@storybook/nextjs-vite":"10.5.5","@storybook/react":"10.5.5","@testing-library/jest-dom":"6.6.3","@testing-library/react":"16.3.0","@types/node":"22.15.30","@types/react":"19.1.6","@types/react-dom":"19.1.6","eslint":"9.39.1","eslint-config-next":"16.2.7","jsdom":"26.1.0","storybook":"10.5.5","typescript":"5.8.3","vitest":"3.2.4"}
+}

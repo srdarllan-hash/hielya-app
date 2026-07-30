@@ -1,0 +1,13 @@
+import type { Meta, StoryObj } from '@storybook/react';
+import { HomeScreen } from './HomeScreen';
+const meta = { title: 'Screens/C-005 Home Master', component: HomeScreen, parameters: { layout: 'fullscreen' }, tags: ['autodocs'] } satisfies Meta<typeof HomeScreen>;
+export default meta;
+type Story = StoryObj<typeof meta>;
+export const Ready: Story = { args: { state: 'ready' } };
+export const Loading: Story = { args: { state: 'loading' } };
+export const Closed: Story = { args: { state: 'closed' } };
+export const HighDemand: Story = { args: { state: 'high-demand' } };
+export const Error: Story = { args: { state: 'error' } };
+export const EmptyCart: Story = { args: { state: 'empty-cart' } };
+export const AlcoholCutoff: Story = { args: { state: 'alcohol-cutoff' } };
+export const OutOfArea: Story = { args: { state: 'out-of-area' } };

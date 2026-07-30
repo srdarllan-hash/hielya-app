@@ -1,0 +1,13 @@
+node_modules/
+.next/
+storybook-static/
+test-results/
+playwright-report/
+coverage/
+.preview-dist/
+*.log
+.env
+.DS_Store
+
+# Materialized from assets-source/public-assets.tar.gz
+public/assets/

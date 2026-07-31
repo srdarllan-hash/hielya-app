@@ -78,6 +78,9 @@ export function ManualAddressForm({
           } else if (event.key === 'ArrowUp') {
             event.preventDefault();
             setActiveIndex((current) => Math.max(current - 1, 0));
+          } else if (event.key === 'Enter' && activeSuggestion) {
+            event.preventDefault();
+            onSelect(activeSuggestion);
           } else if (event.key === 'Escape') {
             setActiveIndex(-1);
           }

@@ -100,6 +100,9 @@ jobs:
         run: pnpm type-check
       - name: Unit tests
         run: pnpm test
+      - name: Coverage baseline
+        if: inputs.screenId == 'C-002'
+        run: pnpm test:coverage
       - name: Build Next.js
         run: pnpm build
       - name: Build Storybook
@@ -119,6 +122,14 @@ jobs:
               pnpm test:c001:functional
               pnpm test:c001:visual
               ;;
+            C-002)
+              pnpm test:c002:a11y
+              pnpm test:c002:functional
+              pnpm test:c002:visual
+              pnpm audit:c002:scope
+              pnpm audit:c002:manifest
+              pnpm gate:c002:manifest
+              ;;
             *)
               echo "Unsupported certified screen: $SCREEN_ID" >&2
               exit 1
@@ -137,5 +148,8 @@ jobs:
             screenshots/
             qa/screen-gates/${{ inputs.screenId }}/
             qa/c001/
+            qa/c002/
+            coverage/
             manifests/
             tests/visual/home.visual.spec.ts-snapshots/
+            tests/visual/location.visual.spec.ts-snapshots/

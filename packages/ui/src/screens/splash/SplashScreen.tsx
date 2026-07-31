@@ -58,10 +58,7 @@ export function SplashScreen({
       >
         <div className={styles.brand} role="img" aria-label={copy.brandLabel}>
           <div aria-hidden="true">
-            <header className="hly-app-header hly-app-header--home">
-              <BrandLockup size="md" showTagline />
-              <div className="hly-app-header__actions" />
-            </header>
+            <BrandLockup size="md" showTagline />
           </div>
           <p className={styles.tagline}>{copy.tagline}</p>
         </div>

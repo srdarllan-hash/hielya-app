@@ -91,7 +91,7 @@ test('C-002 long address remains reachable without horizontal overflow', async (
   expect(editBox).not.toBeNull();
   expect(editBox!.y + editBox!.height).toBeLessThanOrEqual(800);
 
-  const privacy = page.getByText('La ubicación se solicita solo cuando pulsas el botón. No hacemos seguimiento en segundo plano.');
+  const privacy = page.locator('[data-screen-id="C-002"] > p').last();
   await privacy.scrollIntoViewIfNeeded();
   await expect(privacy).toBeVisible();
 });

@@ -61,7 +61,13 @@ jobs:
           ref: ${{ inputs.sourceSha }}
           fetch-depth: 0
       - name: Materialize frozen ancestry
-        run: git fetch --no-tags --force --depth=100 origin "$GATE_SOURCE_SHA" "$FROZEN_ARCHITECTURE_SHA"
+        run: |
+          if [ "$(git rev-parse --is-shallow-repository)" = "true" ]; then
+            git fetch --no-tags --force --unshallow origin
+          fi
+          git fetch --no-tags --force origin "$GATE_SOURCE_SHA" "$FROZEN_ARCHITECTURE_SHA"
+          git cat-file -e "$FROZEN_ARCHITECTURE_SHA^{commit}"
+          git merge-base --is-ancestor "$FROZEN_ARCHITECTURE_SHA" HEAD
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:

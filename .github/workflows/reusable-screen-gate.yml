@@ -59,6 +59,8 @@ jobs:
         with:
           ref: ${{ inputs.sourceSha }}
           fetch-depth: 0
+      - name: Materialize frozen ancestry
+        run: git fetch --no-tags --force --depth=100 origin "$GATE_SOURCE_SHA"
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:

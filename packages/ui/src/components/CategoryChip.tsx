@@ -1,6 +1,41 @@
+'use client';
+
 import React from 'react';
-export function CategoryChip({ label, image, active=false, disabled=false }: { label: string; image: string; active?: boolean; disabled?: boolean }) {
-  return <button type="button" className={`hly-category-chip${active?' is-active':''}`} aria-pressed={active} disabled={disabled}>
-    <span className="hly-category-chip__visual"><img src={image} alt="" /></span><span>{label}</span>
-  </button>;
+
+export interface CategoryChipProps {
+  label: string;
+  image: string;
+  value?: string;
+  active?: boolean;
+  disabled?: boolean;
+  loading?: boolean;
+  ariaLabel?: string;
+  onSelect?: (value: string) => void;
+}
+
+export function CategoryChip({
+  label,
+  image,
+  value = label,
+  active = false,
+  disabled = false,
+  loading = false,
+  ariaLabel,
+  onSelect,
+}: CategoryChipProps) {
+  const blocked = disabled || loading || !onSelect;
+  return (
+    <button
+      type="button"
+      className={`hly-category-chip${active ? ' is-active' : ''}`}
+      aria-label={ariaLabel ?? label}
+      aria-pressed={active}
+      aria-busy={loading || undefined}
+      disabled={blocked}
+      onClick={() => onSelect?.(value)}
+    >
+      <span className="hly-category-chip__visual"><img src={image} alt="" /></span>
+      <span>{label}</span>
+    </button>
+  );
 }

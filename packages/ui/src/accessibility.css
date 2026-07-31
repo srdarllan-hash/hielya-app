@@ -1,18 +1,18 @@
 /* Canonical WCAG AA overrides layered after component styles. */
 .hly-category-chip:disabled {
-  opacity: 0.55;
+  opacity: var(--hly-opacity-disabled-surface);
 }
 
 .hly-product-card.is-disabled,
 .hly-pack-card.is-disabled {
-  opacity: 1;
+  opacity: var(--hly-opacity-full);
   border-color: var(--hly-color-border-subtle);
 }
 
 .hly-product-card.is-disabled img,
 .hly-pack-card.is-disabled > img {
   filter: grayscale(0.45);
-  opacity: 0.62;
+  opacity: var(--hly-opacity-muted-media);
 }
 
 .hly-product-card.is-disabled button,
@@ -24,5 +24,5 @@
 .hly-pack-card.is-disabled .hly-pack-card__copy span {
   background: var(--hly-color-brand-gold-bright);
   color: var(--hly-color-brand-on-gold);
-  opacity: 1;
+  opacity: var(--hly-opacity-full);
 }

@@ -1,0 +1,4 @@
+/* HIELYA lab styles. Generated during architecture consolidation. */
+.hly-component-gallery{display:grid;gap:var(--hly-dimension-16)}.hly-component-gallery>h1{margin:var(--hly-dimension-2) 0 0;font-size:var(--hly-font-size-title)}.hly-component-gallery>p{margin:calc(var(--hly-dimension-10) * -1) 0 0;color:var(--hly-color-text-muted);font-size:var(--hly-font-size-body-small)}.hly-component-gallery__row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--hly-dimension-8);margin-top:var(--hly-dimension-8)}.hly-component-gallery__spacer{margin-top:var(--hly-dimension-8)}.hly-component-gallery .hly-home--loading{min-height:auto}
+.hly-story-frame{width:100%;max-width:var(--hly-dimension-480);margin:var(--hly-space-0) auto;padding:var(--hly-space-24)}
+.hly-story-frame>.hly-app-header+.hly-app-header,.hly-story-frame>.hly-search+.hly-search,.hly-story-frame>.hly-feedback-state+.hly-feedback-state{margin-top:var(--hly-space-16)}

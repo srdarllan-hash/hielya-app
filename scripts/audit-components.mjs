@@ -22,7 +22,7 @@ const result = {
   missingFiles,
   callbackChecks,
   checks: {
-    version: manifest.version === '1.2.0',
+    version: manifest.version === '1.3.0',
     noDuplicateCanonical: names.length === new Set(names).size,
     noMissingFiles: missingFiles.length === 0,
     iconPrimitive: primitives.primitives.some((item) => item.name === 'Icon'),
@@ -30,7 +30,7 @@ const result = {
     interactiveContracts: Object.values(callbackChecks).every(Boolean),
     storiesCoverBrand: storySource.includes('BrandLockupVariants'),
     storiesCoverFeedback: storySource.includes('FeedbackVariants'),
-    storiesCoverActions: storySource.includes('ProductCardStates') && storySource.includes('SearchFieldStates'),
+    storiesCoverActions: storySource.includes('ProductCardStates') && storySource.includes('SearchFieldStates') && fs.existsSync(path.join(root, 'packages/ui/src/components/Button.stories.tsx')),
   },
 };
 result.passed = Object.values(result.checks).every(Boolean);

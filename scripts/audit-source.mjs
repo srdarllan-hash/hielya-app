@@ -21,7 +21,7 @@ const checks = {
   minimum: source.includes('€25'),
   radius: source.includes('4 km'),
   alcohol: source.includes('Entrega antes de 22:00'),
-  tokens: fs.readFileSync(path.join(root, 'packages/design-tokens/src/tokens.json'), 'utf8').includes('"version": "1.1.0"'),
+  tokens: fs.readFileSync(path.join(root, 'packages/design-tokens/src/tokens.json'), 'utf8').includes('"version": "1.2.0"'),
 };
 
 const report = {

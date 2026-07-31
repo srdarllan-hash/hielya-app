@@ -17,10 +17,14 @@ const states = [
 ] as const;
 
 const baselinePath = path.join(process.cwd(), 'manifests', 'C-001-visual-baseline.json');
-const candidateMode = !fs.existsSync(baselinePath);
-const expected = candidateMode
-  ? null
-  : (JSON.parse(fs.readFileSync(baselinePath, 'utf8')) as { hashes: Record<string, string> });
+const baselineMode = process.env.BASELINE_MODE ?? 'GATE_VALIDATION';
+const authoringMode = baselineMode === 'BASELINE_AUTHORING';
+if (!authoringMode && !fs.existsSync(baselinePath)) {
+  throw new Error('C-001 approved visual baseline is missing in GATE_VALIDATION mode');
+}
+const expected = fs.existsSync(baselinePath)
+  ? (JSON.parse(fs.readFileSync(baselinePath, 'utf8')) as { hashes: Record<string, string> })
+  : null;
 
 for (const state of states) {
   test(`C-001 ${state} visual and responsive contract`, async ({ page }, testInfo) => {
@@ -54,7 +58,10 @@ for (const state of states) {
       JSON.stringify({ key, hash, state, project: testInfo.project.name }, null, 2),
     );
 
-    if (!candidateMode) expect(hash, `Visual hash mismatch for ${key}`).toBe(expected?.hashes[key]);
+    if (!authoringMode) {
+      expect(expected?.hashes[key], `Approved visual hash missing for ${key}`).toBeTruthy();
+      expect(hash, `Visual hash mismatch for ${key}`).toBe(expected?.hashes[key]);
+    }
 
     const geometry = await page.evaluate(() => {
       const root = document.querySelector<HTMLElement>('[data-screen-id="C-001"]');

@@ -1,12 +1,7 @@
 import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { SplashScreen } from '../../packages/ui/src/screens/splash/SplashScreen';
-import {
-  coerceSplashLocale,
-  coerceSplashState,
-  nextScreenForSplashState,
-} from '../../packages/ui/src/screens/splash/splash.types';
+import { SplashScreen, coerceSplashLocale, coerceSplashState, nextScreenForSplashState } from '@hielya/ui';
 
 afterEach(() => cleanup());
 

@@ -1,36 +1,54 @@
 {
   "name": "hielya-batch-01-foundation-access-home-codefirst",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "private": true,
   "packageManager": "pnpm@10.15.0",
-  "engines": { "node": ">=24 <25" },
+  "engines": {
+    "node": ">=24 <25"
+  },
   "scripts": {
     "assets:prepare": "node scripts/materialize-assets.mjs && node scripts/sync-assets.mjs",
+    "tokens:generate": "node scripts/generate-tokens.mjs",
+    "tokens:check": "node scripts/generate-tokens.mjs --check",
     "dev": "next dev apps/ui-lab",
     "build": "next build apps/ui-lab",
     "start": "next start apps/ui-lab",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
+    "test": "vitest run",
     "test:unit": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:all": "pnpm test && pnpm test:coverage",
     "test:visual": "playwright test tests/visual",
     "test:a11y": "playwright test tests/accessibility",
     "test:functional": "playwright test tests/functional",
+    "test:c005:a11y": "playwright test tests/accessibility/home.a11y.spec.ts",
+    "test:c005:functional": "playwright test tests/functional/home.functional.spec.ts",
+    "test:c005:visual": "playwright test tests/visual/home.visual.spec.ts",
     "test:c001:a11y": "playwright test tests/accessibility/splash.a11y.spec.ts",
     "test:c001:functional": "playwright test tests/functional/splash.functional.spec.ts",
     "test:c001:visual": "playwright test tests/visual/splash.visual.spec.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "type-check": "tsc --noEmit",
     "audit:source": "node scripts/audit-source.mjs",
     "audit:manifest": "python scripts/audit-manifest.py",
     "audit:c001:scope": "node scripts/audit-c001-scope.mjs",
     "audit:c001:manifest": "python scripts/audit-c001-manifest.py",
+    "audit:architecture": "node scripts/audit-architecture.mjs",
+    "audit:assets": "node scripts/audit-assets.mjs",
+    "audit:manifests": "node scripts/audit-global-manifests.mjs",
     "collect:c001:visual": "node scripts/collect-c001-visual-candidates.mjs",
     "gate:manifest": "node scripts/generate-gate-manifest.mjs",
     "gate:c001:manifest": "node scripts/generate-c001-gate-manifest.mjs",
     "predev": "pnpm assets:prepare",
     "prebuild": "pnpm assets:prepare",
     "prestorybook": "pnpm assets:prepare",
-    "prebuild-storybook": "pnpm assets:prepare"
+    "prebuild-storybook": "pnpm assets:prepare",
+    "audit:styles": "node scripts/audit-runtime-styles.mjs",
+    "audit:components": "node scripts/audit-components.mjs",
+    "gate:consolidation": "node scripts/generate-consolidation-gate-manifest.mjs",
+    "audit:all": "pnpm tokens:check && pnpm audit:architecture && pnpm audit:styles && pnpm audit:components && pnpm audit:assets && pnpm audit:manifests"
   },
   "dependencies": {
     "@fontsource/poppins": "5.3.0",
@@ -55,6 +73,7 @@
     "jsdom": "26.1.0",
     "storybook": "10.5.5",
     "typescript": "5.8.3",
-    "vitest": "3.2.4"
+    "vitest": "3.2.4",
+    "@vitest/coverage-v8": "3.2.4"
   }
 }

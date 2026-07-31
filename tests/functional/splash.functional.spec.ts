@@ -25,7 +25,8 @@ for (const state of states) {
     await page.goto(`/splash?state=${state}`);
     await expect(page.locator('[data-screen-id="C-001"]')).toHaveAttribute('data-state', state);
     await expect(page.locator('.hly-bottom-nav')).toHaveCount(0);
-    await expect(page.locator('.hly-app-header__actions')).toBeHidden();
+    await expect(page.locator('.hly-app-header')).toHaveCount(0);
+    await expect(page.getByRole('img', { name: 'HIELYA, Lo quieres frío. Lo quieres ya.' })).toBeVisible();
     expect(errors).toEqual([]);
   });
 }

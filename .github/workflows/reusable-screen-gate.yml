@@ -53,6 +53,7 @@ jobs:
       REQUIRED_VIEWPORTS: ${{ inputs.requiredViewports }}
       MANIFEST_PATH: ${{ inputs.manifestPath }}
       BASELINE_MODE: ${{ inputs.baselineMode }}
+      FROZEN_ARCHITECTURE_SHA: c838cfc26176b2e748bdbd037147a7f362d5a3c2
     steps:
       - name: Checkout exact source commit
         uses: actions/checkout@v4
@@ -60,7 +61,7 @@ jobs:
           ref: ${{ inputs.sourceSha }}
           fetch-depth: 0
       - name: Materialize frozen ancestry
-        run: git fetch --no-tags --force --depth=100 origin "$GATE_SOURCE_SHA"
+        run: git fetch --no-tags --force --depth=100 origin "$GATE_SOURCE_SHA" "$FROZEN_ARCHITECTURE_SHA"
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:

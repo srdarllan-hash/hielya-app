@@ -100,13 +100,30 @@ const checks = {
 };
 const frozenBase = 'c838cfc26176b2e748bdbd037147a7f362d5a3c2';
 let frozenBaseCheck = 'VERIFIED';
-try {
+const verifyFrozenBase = () => {
   execFileSync('git', ['cat-file', '-e', `${frozenBase}^{commit}`], { stdio: 'ignore' });
   execFileSync('git', ['merge-base', '--is-ancestor', frozenBase, 'HEAD']);
+};
+try {
+  verifyFrozenBase();
 } catch {
   if (process.env.CI === 'true') {
-    checks.exactFrozenBaseIsAncestor = false;
-    frozenBaseCheck = 'FAILED_IN_CI';
+    try {
+      const shallow = execFileSync('git', ['rev-parse', '--is-shallow-repository'], { encoding: 'utf8' }).trim();
+      if (shallow === 'true') {
+        execFileSync('git', ['fetch', '--no-tags', '--force', '--unshallow', 'origin'], { stdio: 'ignore' });
+      }
+      execFileSync(
+        'git',
+        ['fetch', '--no-tags', '--force', 'origin', process.env.GATE_SOURCE_SHA ?? 'HEAD', frozenBase],
+        { stdio: 'ignore' },
+      );
+      verifyFrozenBase();
+      frozenBaseCheck = 'VERIFIED_AFTER_REMATERIALIZATION';
+    } catch {
+      checks.exactFrozenBaseIsAncestor = false;
+      frozenBaseCheck = 'FAILED_IN_CI';
+    }
   } else {
     frozenBaseCheck = 'REQUIRES_CI_VERIFICATION';
   }

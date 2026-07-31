@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "runtime": {
     "node": "24",
     "pnpm": "10.15.0",
@@ -17,7 +17,11 @@
   },
   "componentLibrary": {
     "frozenSource": "1.1.1",
-    "consolidationCandidate": "1.2.0"
+    "consolidationCandidate": "1.2.0",
+    "gate2Candidate": "1.3.0"
   },
-  "coverageThreshold": "PENDING_DECISION"
+  "coverageThreshold": "PENDING_DECISION",
+  "locationDomain": {
+    "candidate": "1.0.0"
+  }
 }

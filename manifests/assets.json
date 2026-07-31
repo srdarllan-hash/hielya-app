@@ -30,22 +30,22 @@
     {
       "id": "pwa-icon-512",
       "status": "ASSET_MISSING",
-      "description": "PWA icon 512×512"
+      "description": "PWA icon 512\u00d7512"
     },
     {
       "id": "pwa-maskable-512",
       "status": "ASSET_MISSING",
-      "description": "Maskable PWA icon 512×512"
+      "description": "Maskable PWA icon 512\u00d7512"
     },
     {
       "id": "apple-touch-icon",
       "status": "ASSET_MISSING",
-      "description": "Apple touch icon 180×180"
+      "description": "Apple touch icon 180\u00d7180"
     },
     {
       "id": "favicons",
       "status": "ASSET_MISSING",
-      "description": "Favicons 32×32 and 16×16"
+      "description": "Favicons 32\u00d732 and 16\u00d716"
     },
     {
       "id": "commercial-packshot-rights",
@@ -58,5 +58,18 @@
     "Separate spinner image",
     "Exported PNG as editable design source"
   ],
-  "policy": "One physical content per deterministic asset. Semantic consumers use aliases. Missing official brand assets are not replaced by placeholders."
+  "policy": "One physical content per deterministic asset. Semantic consumers use aliases. Missing official brand assets are not replaced by placeholders.",
+  "screenUsage": {
+    "C-002": {
+      "physicalAssets": [],
+      "reusedPrimitives": [
+        "Icon.location",
+        "Icon.warning",
+        "Icon.refresh",
+        "Icon.wifi-off",
+        "Icon.arrow-right",
+        "Icon.search"
+      ]
+    }
+  }
 }

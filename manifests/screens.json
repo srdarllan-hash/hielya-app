@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "screens": [
     {
       "screenId": "C-005",
@@ -17,17 +17,20 @@
     },
     {
       "screenId": "C-002",
-      "name": "Localización",
-      "sourceStatus": "AUTHORIZED_NOT_STARTED_BUT_ARCHITECTURE_BLOCKED"
+      "name": "Localizaci\u00f3n",
+      "sourceStatus": "AUTHORIZED_FOR_IMPLEMENTATION",
+      "baseSha": "c2857afe538b2cf5ba44635edd56dbd422c0e2f0",
+      "branch": "hielya/c002-location-gate2",
+      "implementationStatus": "CANDIDATE_PENDING_CI"
     },
     {
       "screenId": "C-003",
-      "name": "Login por teléfono",
+      "name": "Login por tel\u00e9fono",
       "sourceStatus": "BLOCKED"
     },
     {
       "screenId": "C-004",
-      "name": "Verificación OTP",
+      "name": "Verificaci\u00f3n OTP",
       "sourceStatus": "BLOCKED"
     }
   ]

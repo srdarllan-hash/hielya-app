@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "workflows": [
     {
       "name": "Reusable Screen Gate",
@@ -36,6 +36,18 @@
       "path": ".github/workflows/baseline-authoring.yml",
       "type": "workflow_dispatch",
       "authorization": "EXPLICIT_MANUAL_ONLY"
+    },
+    {
+      "name": "C-002 Location Gate 2",
+      "path": ".github/workflows/c002-gate.yml",
+      "type": "pull_request",
+      "screens": [
+        "C-002",
+        "C-001",
+        "C-005"
+      ],
+      "c002BaselineMode": "BASELINE_AUTHORING",
+      "regressionBaselineMode": "GATE_VALIDATION"
     }
   ]
 }

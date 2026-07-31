@@ -18,7 +18,7 @@ const relative = (file) => path.relative(root, file).replaceAll(path.sep, '/');
 const runtimeFiles = [...walk(path.join(root, 'apps')), ...walk(path.join(root, 'packages')), ...walk(path.join(root, '.storybook'))]
   .filter((file) => /\.(ts|tsx|css)$/.test(file));
 const runtimeSource = runtimeFiles.map((file) => `${relative(file)}\n${fs.readFileSync(file, 'utf8')}`).join('\n');
-const blockedScreenFiles = runtimeFiles.map(relative).filter((file) => /screens\/(location|auth|otp)|C-00[234]/i.test(file));
+const blockedScreenFiles = runtimeFiles.map(relative).filter((file) => /screens\/(auth|otp)|C-00[34]/i.test(file));
 const relativeCrossPackageImports = [];
 for (const file of runtimeFiles.filter((item) => /\.(ts|tsx)$/.test(item))) {
   const source = fs.readFileSync(file, 'utf8');
@@ -75,6 +75,8 @@ const canonicalNames = componentManifest.canonical.map((item) => item.name);
 const checks = {
   exactFrozenBaseIsAncestor: true,
   noBlockedScreenImplementation: blockedScreenFiles.length === 0,
+  c002DomainImplemented: exists('packages/location/src/domain/location.machine.ts'),
+  c002RouteImplemented: exists('apps/ui-lab/app/location/page.tsx'),
   noHomeSpecificShellAttribute: !runtimeSource.includes(['data', 'home', 'state'].join('-')),
   appShellGenericContract: appShell.includes('screenState') && appShell.includes('data-screen-state') && !appShell.includes('data-home-state'),
   brandLockupCanonical: exists('packages/ui/src/components/BrandLockup.tsx') && canonicalNames.includes('BrandLockup'),
@@ -90,7 +92,7 @@ const checks = {
   uiPublicStyleExports: packages.ui.exports?.['./styles.css'] && packages.ui.exports?.['./accessibility.css'],
   tokenPublicExports: packages.tokens.exports?.['./tokens.css'] && packages.tokens.exports?.['./tokens'],
   tokenVersionAligned: packages.tokens.version === '1.2.0' && componentManifest.designTokens === '1.2.0',
-  componentVersionAligned: packages.ui.version === '1.2.0' && componentManifest.version === '1.2.0',
+  componentVersionAligned: packages.ui.version === '1.3.0' && componentManifest.version === '1.3.0',
   coverageInstrumented: read('vitest.config.ts').includes("provider: 'v8'") && read('package.json').includes('test:coverage'),
   strictGateBaselineMode: read('playwright.config.ts').includes("'GATE_VALIDATION'") && read('playwright.config.ts').includes("'none'"),
   c005StillCertified: JSON.parse(read('manifests/C-005.json')).status === 'APPROVED_FROZEN',

@@ -14,5 +14,6 @@
       "runId": 30576553445
     }
   ],
-  "consolidationArtifact": "PENDING_CI"
+  "consolidationArtifact": "PENDING_CI",
+  "c002CandidateArtifact": "PENDING_CI"
 }

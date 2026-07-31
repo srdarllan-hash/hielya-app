@@ -1,0 +1,12 @@
+{
+  "screenId": "C-002",
+  "version": "1.0.0",
+  "physicalAssets": [],
+  "reusedPrimitives": ["Icon.location", "Icon.warning", "Icon.refresh", "Icon.wifi-off", "Icon.arrow-right", "Icon.search"],
+  "missingOptionalAssets": [
+    { "id": "location-permission-illustration", "status": "PRODUCT_DECISION" },
+    { "id": "location-out-of-area-illustration", "status": "PRODUCT_DECISION" },
+    { "id": "map-preview", "status": "PRODUCT_DECISION" }
+  ],
+  "placeholdersPromoted": false
+}

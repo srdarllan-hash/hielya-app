@@ -1,16 +1,17 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "designTokens": "1.2.0",
-  "status": "CONSOLIDATION_CANDIDATE",
+  "status": "GATE_2_IMPLEMENTATION_CANDIDATE",
   "canonical": [
     {
       "name": "AppShell",
       "category": "layout",
       "consumers": [
         "C-005",
-        "C-001"
+        "C-001",
+        "C-002"
       ],
-      "version": "1.2.0",
+      "version": "1.3.0",
       "state": "ACTIVE"
     },
     {
@@ -18,9 +19,10 @@
       "category": "brand",
       "consumers": [
         "C-005",
-        "C-001"
+        "C-001",
+        "C-002"
       ],
-      "version": "1.2.0",
+      "version": "1.3.0",
       "state": "ACTIVE"
     },
     {
@@ -136,9 +138,10 @@
       "category": "feedback",
       "consumers": [
         "C-005",
-        "C-001"
+        "C-001",
+        "C-002"
       ],
-      "version": "1.2.0",
+      "version": "1.3.0",
       "state": "ACTIVE"
     },
     {
@@ -149,6 +152,15 @@
       ],
       "version": "1.2.0",
       "state": "ACTIVE"
+    },
+    {
+      "name": "Button",
+      "category": "action",
+      "consumers": [
+        "C-002"
+      ],
+      "version": "1.3.0",
+      "state": "IMPLEMENTATION_CANDIDATE"
     }
   ],
   "adapters": [

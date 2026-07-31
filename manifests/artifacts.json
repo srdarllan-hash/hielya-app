@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "historical": [
+    {
+      "screenId": "C-005",
+      "name": "c005-baseline-candidate-be61e1168b93d973101496cc66cb54d006aba9cc",
+      "digest": "sha256:2ab8f6bbfb60a76b41843a4e4d956421f97d751056dc22ff6e6297fadc2d4d11",
+      "runId": 30570688090
+    },
+    {
+      "screenId": "C-001",
+      "name": "c001-gate-c838cfc26176b2e748bdbd037147a7f362d5a3c2",
+      "digest": "sha256:f1088e22c5823fe166ffe4be301f09f1256d3176b4c6c89dcda9eb1d9adbb0aa",
+      "runId": 30576553445
+    }
+  ],
+  "consolidationArtifact": "PENDING_CI"
+}

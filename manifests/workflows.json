@@ -1,0 +1,41 @@
+{
+  "version": "1.0.0",
+  "workflows": [
+    {
+      "name": "Reusable Screen Gate",
+      "path": ".github/workflows/reusable-screen-gate.yml",
+      "type": "workflow_call",
+      "baselineModes": [
+        "BASELINE_AUTHORING",
+        "GATE_VALIDATION"
+      ],
+      "parameters": [
+        "sourceSha",
+        "screenId",
+        "route",
+        "states",
+        "baseSha",
+        "protectedPaths",
+        "testSuites",
+        "requiredViewports",
+        "manifestPath",
+        "baselineMode"
+      ]
+    },
+    {
+      "name": "Pre-Gate2 Architecture Consolidation",
+      "path": ".github/workflows/pre-gate2-consolidation.yml",
+      "type": "pull_request",
+      "screens": [
+        "C-005",
+        "C-001"
+      ]
+    },
+    {
+      "name": "Baseline Authoring",
+      "path": ".github/workflows/baseline-authoring.yml",
+      "type": "workflow_dispatch",
+      "authorization": "EXPLICIT_MANUAL_ONLY"
+    }
+  ]
+}

@@ -3,7 +3,7 @@
   "screenId": "C-001",
   "approvedFromCandidateSha": "8f4d23e1fecd12bcf3b0b12dfa880a6150d25183",
   "approvedCandidateArtifactDigest": "sha256:6f54abc1fcad67265b7fd2027799d1456116566eda30d35f6b6f3462c8bf958f",
-  "status": "FROZEN_BASELINE_CANDIDATE",
+  "status": "APPROVED_FROZEN",
   "hashAlgorithm": "sha256",
   "hashes": {
     "hires-1170:error": "7287f07409685d4481a7b6b33ebba09352a7c5e9eedaf753074e327cbb4b5e7c",
@@ -36,5 +36,7 @@
     "mobile-390:reduced-motion": "9fd83303381a5d295033fe7ac738a39be88b6c483442a45a5c665c569679077c",
     "mobile-390:timeout": "ac3111e8b6b51acb338eeea6aa9cd4acbc86bc661d9fc7a5d8455904bf3d46cd",
     "mobile-390:transition": "35ab0cfb9437ad75f31e43e6b70ba188fa4ea9a6e7c6a3b2bd68dc32eb75ba99"
-  }
+  },
+  "certifiedCommit": "c838cfc26176b2e748bdbd037147a7f362d5a3c2",
+  "certifiedArtifactDigest": "sha256:f1088e22c5823fe166ffe4be301f09f1256d3176b4c6c89dcda9eb1d9adbb0aa"
 }

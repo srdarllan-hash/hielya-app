@@ -1,0 +1,25 @@
+{
+  "version": "1.0.0",
+  "componentLibrary": "1.2.0",
+  "primitives": [
+    {
+      "name": "Icon",
+      "path": "packages/ui/src/icons/Icon.tsx",
+      "version": "1.2.0",
+      "state": "INTERNAL_PRIMITIVE",
+      "consumers": [
+        "AppHeader",
+        "DeliveryQuoteCard",
+        "SearchField",
+        "HeroBanner",
+        "ProductCard",
+        "PackCard",
+        "FeedbackState",
+        "Snackbar",
+        "BottomNavigation",
+        "IconButton"
+      ],
+      "policy": "Intrinsic SVG geometry may remain inside the primitive; sizing and color are controlled by component contracts and Design Tokens."
+    }
+  ]
+}

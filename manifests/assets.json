@@ -1,0 +1,62 @@
+{
+  "version": "1.0.0",
+  "status": "CONSOLIDATION_CANDIDATE",
+  "physicalAssets": [
+    "shared/victoria.svg",
+    "shared/redbull.svg",
+    "shared/ice-bag.svg",
+    "categories/whiskey.svg",
+    "categories/cocacola.svg",
+    "categories/lays.svg",
+    "products/estrella.svg",
+    "products/pack-cervecero.svg",
+    "products/mix-energia.svg",
+    "hero/cold-beer-hero.svg"
+  ],
+  "aliases": {
+    "categories/victoria.svg": "shared/victoria.svg",
+    "products/victoria.svg": "shared/victoria.svg",
+    "categories/redbull.svg": "shared/redbull.svg",
+    "products/redbull.svg": "shared/redbull.svg",
+    "categories/ice-bag.svg": "shared/ice-bag.svg",
+    "products/ice-bag.svg": "shared/ice-bag.svg"
+  },
+  "pending": [
+    {
+      "id": "brand-logo-svg",
+      "status": "ASSET_MISSING",
+      "description": "Official standalone HIELYA SVG logo"
+    },
+    {
+      "id": "pwa-icon-512",
+      "status": "ASSET_MISSING",
+      "description": "PWA icon 512×512"
+    },
+    {
+      "id": "pwa-maskable-512",
+      "status": "ASSET_MISSING",
+      "description": "Maskable PWA icon 512×512"
+    },
+    {
+      "id": "apple-touch-icon",
+      "status": "ASSET_MISSING",
+      "description": "Apple touch icon 180×180"
+    },
+    {
+      "id": "favicons",
+      "status": "ASSET_MISSING",
+      "description": "Favicons 32×32 and 16×16"
+    },
+    {
+      "id": "commercial-packshot-rights",
+      "status": "REQUIRES_VALIDATION",
+      "description": "Origin and licence of commercial product packshots"
+    }
+  ],
+  "unnecessary": [
+    "Raster background for Splash",
+    "Separate spinner image",
+    "Exported PNG as editable design source"
+  ],
+  "policy": "One physical content per deterministic asset. Semantic consumers use aliases. Missing official brand assets are not replaced by placeholders."
+}

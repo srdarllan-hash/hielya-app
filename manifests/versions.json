@@ -1,0 +1,23 @@
+{
+  "version": "1.0.0",
+  "runtime": {
+    "node": "24",
+    "pnpm": "10.15.0",
+    "next": "16.2.7",
+    "react": "19.2.7",
+    "typescript": "5.8.3",
+    "storybook": "10.5.5",
+    "playwright": "1.62.0",
+    "vitest": "3.2.4",
+    "poppins": "5.3.0"
+  },
+  "designTokens": {
+    "frozenSource": "1.1.0",
+    "consolidationCandidate": "1.2.0"
+  },
+  "componentLibrary": {
+    "frozenSource": "1.1.1",
+    "consolidationCandidate": "1.2.0"
+  },
+  "coverageThreshold": "PENDING_DECISION"
+}

@@ -14,13 +14,13 @@
     },
     {
       "id": "C001-CODE-001",
-      "name": "HIELYA textual lockup",
+      "name": "HIELYA BrandLockup",
       "status": "ASSET_EXISTS",
       "reusable": true,
       "productionUsage": true,
-      "source": "AppHeader React component",
+      "source": "BrandLockup React component",
       "format": "React/CSS",
-      "purpose": "Executable brand lockup"
+      "purpose": "Canonical executable brand lockup"
     },
     {
       "id": "C001-CODE-002",
@@ -34,11 +34,26 @@
     }
   ],
   "missingNonBlocking": [
-    {"name": "Official standalone HIELYA SVG logo", "status": "REQUIRES_VALIDATION"},
-    {"name": "PWA icon 512x512", "status": "ASSET_MISSING"},
-    {"name": "Maskable PWA icon 512x512", "status": "ASSET_MISSING"},
-    {"name": "Apple touch icon 180x180", "status": "ASSET_MISSING"},
-    {"name": "Favicons 32x32 and 16x16", "status": "ASSET_MISSING"}
+    {
+      "name": "Official standalone HIELYA SVG logo",
+      "status": "REQUIRES_VALIDATION"
+    },
+    {
+      "name": "PWA icon 512x512",
+      "status": "ASSET_MISSING"
+    },
+    {
+      "name": "Maskable PWA icon 512x512",
+      "status": "ASSET_MISSING"
+    },
+    {
+      "name": "Apple touch icon 180x180",
+      "status": "ASSET_MISSING"
+    },
+    {
+      "name": "Favicons 32x32 and 16x16",
+      "status": "ASSET_MISSING"
+    }
   ],
   "generatedPlaceholders": []
 }

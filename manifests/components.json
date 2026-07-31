@@ -1,1 +1,173 @@
-{"version":"1.1.1","designTokens":"1.1.0","canonical":["AppShell","AppHeader","DeliveryQuoteCard","SearchField","CategoryChip","HeroBanner","SectionHeader","ProductCard","PackCard","StatusBadge","IconButton","BottomNavigation","LoadingState","ErrorState","EmptyState","Snackbar"],"duplicateComponents":[],"homeExclusive":[],"decisions":["HLY-DS-001","HLY-DS-002"],"policy":"Every Batch 01 component is reusable and regression-tested."}
+{
+  "version": "1.2.0",
+  "designTokens": "1.2.0",
+  "status": "CONSOLIDATION_CANDIDATE",
+  "canonical": [
+    {
+      "name": "AppShell",
+      "category": "layout",
+      "consumers": [
+        "C-005",
+        "C-001"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "BrandLockup",
+      "category": "brand",
+      "consumers": [
+        "C-005",
+        "C-001"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "AppHeader",
+      "category": "navigation",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "DeliveryQuoteCard",
+      "category": "delivery",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "SearchField",
+      "category": "input",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "CategoryChip",
+      "category": "catalog",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "HeroBanner",
+      "category": "commerce",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "SectionHeader",
+      "category": "content",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "ProductCard",
+      "category": "commerce",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "PackCard",
+      "category": "commerce",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "StatusBadge",
+      "category": "feedback",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "IconButton",
+      "category": "action",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "BottomNavigation",
+      "category": "navigation",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "HomeLoadingState",
+      "category": "feedback",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "FeedbackState",
+      "category": "feedback",
+      "consumers": [
+        "C-005",
+        "C-001"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "Snackbar",
+      "category": "feedback",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    }
+  ],
+  "adapters": [
+    {
+      "name": "ErrorState",
+      "target": "FeedbackState",
+      "state": "THIN_ADAPTER"
+    },
+    {
+      "name": "EmptyState",
+      "target": "FeedbackState",
+      "state": "THIN_ADAPTER"
+    },
+    {
+      "name": "LoadingState",
+      "target": "HomeLoadingState",
+      "state": "DEPRECATED_COMPATIBILITY_ADAPTER"
+    }
+  ],
+  "duplicates": [],
+  "policy": "Canonical components expose typed data, action, disabled, loading and accessibility contracts as applicable."
+}

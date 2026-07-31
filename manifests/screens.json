@@ -1,0 +1,34 @@
+{
+  "version": "1.0.0",
+  "screens": [
+    {
+      "screenId": "C-005",
+      "name": "Home",
+      "sourceStatus": "APPROVED_FROZEN",
+      "sourceCommit": "be61e1168b93d973101496cc66cb54d006aba9cc",
+      "architectureRegression": "REQUIRES_EXACT_SHA_GATE"
+    },
+    {
+      "screenId": "C-001",
+      "name": "Splash",
+      "sourceStatus": "APPROVED_FROZEN",
+      "sourceCommit": "c838cfc26176b2e748bdbd037147a7f362d5a3c2",
+      "architectureRegression": "REQUIRES_EXACT_SHA_GATE"
+    },
+    {
+      "screenId": "C-002",
+      "name": "Localización",
+      "sourceStatus": "AUTHORIZED_NOT_STARTED_BUT_ARCHITECTURE_BLOCKED"
+    },
+    {
+      "screenId": "C-003",
+      "name": "Login por teléfono",
+      "sourceStatus": "BLOCKED"
+    },
+    {
+      "screenId": "C-004",
+      "name": "Verificación OTP",
+      "sourceStatus": "BLOCKED"
+    }
+  ]
+}

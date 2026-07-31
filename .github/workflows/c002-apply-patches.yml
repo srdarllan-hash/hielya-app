@@ -1,0 +1,74 @@
+name: C-002 Apply Implementation Patches
+
+on:
+  pull_request:
+    branches:
+      - hielya/pre-gate2-architecture-consolidation
+
+permissions:
+  contents: write
+
+concurrency:
+  group: c002-apply-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  apply:
+    if: github.head_ref == 'hielya/c002-location-gate2'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact staged branch SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Verify and reconstruct patch package
+        run: |
+          cat .github/c002-payload/part* > /tmp/c002-patches.tar.gz.b64
+          echo 'e58fb1c5f10aead94b1917832ef979a77a3177aa7a2dba49fcfe4dc3ef973a67  /tmp/c002-patches.tar.gz.b64' | sha256sum --check
+          base64 --decode /tmp/c002-patches.tar.gz.b64 > /tmp/c002-patches.tar.gz
+          echo 'a9375b98d1a779c447e57d35b179ad5bea93aa967501d151e0e10f84febfefca  /tmp/c002-patches.tar.gz' | sha256sum --check
+          mkdir -p /tmp/c002-patches
+          tar -xzf /tmp/c002-patches.tar.gz -C /tmp/c002-patches
+          find /tmp/c002-patches -maxdepth 2 -type f -name '*.patch' -print | sort
+          test "$(find /tmp/c002-patches -type f -name '*.patch' | wc -l)" -eq 6
+
+      - name: Apply organized implementation commits
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git am --3way /tmp/c002-patches/*.patch
+
+      - name: Remove temporary transfer infrastructure
+        run: |
+          rm -rf .github/c002-payload
+          rm -f .github/workflows/c002-apply-patches.yml
+
+      - name: Materialize definitive lockfile
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Commit lockfile and cleanup
+        run: |
+          git add -A
+          git commit -m 'chore(c002): materialize lockfile and finalize implementation transfer'
+
+      - name: Push implementation branch
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          git push origin "HEAD:$BRANCH"
+          echo "final SHA=$(git rev-parse HEAD)"

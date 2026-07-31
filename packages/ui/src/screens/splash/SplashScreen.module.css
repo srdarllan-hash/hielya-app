@@ -1,4 +1,4 @@
-:global(.hly-app-shell[data-home-state^='splash-']) {
+:global(.hly-app-shell[data-screen-state^='splash-']) {
   max-width: none;
   min-height: 100svh;
   padding: var(--hly-space-0);
@@ -36,15 +36,6 @@
   transform: translate(-50%, -50%);
 }
 
-.brand :global(.hly-app-header) {
-  min-height: auto;
-  margin: var(--hly-space-0);
-  justify-content: center;
-}
-
-.brand :global(.hly-app-header__actions) {
-  display: none;
-}
 
 .brand :global(.hly-brand) {
   display: grid;
@@ -63,12 +54,7 @@
 }
 
 .brand :global(.hly-brand__tagline) {
-  display: none;
-}
-
-.tagline {
   max-width: calc(var(--hly-space-64) * 2);
-  margin: var(--hly-space-0);
   color: var(--hly-color-text-primary);
   font-size: var(--hly-font-size-caption);
   line-height: var(--hly-font-line-height-caption);

@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { AppHeader } from '../../components/AppHeader';
 import { AppShell } from '../../components/AppShell';
+import { BrandLockup } from '../../components/BrandLockup';
 import { getSplashCopy } from './splash.copy';
 import {
   nextScreenForSplashState,
@@ -46,7 +46,7 @@ export function SplashScreen({
   };
 
   return (
-    <AppShell state={`splash-${state}`}>
+    <AppShell screenState={`splash-${state}`}>
       <main
         className={styles.splash}
         data-screen-id="C-001"
@@ -56,11 +56,13 @@ export function SplashScreen({
         aria-busy={isBusy || undefined}
         lang={locale}
       >
-        <div className={styles.brand} role="img" aria-label={copy.brandLabel}>
-          <div aria-hidden="true">
-            <AppHeader />
-          </div>
-          <p className={styles.tagline}>{copy.tagline}</p>
+        <div className={styles.brand}>
+          <BrandLockup
+            size="lg"
+            align="center"
+            tagline={copy.tagline}
+            ariaLabel={copy.brandLabel}
+          />
         </div>
 
         <div className={styles.statusArea}>

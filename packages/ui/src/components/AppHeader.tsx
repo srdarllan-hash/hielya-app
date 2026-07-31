@@ -1,14 +1,35 @@
+'use client';
+
 import React from 'react';
+import { BrandLockup } from './BrandLockup';
 import { IconButton } from './IconButton';
-export function AppHeader({ cartCount=0 }: { cartCount?: number }) {
-  return <header className="hly-app-header">
-    <div className="hly-brand" aria-label="HIELYA, Lo quieres frío. Lo quieres ya.">
-      <div className="hly-brand__word"><span className="hly-brand__snow">❄</span>HIELY<span className="hly-brand__bolt">A</span></div>
-      <div className="hly-brand__tagline">Lo quieres frío. Lo quieres <strong>ya.</strong></div>
-    </div>
-    <div className="hly-app-header__actions">
-      <IconButton icon="user" label="Abrir perfil" />
-      <IconButton icon="cart" label="Abrir carrito" badge={cartCount}/>
-    </div>
-  </header>;
+
+export type AppHeaderVariant = 'home' | 'internal';
+
+export interface AppHeaderProps {
+  variant?: AppHeaderVariant;
+  cartCount?: number;
+  onProfile?: () => void;
+  onCart?: () => void;
+  profileDisabled?: boolean;
+  cartDisabled?: boolean;
+}
+
+export function AppHeader({
+  variant = 'home',
+  cartCount = 0,
+  onProfile,
+  onCart,
+  profileDisabled = false,
+  cartDisabled = false,
+}: AppHeaderProps) {
+  return (
+    <header className={`hly-app-header hly-app-header--${variant}`}>
+      <BrandLockup size={variant === 'home' ? 'md' : 'sm'} showTagline={variant === 'home'} />
+      <div className="hly-app-header__actions">
+        <IconButton icon="user" label="Abrir perfil" onClick={onProfile} disabled={profileDisabled || !onProfile} />
+        <IconButton icon="cart" label="Abrir carrito" badge={cartCount} onClick={onCart} disabled={cartDisabled || !onCart} />
+      </div>
+    </header>
+  );
 }

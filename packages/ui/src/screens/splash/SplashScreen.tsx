@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { AppHeader } from '../../components/AppHeader';
 import { AppShell } from '../../components/AppShell';
+import { BrandLockup } from '../../components/BrandLockup';
 import { getSplashCopy } from './splash.copy';
 import {
   nextScreenForSplashState,
@@ -58,7 +58,10 @@ export function SplashScreen({
       >
         <div className={styles.brand} role="img" aria-label={copy.brandLabel}>
           <div aria-hidden="true">
-            <AppHeader />
+            <header className="hly-app-header hly-app-header--home">
+              <BrandLockup size="md" showTagline />
+              <div className="hly-app-header__actions" />
+            </header>
           </div>
           <p className={styles.tagline}>{copy.tagline}</p>
         </div>

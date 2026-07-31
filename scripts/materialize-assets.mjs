@@ -1,8 +1,9 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
 const root = process.cwd();
 const publicRoot = resolve(root, 'public', 'assets');
+rmSync(publicRoot, { recursive: true, force: true });
 
 const wrap = (body, viewBox = '0 0 240 240') => `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" role="img" aria-hidden="true">
@@ -91,16 +92,13 @@ const hero = () => wrap(`
   <g opacity=".8" fill="#FFF"><circle cx="473" cy="77" r="4"/><circle cx="468" cy="98" r="3"/><circle cx="567" cy="96" r="4"/><circle cx="582" cy="121" r="3"/></g>`, '0 0 720 260');
 
 const assets = {
-  'categories/victoria.svg': bottle('#7A3E16', '#F6B800'),
+  'shared/victoria.svg': bottle('#7A3E16', '#F6B800'),
+  'shared/redbull.svg': can('#D7E0E8', '#D4A017'),
+  'shared/ice-bag.svg': iceBag(),
   'categories/whiskey.svg': whiskey(),
-  'categories/redbull.svg': can('#D7E0E8', '#D4A017'),
-  'categories/ice-bag.svg': iceBag(),
   'categories/cocacola.svg': cola(),
   'categories/lays.svg': snackBag(),
-  'products/victoria.svg': bottle('#7A3E16', '#F6B800'),
   'products/estrella.svg': bottle('#4A220D', '#D4A017'),
-  'products/redbull.svg': can('#D7E0E8', '#D4A017'),
-  'products/ice-bag.svg': iceBag(),
   'products/pack-cervecero.svg': pack(false),
   'products/mix-energia.svg': pack(true),
   'hero/cold-beer-hero.svg': hero(),
@@ -112,4 +110,4 @@ for (const [relativePath, content] of Object.entries(assets)) {
   writeFileSync(destination, content, 'utf8');
 }
 
-console.log(`Materialized ${Object.keys(assets).length} deterministic SVG assets in ${publicRoot}`);
+console.log(`Materialized ${Object.keys(assets).length} unique deterministic SVG assets in ${publicRoot}`);

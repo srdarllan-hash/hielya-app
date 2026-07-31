@@ -41,6 +41,12 @@
       ],
       "@hielya/design-tokens/*": [
         "packages/design-tokens/src/*"
+      ],
+      "@hielya/location": [
+        "packages/location/src/index.ts"
+      ],
+      "@hielya/location/*": [
+        "packages/location/src/*"
       ]
     }
   },

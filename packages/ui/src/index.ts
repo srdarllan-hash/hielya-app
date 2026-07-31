@@ -24,3 +24,6 @@ export * from './components/DeliveryQuoteCard';
 export * from './icons/Icon';
 export * from './lib/ui-actions';
 export * from './screens/lab/ComponentGallery';
+export * from './components/Button';
+export * from './screens/location/LocationScreen';
+export * from './screens/location/location.types';

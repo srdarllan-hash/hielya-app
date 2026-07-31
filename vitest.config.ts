@@ -7,6 +7,9 @@ export default defineConfig({
       '@hielya/ui': fileURLToPath(
         new URL('./packages/ui/src/index.ts', import.meta.url),
       ),
+      '@hielya/location': fileURLToPath(
+        new URL('./packages/location/src/index.ts', import.meta.url),
+      ),
     },
   },
   test: {
@@ -19,6 +22,7 @@ export default defineConfig({
       reportsDirectory: './coverage',
       include: [
         'packages/ui/src/**/*.{ts,tsx}',
+        'packages/location/src/**/*.{ts,tsx}',
         'scripts/generate-tokens.mjs',
       ],
       exclude: [

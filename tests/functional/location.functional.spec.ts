@@ -73,3 +73,25 @@ test('C-002 address suggestions support keyboard selection', async ({ page }) =>
   await input.press('Enter');
   await expect(page.getByRole('button', { name: 'Confirmar dirección' })).toBeVisible();
 });
+
+test('C-002 long address remains reachable without horizontal overflow', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto('/location?state=resolved&driver=fake&variant=long_address');
+
+  const overflow = await page.evaluate(() => ({
+    viewportWidth: document.documentElement.clientWidth,
+    contentWidth: document.documentElement.scrollWidth,
+  }));
+  expect(overflow.contentWidth).toBeLessThanOrEqual(overflow.viewportWidth);
+
+  const edit = page.getByRole('button', { name: 'Editar dirección' });
+  await edit.scrollIntoViewIfNeeded();
+  await expect(edit).toBeVisible();
+  const editBox = await edit.boundingBox();
+  expect(editBox).not.toBeNull();
+  expect(editBox!.y + editBox!.height).toBeLessThanOrEqual(800);
+
+  const privacy = page.getByText('La ubicación se solicita solo cuando pulsas el botón. No hacemos seguimiento en segundo plano.');
+  await privacy.scrollIntoViewIfNeeded();
+  await expect(privacy).toBeVisible();
+});

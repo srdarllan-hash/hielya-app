@@ -2,11 +2,23 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
+const ignoredDirectories = new Set([
+  '.next',
+  'coverage',
+  'node_modules',
+  'playwright-report',
+  'storybook-static',
+  'test-results',
+]);
 const walk = (directory, files = []) => {
   if (!fs.existsSync(directory)) return files;
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
     const full = path.join(directory, entry.name);
-    if (entry.isDirectory()) walk(full, files); else files.push(full);
+    if (entry.isDirectory()) {
+      if (!ignoredDirectories.has(entry.name)) walk(full, files);
+    } else {
+      files.push(full);
+    }
   }
   return files;
 };

@@ -78,8 +78,8 @@ jobs:
             echo "node=$(node --version)"
             echo "pnpm=$(pnpm --version)"
             echo "lockfile=$(sha256sum pnpm-lock.yaml | cut -d' ' -f1)"
-            echo "tokenVersion=$(node -p \"require('./packages/design-tokens/package.json').version\")"
-            echo "componentLibraryVersion=$(node -p \"require('./packages/ui/package.json').version\")"
+            node -p "'tokenVersion=' + require('./packages/design-tokens/package.json').version"
+            node -p "'componentLibraryVersion=' + require('./packages/ui/package.json').version"
             echo "baselineMode=$BASELINE_MODE"
           } | tee logs/source-identity.log
           test "$(git rev-parse HEAD)" = "$GATE_SOURCE_SHA"

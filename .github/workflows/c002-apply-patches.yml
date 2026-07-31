@@ -38,38 +38,37 @@ jobs:
 
       - name: Verify and reconstruct patch package
         run: |
-          wc -c .github/c002-payload/part*
-          sha256sum .github/c002-payload/part*
           cat .github/c002-payload/part* > /tmp/c002-patches.tar.gz.b64
-          sha256sum /tmp/c002-patches.tar.gz.b64
           echo 'e58fb1c5f10aead94b1917832ef979a77a3177aa7a2dba49fcfe4dc3ef973a67  /tmp/c002-patches.tar.gz.b64' | sha256sum --check
           base64 --decode /tmp/c002-patches.tar.gz.b64 > /tmp/c002-patches.tar.gz
           echo 'a9375b98d1a779c447e57d35b179ad5bea93aa967501d151e0e10f84febfefca  /tmp/c002-patches.tar.gz' | sha256sum --check
           mkdir -p /tmp/c002-patches
           tar -xzf /tmp/c002-patches.tar.gz -C /tmp/c002-patches
-          find /tmp/c002-patches -maxdepth 2 -type f -name '*.patch' -print | sort
           test "$(find /tmp/c002-patches -type f -name '*.patch' | wc -l)" -eq 6
 
-      - name: Apply organized implementation commits
+      - name: Apply non-workflow implementation commits
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git am --3way /tmp/c002-patches/*.patch
+          git am --3way \
+            /tmp/c002-patches/0001-feat-location-domain-add-typed-state-machine-ports-p.patch \
+            /tmp/c002-patches/0002-feat-c002-ui-add-canonical-button-location-screen-fo.patch \
+            /tmp/c002-patches/0003-test-c002-cover-domain-adapters-UI-accessibility-and.patch \
+            /tmp/c002-patches/0004-chore-c002-governance-register-candidate-manifests-p.patch \
+            /tmp/c002-patches/0006-test-governance-align-component-audit-with-library-1.patch
 
-      - name: Remove temporary transfer infrastructure
-        run: |
-          rm -rf .github/c002-payload
-          rm -f .github/workflows/c002-apply-patches.yml
+      - name: Remove staged payload
+        run: rm -rf .github/c002-payload
 
       - name: Materialize definitive lockfile
         run: pnpm install --no-frozen-lockfile
 
-      - name: Commit lockfile and cleanup
+      - name: Commit lockfile and payload cleanup
         run: |
           git add -A
-          git commit -m 'chore(c002): materialize lockfile and finalize implementation transfer'
+          git commit -m 'chore(c002): materialize lockfile and finalize code transfer'
 
-      - name: Push implementation branch
+      - name: Push non-workflow implementation
         env:
           BRANCH: ${{ github.head_ref }}
         run: |

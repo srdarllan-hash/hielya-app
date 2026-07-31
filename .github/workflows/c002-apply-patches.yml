@@ -38,7 +38,10 @@ jobs:
 
       - name: Verify and reconstruct patch package
         run: |
+          wc -c .github/c002-payload/part*
+          sha256sum .github/c002-payload/part*
           cat .github/c002-payload/part* > /tmp/c002-patches.tar.gz.b64
+          sha256sum /tmp/c002-patches.tar.gz.b64
           echo 'e58fb1c5f10aead94b1917832ef979a77a3177aa7a2dba49fcfe4dc3ef973a67  /tmp/c002-patches.tar.gz.b64' | sha256sum --check
           base64 --decode /tmp/c002-patches.tar.gz.b64 > /tmp/c002-patches.tar.gz
           echo 'a9375b98d1a779c447e57d35b179ad5bea93aa967501d151e0e10f84febfefca  /tmp/c002-patches.tar.gz' | sha256sum --check

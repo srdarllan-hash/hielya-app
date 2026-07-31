@@ -46,7 +46,7 @@
         "C-001",
         "C-005"
       ],
-      "c002BaselineMode": "BASELINE_AUTHORING",
+      "c002BaselineMode": "GATE_VALIDATION",
       "regressionBaselineMode": "GATE_VALIDATION"
     }
   ]

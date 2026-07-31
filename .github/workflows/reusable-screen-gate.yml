@@ -126,9 +126,12 @@ jobs:
               pnpm test:c002:a11y
               pnpm test:c002:functional
               pnpm test:c002:visual
+              git diff --exit-code -- tests/visual/location.visual.spec.ts-snapshots
+              pnpm audit:all
               pnpm audit:c002:scope
               pnpm audit:c002:manifest
               pnpm gate:c002:manifest
+              pnpm audit:c002:evidence
               ;;
             *)
               echo "Unsupported certified screen: $SCREEN_ID" >&2

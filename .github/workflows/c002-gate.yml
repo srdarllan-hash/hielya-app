@@ -25,7 +25,7 @@ jobs:
       testSuites: '["unit","coverage","axe","functional","console","visual","responsive","scope","manifest"]'
       requiredViewports: '["360x800","390x844","1170x2532"]'
       manifestPath: manifests/C-002.json
-      baselineMode: BASELINE_AUTHORING
+      baselineMode: GATE_VALIDATION
 
   c001-regression:
     uses: ./.github/workflows/reusable-screen-gate.yml
@@ -59,8 +59,9 @@ jobs:
     needs: [c002-candidate, c001-regression, c005-regression]
     runs-on: ubuntu-latest
     steps:
-      - name: Confirm implementation candidate status
+      - name: Confirm frozen integration status
         run: |
-          echo "C002_IMPLEMENTATION_STATUS=READY_FOR_WORK_INTEGRATION"
-          echo "APPROVED_FROZEN=false"
-          echo "WORK_INTEGRATED=false"
+          echo "C002_IMPLEMENTATION_STATUS=APPROVED_FROZEN"
+          echo "APPROVED_FROZEN=true"
+          echo "WORK_INTEGRATED=true"
+          echo "READY_FOR_C003_PLANNING=true"

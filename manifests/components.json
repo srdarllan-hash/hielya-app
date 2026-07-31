@@ -1,7 +1,7 @@
 {
   "version": "1.3.0",
   "designTokens": "1.2.0",
-  "status": "GATE_2_IMPLEMENTATION_CANDIDATE",
+  "status": "GATE_2_APPROVED_FROZEN",
   "canonical": [
     {
       "name": "AppShell",
@@ -160,7 +160,7 @@
         "C-002"
       ],
       "version": "1.3.0",
-      "state": "IMPLEMENTATION_CANDIDATE"
+      "state": "ACTIVE"
     }
   ],
   "adapters": [

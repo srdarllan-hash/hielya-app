@@ -1,11 +1,11 @@
-# C-002 Localización — Implementation Candidate
+# C-002 Localización — Approved Frozen
 
 ## Base
 
 - Repository: `srdarllan-hash/hielya-app`
 - Base SHA: `c2857afe538b2cf5ba44635edd56dbd422c0e2f0`
 - Branch: `hielya/c002-location-gate2`
-- Status: `AUTHORIZED_FOR_IMPLEMENTATION`
+- Status: `APPROVED_FROZEN`
 
 ## Architecture
 
@@ -24,4 +24,6 @@ The screen never routes directly to C-003 or C-005. It emits the typed outcome `
 
 ## Visual status
 
-C-002 screenshots and visual baselines are candidates generated in `BASELINE_AUTHORING`. This implementation does not declare `APPROVED_FROZEN`.
+The 63 accepted baselines cover 21 states and variants across 360×800, 390×844 and 1170×2532 evidence captures. They are versioned and validated in `GATE_VALIDATION`; the workflow is not permitted to create or modify baselines.
+
+`APPROVED_FROZEN = TRUE`, `WORK_INTEGRATED = TRUE`, and C-003 is ready for planning while its implementation remains blocked.

@@ -54,6 +54,7 @@
     "test:c002:visual": "playwright test tests/visual/location.visual.spec.ts",
     "audit:c002:scope": "node scripts/audit-c002-scope.mjs",
     "audit:c002:manifest": "python scripts/audit-c002-manifest.py",
+    "audit:c002:evidence": "node scripts/audit-c002-evidence.mjs",
     "gate:c002:manifest": "node scripts/generate-c002-gate-manifest.mjs"
   },
   "dependencies": {

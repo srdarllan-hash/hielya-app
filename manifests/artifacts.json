@@ -15,5 +15,15 @@
     }
   ],
   "consolidationArtifact": "PENDING_CI",
-  "c002CandidateArtifact": "PENDING_CI"
+  "c002BaselineAuthoringArtifact": {
+    "name": "screen-gate-C-002-4136b8c959d2a8648054de406797c22f1e07ec61",
+    "runId": 30632260281,
+    "artifactId": 8793878089,
+    "digest": "sha256:6e3f84d58e5bf6a21acd9661beb4fe1f9481b6b76c96b93b256bd9a7ef210959",
+    "baselineMode": "BASELINE_AUTHORING"
+  },
+  "c002FinalValidationArtifact": {
+    "status": "RECORDED_ON_PR_4_AFTER_EXACT_HEAD_VALIDATION",
+    "baselineMode": "GATE_VALIDATION"
+  }
 }

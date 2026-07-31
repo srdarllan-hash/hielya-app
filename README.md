@@ -106,3 +106,32 @@ pnpm gate:c001:manifest
 ## Gate status
 
 C-001 only becomes `APPROVED_FROZEN` after the exact PR head commit passes the complete `C-001 Splash Gate 1B` workflow and its uploaded evidence is inspected. The PR must remain draft and no merge to `main` is allowed without explicit authorization.
+
+## Pre-Gate 2 architecture consolidation
+
+The branch `hielya/pre-gate2-architecture-consolidation` is derived from the exact frozen C-001 commit and does not rewrite the original C-005 or C-001 certification records.
+
+It consolidates shared tokens, components, package boundaries, assets, manifests and Gate infrastructure before C-002. C-002 is not implemented in this branch.
+
+Validation commands:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm tokens:check
+pnpm lint
+pnpm type-check
+pnpm test
+pnpm test:coverage
+pnpm build
+pnpm build-storybook
+pnpm audit:all
+```
+
+Visual baselines have two explicit modes:
+
+```text
+BASELINE_AUTHORING  manual authorization only
+GATE_VALIDATION     never creates baselines; missing or changed baseline fails
+```
+
+The final decision is generated only by the exact-SHA `Pre-Gate2 Architecture Consolidation` GitHub Actions workflow.

@@ -30,3 +30,17 @@
 - Added Storybook, unit, functional, Axe, responsive and visual-hash tests.
 - Added scope protection, manifest audits and commit-bound Gate evidence workflow.
 - C-002, C-003, C-004 and all other modules remain blocked.
+
+## 1.2.0 — Pre-Gate 2 architecture consolidation candidate
+
+- Corrected deterministic Design Token compilation, including valid elevation CSS and duplicate detection.
+- Generalized `AppShell` and extracted canonical `BrandLockup`.
+- Consolidated `FeedbackState`; retained thin compatibility adapters.
+- Standardized typed action, loading and disabled contracts for interactive components.
+- Migrated C-005 runtime visuals to token-backed modular styles without intentionally changing the approved composition.
+- Replaced cross-package filesystem imports with public workspace exports.
+- Consolidated duplicate deterministic SVG assets through semantic aliases.
+- Added global manifests for components, primitives, assets, screens, certifications, workflows, artifacts and versions.
+- Added reusable exact-SHA screen validation, explicit baseline authoring and strict Gate validation.
+- Added V8 coverage reporting with `COVERAGE_THRESHOLD = PENDING_DECISION`.
+- Added complete C-005 and C-001 architecture regression orchestration; C-002 remains unimplemented.

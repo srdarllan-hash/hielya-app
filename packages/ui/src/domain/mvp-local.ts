@@ -71,15 +71,6 @@ export interface MvpOperationalSettings {
   tipsEnabled: boolean;
 }
 
-export const MVP_SIMULATION_DEFAULTS: Readonly<MvpOperationalSettings> = {
-  minimumProductSubtotalCents: 2500,
-  deliveryBaseFeeCents: 200,
-  deliveryFeePerKmCents: 60,
-  maximumRoadDistanceKm: 4,
-  maximumPinAttempts: 3,
-  tipsEnabled: true,
-};
-
 export function getCatalogCategoryCounts(catalog: readonly MvpCatalogItem[] = MVP_LOCAL_36_CATALOG): Record<MvpCategory, number> {
   return MVP_CATEGORIES.reduce((counts, category) => ({
     ...counts,
@@ -118,6 +109,6 @@ export function generateDeliveryPin(random: () => number = Math.random): string 
   return String(Math.floor(random() * 10000)).padStart(4, '0');
 }
 
-export function canCompleteDelivery(pinMatches: boolean, attemptsUsed: number, settings: MvpOperationalSettings): boolean {
-  return pinMatches && attemptsUsed < settings.maximumPinAttempts;
+export function canCompleteDelivery(pinMatches: boolean, attemptsUsedBeforeValidation: number, settings: MvpOperationalSettings): boolean {
+  return pinMatches && attemptsUsedBeforeValidation < settings.maximumPinAttempts;
 }

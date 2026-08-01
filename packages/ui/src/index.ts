@@ -27,3 +27,5 @@ export * from './screens/lab/ComponentGallery';
 export * from './components/Button';
 export * from './screens/location/LocationScreen';
 export * from './screens/location/location.types';
+
+export * from './domain/mvp-local';

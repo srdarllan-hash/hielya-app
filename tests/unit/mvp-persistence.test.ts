@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { BUNDLE_COMPONENTS, INITIAL_SEED, MvpPersistenceDatabase } from '../../packages/persistence/src/index';
+import { BUNDLE_COMPONENTS, INITIAL_SEED, MvpPersistenceDatabase, resolveDevelopmentMigrationPath } from '../../packages/persistence/src/index';
 
 const settings = { minimumProductSubtotalCents: 2500, deliveryBaseFeeCents: 200, deliveryFeePerKmCents: 60, maximumRoadDistanceKm: 4, maximumPinAttempts: 3, tipsEnabled: true };
 const createDb = () => { const persistence = new MvpPersistenceDatabase(); persistence.migrate(); persistence.seed(settings); return persistence; };
 
 describe('MVP Local 36 persistence contracts', () => {
+  it('resolves the development migration without requiring a file URL', () => {
+    expect(resolveDevelopmentMigrationPath('http://vitest.invalid/module.ts')).toMatch(/\.dev-migrations\/0001_mvp_local_36_persistence\.sql$/);
+  });
+
   it('seeds 30 selected original SKUs, six composites and preserves 30 deferred baseline SKUs', () => {
     const persistence = createDb();
     expect(INITIAL_SEED).toHaveLength(66);

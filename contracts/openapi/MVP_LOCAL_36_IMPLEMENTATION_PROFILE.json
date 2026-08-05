@@ -1,0 +1,54 @@
+{
+  "profile": "MVP_LOCAL_36",
+  "contractVersion": "1.1.0",
+  "contractFile": "contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_1.yaml",
+  "baseline": {
+    "file": "contracts/openapi/HIELYA_OPENAPI_V1_0.yaml",
+    "sha256": "a2c027c6294b44c94cf4be21d18fbd251b0323102e3c9ba2cba912a96d810ae9",
+    "modified": false
+  },
+  "IMPLEMENT_NOW": [
+    { "method": "GET", "path": "/catalog/categories" },
+    { "method": "GET", "path": "/catalog/products" },
+    { "method": "GET", "path": "/catalog/products/{productId}" },
+    { "method": "POST", "path": "/delivery/quote" }
+  ],
+  "DEFERRED": [
+    {
+      "method": "POST",
+      "path": "/carts/{cartId}/validate",
+      "IMPLEMENTATION_STATUS": "DEFERRED_AUTH_CART_LAYER",
+      "reason": [
+        "requires customerBearer",
+        "requires a persisted cart",
+        "requires a persisted address",
+        "depends on future authentication and cart layers"
+      ]
+    }
+  ],
+  "deferredCapabilities": [
+    "authentication",
+    "cart creation and mutation",
+    "orders",
+    "payments",
+    "Admin",
+    "tracking",
+    "webhooks",
+    "production"
+  ],
+  "prohibitedParallelRoutes": [
+    { "method": "GET", "path": "/catalog" },
+    { "method": "GET", "path": "/products/{id}" },
+    { "method": "POST", "path": "/checkout/validate" }
+  ],
+  "controls": {
+    "apiImplementationAuthorized": false,
+    "serviceLayerAuthorized": false,
+    "authenticationAuthorized": false,
+    "cartLayerAuthorized": false,
+    "paymentAuthorized": false,
+    "productionAuthorized": false,
+    "mergeAuthorized": false,
+    "prDraftRequired": true
+  }
+}

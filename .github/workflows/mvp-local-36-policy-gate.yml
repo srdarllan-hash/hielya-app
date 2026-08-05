@@ -1,0 +1,104 @@
+name: MVP Local 36 Policy Gate
+
+on:
+  push:
+    branches:
+      - hielya/mvp-local-36-implementation
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mvp-local-36-policy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  policy-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact pushed commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Verify pushed source and frozen ancestry
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+          git cat-file -e 6d4773403fad4788b11ef6a7277f77171caf0c0a^{commit}
+          git merge-base --is-ancestor 6d4773403fad4788b11ef6a7277f77171caf0c0a HEAD
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
+      - name: Type-check
+        run: pnpm type-check
+      - name: Unit tests
+        run: pnpm test
+      - name: Build
+        run: pnpm build
+
+  c001-regression:
+    uses: ./.github/workflows/reusable-screen-gate.yml
+    with:
+      sourceSha: ${{ github.sha }}
+      screenId: C-001
+      route: /splash
+      states: '["initial","loading","transition","offline","error","timeout","maintenance","ready-location","ready-home","reduced-motion"]'
+      baseSha: c2857afe538b2cf5ba44635edd56dbd422c0e2f0
+      protectedPaths: '["packages/ui/src/screens/splash/","tests/unit/splash","tests/accessibility/splash","tests/functional/splash","tests/visual/splash","manifests/C-001"]'
+      testSuites: '["unit","axe","functional","console","visual","responsive"]'
+      requiredViewports: '["360x800","390x844","1170x2532"]'
+      manifestPath: manifests/C-001.json
+      baselineMode: GATE_VALIDATION
+
+  c002-regression:
+    uses: ./.github/workflows/reusable-screen-gate.yml
+    with:
+      sourceSha: ${{ github.sha }}
+      screenId: C-002
+      route: /location
+      states: '["idle","requesting_permission","locating","reverse_geocoding","manual_entry","validating_manual_address","resolved","checking_service_area","permission_denied","location_unavailable","timeout","offline","network_error","invalid_address","out_of_area","retrying","success","reduced_motion","long_address","hotel","condominium"]'
+      baseSha: c2857afe538b2cf5ba44635edd56dbd422c0e2f0
+      protectedPaths: '["packages/ui/src/screens/home/","packages/ui/src/screens/splash/","tests/unit/home","tests/unit/splash","tests/accessibility/home","tests/accessibility/splash","tests/functional/home","tests/functional/splash","tests/visual/home","tests/visual/splash","manifests/C-005","manifests/C-001"]'
+      testSuites: '["unit","coverage","axe","functional","console","visual","responsive","scope","manifest"]'
+      requiredViewports: '["360x800","390x844","1170x2532"]'
+      manifestPath: manifests/C-002.json
+      baselineMode: GATE_VALIDATION
+
+  c005-regression:
+    uses: ./.github/workflows/reusable-screen-gate.yml
+    with:
+      sourceSha: ${{ github.sha }}
+      screenId: C-005
+      route: /
+      states: '["ready","loading","closed","high-demand","error","empty-cart","alcohol-cutoff","out-of-area"]'
+      baseSha: c2857afe538b2cf5ba44635edd56dbd422c0e2f0
+      protectedPaths: '["packages/ui/src/screens/home/","tests/unit/home","tests/accessibility/home","tests/functional/home","tests/visual/home","manifests/C-005"]'
+      testSuites: '["unit","axe","functional","console","visual","responsive"]'
+      requiredViewports: '["360x800","390x844","1170x2532"]'
+      manifestPath: manifests/C-005.json
+      baselineMode: GATE_VALIDATION
+
+  policy-gate-summary:
+    needs: [policy-validation, c001-regression, c002-regression, c005-regression]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record policy-gate outcome
+        run: |
+          echo "MVP_LOCAL_36_POLICY_VALIDATED=true"
+          echo "C001_REGRESSION=true"
+          echo "C002_REGRESSION=true"
+          echo "C005_REGRESSION=true"
+          echo "PR_DRAFT_REQUIRED=true"
+          echo "MERGE_AUTHORIZED=false"
+          echo "MAIN_CHANGE_AUTHORIZED=false"
+          echo "SECOND_LAYER_AUTHORIZED=false"

@@ -37,6 +37,10 @@ jobs:
           cache: pnpm
       - name: Install frozen dependencies
         run: pnpm install --frozen-lockfile
+      - name: Validate MVP Local 36 OpenAPI contract
+        run: |
+          pnpm --package=@redocly/cli@2.44.1 dlx redocly lint contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_1.yaml
+          node scripts/validate-mvp-local-36-openapi.mjs
       - name: Validate persistence schema
         run: node scripts/validate-mvp-persistence-schema.mjs
       - name: Validate development migrations
@@ -108,3 +112,9 @@ jobs:
           echo "MERGE_AUTHORIZED=false"
           echo "MAIN_CHANGE_AUTHORIZED=false"
           echo "SECOND_LAYER_AUTHORIZED=false"
+          echo "MVP_LOCAL_36_OPENAPI_V1_1_VALIDATED=true"
+          echo "API_IMPLEMENTATION_STARTED=false"
+          echo "SERVICE_LAYER_STARTED=false"
+          echo "AUTH_STARTED=false"
+          echo "CART_LAYER_STARTED=false"
+          echo "PAYMENT_STARTED=false"

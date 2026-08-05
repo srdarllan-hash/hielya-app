@@ -13,6 +13,7 @@ export interface PackCardProps {
   unavailable?: boolean;
   disabled?: boolean;
   loading?: boolean;
+  onOpen?: (packId: string) => void;
   onAdd?: (packId: string) => void;
 }
 
@@ -26,11 +27,21 @@ export function PackCard({
   unavailable = false,
   disabled = false,
   loading = false,
+  onOpen,
   onAdd,
 }: PackCardProps) {
   const blocked = unavailable || disabled || loading || !onAdd;
   return (
     <article className={`hly-pack-card${blocked ? ' is-disabled' : ''}`} aria-busy={loading || undefined}>
+      {onOpen ? (
+        <button
+          type="button"
+          className="hly-pack-card__details"
+          aria-label={`Ver detalles de ${name}`}
+          disabled={loading}
+          onClick={() => onOpen(packId)}
+        />
+      ) : null}
       {image ? <img src={image} alt="" /> : <span aria-hidden="true">{name.slice(0, 1)}</span>}
       <div className="hly-pack-card__copy">
         <h3>{name}</h3>
@@ -39,6 +50,7 @@ export function PackCard({
       </div>
       <button
         type="button"
+        className="hly-pack-card__add"
         aria-label={blocked ? `${name} no disponible` : `Añadir ${name} al carrito`}
         disabled={blocked}
         onClick={() => onAdd?.(packId)}

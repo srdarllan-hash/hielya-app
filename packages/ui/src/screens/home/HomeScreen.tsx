@@ -42,6 +42,7 @@ export interface HomeScreenProps {
   onClearCatalogFilters?: () => void;
   onSearch?: (query: string) => void;
   onSelectCategory?: (categoryId: string) => void;
+  onOpenProduct?: (productId: string) => void;
 }
 
 const notices: Partial<Record<HomeState, { tone: 'neutral' | 'success' | 'warning' | 'danger' | 'info'; text: string }>> = {
@@ -78,6 +79,7 @@ export function HomeScreen({
   onClearCatalogFilters,
   onSearch,
   onSelectCategory,
+  onOpenProduct,
 }: HomeScreenProps) {
   const blocked = state === 'closed' || state === 'out-of-area';
   const filteredEmpty = catalogState === 'HOME_CATALOG_READY'
@@ -186,6 +188,7 @@ export function HomeScreen({
                       unavailable={unavailable}
                       statusLabel={status}
                       statusTone={unavailable ? 'warning' : 'info'}
+                      onOpen={onOpenProduct}
                       onAdd={(productId) => emitHielyaUiAction('add-product', productId)}
                     />
                   );
@@ -217,6 +220,7 @@ export function HomeScreen({
                       image={pack.image}
                       unavailable={pack.availability !== 'AVAILABLE'}
                       disabled={blocked}
+                      onOpen={onOpenProduct}
                       onAdd={(packId) => emitHielyaUiAction('add-pack', packId)}
                     />
                   );

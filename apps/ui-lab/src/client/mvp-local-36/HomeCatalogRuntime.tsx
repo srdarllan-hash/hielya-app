@@ -62,6 +62,7 @@ export interface HomeCatalogRuntimeMachine {
 export interface HomeCatalogRuntimeProps {
   client?: MvpCatalogClient;
   requestTimeoutMs?: number;
+  onOpenProduct?: (productId: string) => void;
 }
 
 const hasActiveCriteria = (criteria: CatalogCriteria): boolean => Boolean(
@@ -268,6 +269,7 @@ export const createHomeCatalogRuntimeMachine = (
 export function HomeCatalogRuntime({
   client: injectedClient,
   requestTimeoutMs,
+  onOpenProduct,
 }: HomeCatalogRuntimeProps) {
   const client = useMemo(
     () => injectedClient ?? createMvpCatalogClient(),
@@ -288,6 +290,14 @@ export function HomeCatalogRuntime({
     };
   }, [machine]);
 
+  const openProduct = (productId: string) => {
+    if (onOpenProduct) {
+      onOpenProduct(productId);
+      return;
+    }
+    globalThis.location.assign(`/products/${encodeURIComponent(productId)}`);
+  };
+
   return (
     <HomeScreen
       catalogState={snapshot.catalogState}
@@ -301,6 +311,7 @@ export function HomeCatalogRuntime({
       onClearCatalogFilters={() => void machine.clearFilters()}
       onSearch={(value) => void machine.search(value)}
       onSelectCategory={(categoryId) => void machine.selectCategory(categoryId)}
+      onOpenProduct={openProduct}
     />
   );
 }

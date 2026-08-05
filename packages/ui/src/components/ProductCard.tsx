@@ -16,6 +16,7 @@ export interface ProductCardProps {
   statusTone?: StatusTone;
   disabled?: boolean;
   loading?: boolean;
+  onOpen?: (productId: string) => void;
   onAdd?: (productId: string) => void;
 }
 
@@ -31,11 +32,21 @@ export function ProductCard({
   statusTone = 'neutral',
   disabled = false,
   loading = false,
+  onOpen,
   onAdd,
 }: ProductCardProps) {
   const blocked = unavailable || disabled || loading || !onAdd;
   return (
     <article className={`hly-product-card${blocked ? ' is-disabled' : ''}`} aria-busy={loading || undefined}>
+      {onOpen ? (
+        <button
+          type="button"
+          className="hly-product-card__details"
+          aria-label={`Ver detalles de ${name}`}
+          disabled={loading}
+          onClick={() => onOpen(productId)}
+        />
+      ) : null}
       <div className="hly-product-card__image">
         {image ? <img src={image} alt={[name, size].filter(Boolean).join(' ')} /> : <span aria-hidden="true">{name.slice(0, 1)}</span>}
       </div>

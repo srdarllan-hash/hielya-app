@@ -1,0 +1,64 @@
+{
+  "screenId": "PRODUCT-DETAIL-PUBLIC-API-INTEGRATION",
+  "name": "Product Detail Public API Integration",
+  "version": "1.0.0",
+  "status": "GATE_CANDIDATE",
+  "parentScreenId": "C-005-HOME-CATALOG-API-INTEGRATION",
+  "parentFrozenSha": "274d72db6babbf2605d7fecc9946adb28fbd6593",
+  "parentManifest": "manifests/C-005-HOME-CATALOG-API-INTEGRATION-V1.json",
+  "route": "/products/{productId}",
+  "runtimeDataSource": "HTTP_PUBLIC_API",
+  "endpoints": [
+    "GET /api/v1/catalog/products/{productId}"
+  ],
+  "states": [
+    "PRODUCT_DETAIL_LOADING",
+    "PRODUCT_DETAIL_READY",
+    "PRODUCT_DETAIL_NOT_FOUND",
+    "PRODUCT_DETAIL_ERROR"
+  ],
+  "viewports": [
+    {
+      "css": "360x800",
+      "physical": "360x800"
+    },
+    {
+      "css": "390x844",
+      "physical": "390x844"
+    },
+    {
+      "css": "390x844",
+      "deviceScaleFactor": 3,
+      "physical": "1170x2532"
+    }
+  ],
+  "baselineNamespace": "PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1",
+  "baselinePath": "tests/visual/product-detail-api-integration.visual.spec.ts-snapshots",
+  "baselineReviewManifest": "manifests/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-BASELINE-REVIEW.json",
+  "artifactValidationScript": "scripts/validate-product-detail-api-integration-baseline-artifact.mjs",
+  "evidencePath": "qa/screen-gates/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1",
+  "baselineMode": "GATE_VALIDATION",
+  "canonicalProductDetailResult": "NOT_FOUND",
+  "canonicalCatalogEmpty": true,
+  "commercialSkusActivated": 0,
+  "persistenceMutations": 0,
+  "syntheticRuntimeFallback": false,
+  "syntheticFixturePolicy": "PLAYWRIGHT_NETWORK_INTERCEPTION_ONLY_NON_HYA_SKUS",
+  "homeNavigationToDetail": true,
+  "parallelVisualRoutesProhibited": [
+    "/product/{id}",
+    "/catalog/product/{id}",
+    "/item/{id}"
+  ],
+  "frozenContracts": [
+    "contracts/openapi/HIELYA_OPENAPI_V1_0.yaml",
+    "contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_1.yaml",
+    "packages/application",
+    "packages/persistence",
+    "manifests/C-001.json",
+    "manifests/C-002.json",
+    "manifests/C-005.json",
+    "manifests/C-005-HOME-CATALOG-API-INTEGRATION-V1.json",
+    "tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots"
+  ]
+}

@@ -51,6 +51,15 @@ export interface MvpCatalogClient {
   ): Promise<CatalogResponse<PublicProductPageDto>>;
 }
 
+export interface MvpProductDetailClient {
+  getProduct(
+    productId: string,
+    options?: CatalogRequestOptions,
+  ): Promise<CatalogResponse<PublicProductDto>>;
+}
+
+export type MvpPublicCatalogClient = MvpCatalogClient & MvpProductDetailClient;
+
 export interface CreateMvpCatalogClientOptions {
   fetch?: FetchImplementation;
   defaultTimeoutMs?: number;
@@ -235,6 +244,10 @@ const parseProductPage = (value: unknown): PublicProductPageDto | undefined => {
   };
 };
 
+const parseProduct = (value: unknown): PublicProductDto | undefined => (
+  isPublicProduct(value) ? value : undefined
+);
+
 const parsePublicError = (value: unknown): PublicErrorDto | undefined => {
   if (!isRecord(value) || !hasOnlyKeys(value, [
     'code',
@@ -295,13 +308,20 @@ const productsUrl = (query: CatalogProductsQuery): string => {
   return queryString ? `${PRODUCTS_ENDPOINT}?${queryString}` : PRODUCTS_ENDPOINT;
 };
 
+const productUrl = (productId: string): string => {
+  if (!isUuid(productId)) {
+    throw new CatalogClientError('INVALID_PAYLOAD', 'The product identifier is invalid.');
+  }
+  return `${PRODUCTS_ENDPOINT}/${productId}`;
+};
+
 const requestHeaders = (correlationId: string | undefined): HeadersInit => (
   correlationId ? { 'x-correlation-id': correlationId } : {}
 );
 
 export const createMvpCatalogClient = (
   options: CreateMvpCatalogClientOptions = {},
-): MvpCatalogClient => {
+): MvpPublicCatalogClient => {
   const fetchImplementation = options.fetch ?? globalThis.fetch;
   const defaultTimeoutMs = positiveTimeout(options.defaultTimeoutMs, DEFAULT_TIMEOUT_MS);
 
@@ -377,6 +397,17 @@ export const createMvpCatalogClient = (
     },
     listProducts(query = {}, requestOptions = {}) {
       return get(productsUrl(query), parseProductPage, requestOptions);
+    },
+    async getProduct(productId, requestOptions = {}) {
+      const response = await get(productUrl(productId), parseProduct, requestOptions);
+      if (response.data.id !== productId) {
+        throw new CatalogClientError(
+          'INVALID_PAYLOAD',
+          'The catalog response is invalid.',
+          { correlationId: response.correlationId },
+        );
+      }
+      return response;
     },
   };
 };

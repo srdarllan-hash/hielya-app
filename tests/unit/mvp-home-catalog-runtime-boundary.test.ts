@@ -29,10 +29,12 @@ describe('Home catalog runtime boundary', () => {
     expect(operationalSource).not.toContain('HYA-');
   });
 
-  it('limits HTTP consumption to category and product collection endpoints', () => {
+  it('limits the Home runtime to category and product collection operations', () => {
     expect(clientSource).toContain("'/api/v1/catalog/categories'");
     expect(clientSource).toContain("'/api/v1/catalog/products'");
-    expect(clientSource).not.toMatch(/catalog\/products\/\$\{|delivery\/quote/);
+    expect(runtimeSource).toContain('client.listCategories');
+    expect(runtimeSource).toContain('client.listProducts');
+    expect(runtimeSource).not.toMatch(/client\.getProduct|delivery\/quote/);
   });
 
   it('uses explicit DTO-to-view mapping without spreading HTTP DTO objects', () => {

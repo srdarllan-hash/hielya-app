@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 type Statement = { run: (...args: unknown[]) => unknown; get: <T>(...args: unknown[]) => T | undefined; all: <T>(...args: unknown[]) => T[] };
@@ -31,7 +32,10 @@ export const INITIAL_SEED: readonly SeedProduct[] = [
   ...allBaselineSkus.map((sku) => ({ sku, category: categoryFor(sku), status: (SELECTED_EXISTING_SKUS as readonly string[]).includes(sku) ? 'PAUSED' as const : 'DEFERRED_AFTER_MVP' as const })),
   ...Object.keys(BUNDLE_COMPONENTS).map((sku) => ({ sku, category: sku === 'HYA-CMB-005' || sku === 'HYA-CMB-006' ? 'Destilados' : 'Cervejas', status: 'PAUSED' as const, kind: 'COMPOSITE' as const })),
 ];
-const migrationPath = fileURLToPath(new URL('../../../.dev-migrations/0001_mvp_local_36_persistence.sql', import.meta.url));
+export const resolveDevelopmentMigrationPath = (moduleUrl: string): string => moduleUrl.startsWith('file:')
+  ? fileURLToPath(new URL('../../../.dev-migrations/0001_mvp_local_36_persistence.sql', moduleUrl))
+  : resolve(process.cwd(), '.dev-migrations/0001_mvp_local_36_persistence.sql');
+const migrationPath = resolveDevelopmentMigrationPath(import.meta.url);
 const migrationSql = () => readFileSync(migrationPath, 'utf8');
 const row = <T>(db: SqliteDatabase, sql: string, ...args: unknown[]) => db.prepare(sql).get<T>(...args);
 const rows = <T>(db: SqliteDatabase, sql: string, ...args: unknown[]) => db.prepare(sql).all<T>(...args);

@@ -1,34 +1,14 @@
-import { mkdirSync, rmSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { resolve } from 'node:path';
 
-import { MvpPersistenceDatabase } from '../../packages/persistence/src/index';
-
-const databasePath = resolve('.tmp/home-catalog-api-integration/catalog.sqlite');
+const viteNode = resolve('node_modules/.bin/vite-node');
+const databaseHarness = resolve(
+  'tests/integration/home-catalog-api-integration.database.ts',
+);
 
 export default function globalSetup() {
-  rmSync(dirname(databasePath), { recursive: true, force: true });
-  mkdirSync(dirname(databasePath), { recursive: true });
-
-  const persistence = new MvpPersistenceDatabase(databasePath);
-  persistence.migrate();
-  persistence.seed({
-    minimumProductSubtotalCents: 2500,
-    deliveryBaseFeeCents: 200,
-    deliveryFeePerKmCents: 60,
-    maximumRoadDistanceKm: 4,
-    maximumPinAttempts: 3,
-    tipsEnabled: true,
+  execFileSync(viteNode, [databaseHarness, 'setup'], {
+    env: { ...process.env, NODE_ENV: 'test' },
+    stdio: 'inherit',
   });
-
-  const active = persistence.db
-    .prepare('SELECT SUM(commercially_active) AS total FROM products')
-    .get() as { total: number };
-  const visible = persistence.db
-    .prepare('SELECT SUM(public_visible) AS total FROM product_commercial_data')
-    .get() as { total: number };
-  persistence.close();
-
-  if (active.total !== 0 || visible.total !== 0) {
-    throw new Error('The canonical integration database must remain commercially empty');
-  }
 }

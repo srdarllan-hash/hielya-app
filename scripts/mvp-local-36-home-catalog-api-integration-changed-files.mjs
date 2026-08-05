@@ -27,6 +27,7 @@ export const HOME_CATALOG_API_INTEGRATION_CHANGED_FILES = [
   'scripts/validate-mvp-local-36-home-catalog-api-integration.mjs',
   'tests/accessibility/home-catalog-api-integration.a11y.spec.ts',
   'tests/functional/home-catalog-api-integration.functional.spec.ts',
+  'tests/integration/home-catalog-api-integration.database.ts',
   'tests/integration/home-catalog-api-integration.fixtures.ts',
   'tests/integration/home-catalog-api-integration.global-setup.ts',
   'tests/integration/home-catalog-api-integration.global-teardown.ts',

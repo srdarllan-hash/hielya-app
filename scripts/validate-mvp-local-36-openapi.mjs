@@ -50,6 +50,17 @@ const ALLOWED_CHANGED_FILES = new Set([
   'docs/decisions/ADR-MVP-LOCAL-36-COMPOSITE-COMMERCIAL-DATA.md',
   'scripts/validate-mvp-local-36-composite-commercial-data.mjs',
   'tests/unit/mvp-local-36-composite-commercial-data.test.ts',
+  '.dev-migrations/0002_mvp_local_36_catalog_read_model.sql',
+  'contracts/catalog/HIELYA_MVP_LOCAL_36_UNIT_COMMERCIAL_DATA_V1_1.json',
+  'docs/architecture/MVP_LOCAL_36_API_HOST_PROFILE.json',
+  'docs/decisions/ADR-MVP-LOCAL-36-API-HOST-ARCHITECTURE.md',
+  'packages/persistence/src/catalog-data.ts',
+  'packages/persistence/src/index.ts',
+  'scripts/validate-mvp-local-36-catalog-read-model.mjs',
+  'scripts/validate-mvp-persistence-schema.mjs',
+  'tests/unit/mvp-catalog-read-model.test.ts',
+  'tests/unit/mvp-local-36-api-host-architecture.test.ts',
+  'tests/unit/mvp-persistence.test.ts',
 ]);
 const HTTP_METHODS = new Set(['get', 'post', 'put', 'patch', 'delete', 'options', 'head', 'trace']);
 

@@ -1,0 +1,10 @@
+{
+  "architecture": "MODULAR_TYPESCRIPT_MONOLITH",
+  "runtime": "NEXTJS",
+  "host": "apps/ui-lab",
+  "basePath": "/api/v1",
+  "routeHandlersAuthorized": false,
+  "secondRuntimeAuthorized": false,
+  "microservicesAuthorized": false,
+  "productionAuthorized": false
+}

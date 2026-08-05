@@ -1,5 +1,16 @@
+import { createHash } from 'node:crypto';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
-import { BUNDLE_COMPONENTS, INITIAL_SEED, MvpPersistenceDatabase, resolveDevelopmentMigrationPath } from '../../packages/persistence/src/index';
+import {
+  BUNDLE_COMPONENTS,
+  DEVELOPMENT_MIGRATIONS,
+  INITIAL_SEED,
+  MvpPersistenceDatabase,
+  resolveDevelopmentMigrationPath,
+} from '../../packages/persistence/src/index';
 
 const settings = { minimumProductSubtotalCents: 2500, deliveryBaseFeeCents: 200, deliveryFeePerKmCents: 60, maximumRoadDistanceKm: 4, maximumPinAttempts: 3, tipsEnabled: true };
 const createDb = () => { const persistence = new MvpPersistenceDatabase(); persistence.migrate(); persistence.seed(settings); return persistence; };
@@ -7,6 +18,10 @@ const createDb = () => { const persistence = new MvpPersistenceDatabase(); persi
 describe('MVP Local 36 persistence contracts', () => {
   it('resolves the development migration without requiring a file URL', () => {
     expect(resolveDevelopmentMigrationPath('http://vitest.invalid/module.ts')).toMatch(/\.dev-migrations\/0001_mvp_local_36_persistence\.sql$/);
+    expect(resolveDevelopmentMigrationPath(
+      'http://vitest.invalid/module.ts',
+      DEVELOPMENT_MIGRATIONS[1],
+    )).toMatch(/\.dev-migrations\/0002_mvp_local_36_catalog_read_model\.sql$/);
   });
 
   it('seeds 30 selected original SKUs, six composites and preserves 30 deferred baseline SKUs', () => {
@@ -63,8 +78,97 @@ describe('MVP Local 36 persistence contracts', () => {
     persistence.close();
   });
 
-  it('applies the migration to an empty database and preserves an existing development table', () => {
-    const empty = new MvpPersistenceDatabase(); empty.migrate(); expect(empty.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='products'").get()).toBeTruthy(); empty.close();
-    const existing = new MvpPersistenceDatabase(); existing.db.exec('CREATE TABLE legacy_development_data (id INTEGER PRIMARY KEY, note TEXT)'); existing.db.prepare('INSERT INTO legacy_development_data (note) VALUES (?)').run('preserve'); existing.migrate(); expect(existing.db.prepare('SELECT note FROM legacy_development_data').get<{ note:string }>()?.note).toBe('preserve'); existing.close();
+  it('applies ordered checksummed migrations to an empty database exactly once', () => {
+    const persistence = new MvpPersistenceDatabase();
+    persistence.migrate();
+
+    const tables = persistence.db.prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name",
+    ).all<{ name: string }>().map(({ name }) => name);
+    expect(tables).toEqual(expect.arrayContaining([
+      'categories',
+      'products',
+      'category_commercial_data',
+      'product_commercial_data',
+      'development_schema_migrations',
+    ]));
+
+    const expectedMigrations = DEVELOPMENT_MIGRATIONS.map((version) => ({
+      version,
+      sha256: createHash('sha256')
+        .update(readFileSync(join(process.cwd(), '.dev-migrations', version)))
+        .digest('hex'),
+    }));
+    const firstLedger = persistence.db.prepare(
+      'SELECT version,sha256 FROM development_schema_migrations ORDER BY version',
+    ).all<{ version: string; sha256: string }>();
+    expect(firstLedger).toEqual(expectedMigrations);
+
+    persistence.migrate();
+    const secondLedger = persistence.db.prepare(
+      'SELECT version,sha256 FROM development_schema_migrations ORDER BY version',
+    ).all<{ version: string; sha256: string }>();
+    expect(secondLedger).toEqual(firstLedger);
+    expect(persistence.db.prepare('PRAGMA foreign_keys').get<{ foreign_keys: number }>()?.foreign_keys).toBe(1);
+    expect(persistence.db.prepare('PRAGMA foreign_key_check').all()).toEqual([]);
+    persistence.close();
+  });
+
+  it('preserves an existing development database while applying the additive read model', () => {
+    const persistence = new MvpPersistenceDatabase();
+    persistence.db.exec(readFileSync(
+      join(process.cwd(), '.dev-migrations', DEVELOPMENT_MIGRATIONS[0]),
+      'utf8',
+    ));
+    persistence.db.prepare(
+      'INSERT INTO categories (slug,name_es,sort_order) VALUES (?,?,?)',
+    ).run('Legacy', 'Legacy', 99);
+    persistence.db.prepare(`
+      INSERT INTO products (sku,category_slug,kind,mvp_status)
+      VALUES (?,?,?,?)
+    `).run('HYA-LEG-001', 'Legacy', 'UNIT', 'DEFERRED_AFTER_MVP');
+    persistence.db.exec('CREATE TABLE legacy_development_data (id INTEGER PRIMARY KEY, note TEXT)');
+    persistence.db.prepare('INSERT INTO legacy_development_data (note) VALUES (?)').run('preserve');
+
+    persistence.migrate();
+
+    expect(persistence.db.prepare(
+      'SELECT note FROM legacy_development_data',
+    ).get<{ note: string }>()?.note).toBe('preserve');
+    expect(persistence.db.prepare(
+      'SELECT category_slug FROM products WHERE sku = ?',
+    ).get<{ category_slug: string }>('HYA-LEG-001')?.category_slug).toBe('Legacy');
+    expect(persistence.db.prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='product_commercial_data'",
+    ).get()).toBeTruthy();
+    expect(persistence.db.prepare('PRAGMA foreign_key_check').all()).toEqual([]);
+    persistence.close();
+  });
+
+  it('rejects a modified migration whose recorded checksum no longer matches', () => {
+    const directory = mkdtempSync(join(tmpdir(), 'hielya-migrations-'));
+    try {
+      mkdirSync(directory, { recursive: true });
+      for (const filename of DEVELOPMENT_MIGRATIONS) {
+        writeFileSync(
+          join(directory, filename),
+          readFileSync(join(process.cwd(), '.dev-migrations', filename)),
+        );
+      }
+      const persistence = new MvpPersistenceDatabase(':memory:', directory);
+      persistence.migrate();
+      writeFileSync(
+        join(directory, DEVELOPMENT_MIGRATIONS[1]),
+        `${readFileSync(join(directory, DEVELOPMENT_MIGRATIONS[1]), 'utf8')}\n-- forbidden rewrite\n`,
+      );
+
+      expect(() => persistence.migrate()).toThrow(
+        `development migration checksum mismatch: ${DEVELOPMENT_MIGRATIONS[1]}`,
+      );
+      expect(persistence.db.prepare('PRAGMA foreign_key_check').all()).toEqual([]);
+      persistence.close();
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 });

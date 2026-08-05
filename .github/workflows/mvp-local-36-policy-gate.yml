@@ -49,14 +49,15 @@ jobs:
         run: |
           node scripts/validate-mvp-local-36-catalog-read-model.mjs
           pnpm exec vitest run tests/unit/mvp-catalog-read-model.test.ts tests/unit/mvp-local-36-api-host-architecture.test.ts
-      - name: Validate Public Service API scope, architecture, contracts and read-only behavior
+      - name: Validate Public Service API hardening, final freeze and OpenAPI response conformance
         run: |
           node scripts/validate-mvp-local-36-public-service-api.mjs
           pnpm exec vitest run \
             tests/unit/mvp-public-application.test.ts \
             tests/unit/mvp-public-api-adapters.test.ts \
             tests/unit/mvp-public-api-handlers.test.ts \
-            tests/unit/mvp-public-api-integration.test.ts
+            tests/unit/mvp-public-api-integration.test.ts \
+            tests/unit/mvp-public-api-openapi-conformance.test.ts
       - name: Validate persistence schema
         run: node scripts/validate-mvp-persistence-schema.mjs
       - name: Validate development migrations
@@ -157,7 +158,28 @@ jobs:
           echo "ROUTE_HANDLER_COUNT=4"
           echo "PUBLIC_ENDPOINTS_IMPLEMENTED=true"
           echo "PUBLIC_ENDPOINT_COUNT=4"
+          echo "PUBLIC_ENDPOINTS_CHANGED=false"
           echo "PUBLIC_API_READ_ONLY=true"
+          echo "PUBLIC_SERVICE_API_FINAL_HARDENING_VALIDATED=true"
+          echo "PUBLIC_SERVICE_API_FINAL_FREEZE=true"
+          echo "PUBLIC_ADAPTER_EXPLICIT_MAPPING=true"
+          echo "PUBLIC_PRODUCT_WHITELIST=true"
+          echo "PUBLIC_COMPONENT_WHITELIST=true"
+          echo "OBJECT_SPREAD_IN_PUBLIC_MAPPING=false"
+          echo "OPENAPI_RESPONSE_CONFORMANCE=true"
+          echo "ADDITIONAL_PROPERTIES_BLOCKED=true"
+          echo "OPENAPI_V1_0_MODIFIED=false"
+          echo "OPENAPI_V1_1_MODIFIED=false"
+          echo "PERSISTENCE_SCHEMA_CHANGED=false"
+          echo "MIGRATION_CREATED=false"
+          echo "CANONICAL_DATA_CHANGED=false"
+          echo "PUBLIC_NUMERIC_STOCK_FIELDS=0"
+          echo "INTERNAL_FIELDS_EXPOSED=0"
+          echo "FOUNDATION_FUNCTIONAL_SCOPE_CLOSED=true"
+          echo "NEXT_IMPLEMENTATION_REQUIRES_CHILD_BRANCH=true"
+          echo "FREEZE_ADR=docs/decisions/ADR-MVP-LOCAL-36-PUBLIC-SERVICE-API-FINAL-FREEZE.md"
+          echo "HOME_CHANGED=false"
+          echo "C002_CHANGED=false"
           echo "REAL_MAP_PROVIDER=false"
           echo "INVENTORY_MUTATIONS=0"
           echo "CART_VALIDATION_STATUS=DEFERRED_AUTH_CART_LAYER"

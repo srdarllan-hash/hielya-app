@@ -80,6 +80,8 @@ const ALLOWED_CHANGED_FILES = new Set([
   'tests/unit/mvp-public-api-handlers.test.ts',
   'tests/unit/mvp-public-api-integration.test.ts',
   'tests/unit/mvp-public-application.test.ts',
+  'docs/decisions/ADR-MVP-LOCAL-36-PUBLIC-SERVICE-API-FINAL-FREEZE.md',
+  'tests/unit/mvp-public-api-openapi-conformance.test.ts',
 ]);
 const HTTP_METHODS = new Set(['get', 'post', 'put', 'patch', 'delete', 'options', 'head', 'trace']);
 

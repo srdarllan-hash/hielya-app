@@ -31,8 +31,24 @@ export class MvpCatalogReadAdapter implements CatalogQueryPort {
 
   listPublicProducts() {
     return this.source.listPubliclyEligibleProducts().map((product) => ({
-      ...product,
-      bundleComponents: product.bundleComponents.map((component) => ({ ...component })),
+      id: product.id,
+      sku: product.sku,
+      name: product.name,
+      categoryId: product.categoryId,
+      salePriceCents: product.salePriceCents,
+      currency: product.currency,
+      availability: product.availability,
+      isPack: product.isPack,
+      iceIncluded: product.iceIncluded,
+      maxPerOrder: product.maxPerOrder,
+      containsAlcohol: product.containsAlcohol,
+      minimumAge: product.minimumAge,
+      bundleComponents: product.bundleComponents.map((component) => ({
+        productId: component.productId,
+        sku: component.sku,
+        name: component.name,
+        quantity: component.quantity,
+      })),
     }));
   }
 

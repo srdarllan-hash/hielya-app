@@ -10,6 +10,7 @@ import { pathToFileURL } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 
 export const CERTIFIED_BASE_SHA = 'f1a533a3e4bcf76ea5634979536e58445432bb11';
+export const HARDENING_BASE_SHA = 'fb35d2fd3e9cd4eb64be0c1196e22cc2d55003e6';
 export const OPENAPI_V1_0_PATH = 'contracts/openapi/HIELYA_OPENAPI_V1_0.yaml';
 export const OPENAPI_V1_0_SHA256 = 'a2c027c6294b44c94cf4be21d18fbd251b0323102e3c9ba2cba912a96d810ae9';
 export const OPENAPI_V1_1_PATH = 'contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_1.yaml';
@@ -17,6 +18,9 @@ export const OPENAPI_V1_1_SHA256 = '92e1ebcc1d817718a7f2fe9ef1ce93df60194e049d3e
 export const IMPLEMENTATION_PROFILE_PATH = 'contracts/openapi/MVP_LOCAL_36_IMPLEMENTATION_PROFILE.json';
 export const ARCHITECTURE_PROFILE_PATH = 'docs/architecture/MVP_LOCAL_36_API_HOST_PROFILE.json';
 export const PUBLIC_API_ADR_PATH = 'docs/decisions/ADR-MVP-LOCAL-36-PUBLIC-SERVICE-API-LAYER.md';
+export const FINAL_FREEZE_ADR_PATH = 'docs/decisions/ADR-MVP-LOCAL-36-PUBLIC-SERVICE-API-FINAL-FREEZE.md';
+export const PUBLIC_API_ADAPTER_PATH = 'packages/persistence/src/public-api-read-adapter.ts';
+export const OPENAPI_CONFORMANCE_TEST_PATH = 'tests/unit/mvp-public-api-openapi-conformance.test.ts';
 
 export const AUTHORIZED_ROUTE_HANDLERS = [
   {
@@ -54,6 +58,7 @@ export const GATE_CHANGED_FILES = [
   IMPLEMENTATION_PROFILE_PATH,
   ARCHITECTURE_PROFILE_PATH,
   PUBLIC_API_ADR_PATH,
+  FINAL_FREEZE_ADR_PATH,
   'packages/application/package.json',
   'packages/application/src/index.ts',
   'packages/persistence/package.json',
@@ -69,6 +74,7 @@ export const GATE_CHANGED_FILES = [
   'tests/unit/mvp-public-api-handlers.test.ts',
   'tests/unit/mvp-public-api-integration.test.ts',
   'tests/unit/mvp-public-application.test.ts',
+  OPENAPI_CONFORMANCE_TEST_PATH,
 ];
 
 const ALLOWED_CHANGED_FILES = new Set(GATE_CHANGED_FILES);
@@ -78,6 +84,28 @@ const REQUIRED_TEST_FILES = [
   'tests/unit/mvp-public-api-adapters.test.ts',
   'tests/unit/mvp-public-api-handlers.test.ts',
   'tests/unit/mvp-public-api-integration.test.ts',
+  OPENAPI_CONFORMANCE_TEST_PATH,
+];
+
+const HARDENING_CHANGED_FILES = new Set([
+  '.github/workflows/mvp-local-36-policy-gate.yml',
+  FINAL_FREEZE_ADR_PATH,
+  PUBLIC_API_ADAPTER_PATH,
+  'scripts/validate-mvp-local-36-catalog-read-model.mjs',
+  'scripts/validate-mvp-local-36-composite-commercial-data.mjs',
+  'scripts/validate-mvp-local-36-openapi.mjs',
+  'scripts/validate-mvp-local-36-public-service-api.mjs',
+  'tests/unit/mvp-public-api-adapters.test.ts',
+  OPENAPI_CONFORMANCE_TEST_PATH,
+]);
+
+const REQUIRED_HARDENING_CHANGES = [
+  '.github/workflows/mvp-local-36-policy-gate.yml',
+  FINAL_FREEZE_ADR_PATH,
+  PUBLIC_API_ADAPTER_PATH,
+  'scripts/validate-mvp-local-36-public-service-api.mjs',
+  'tests/unit/mvp-public-api-adapters.test.ts',
+  OPENAPI_CONFORMANCE_TEST_PATH,
 ];
 
 const assert = (condition, message) => {
@@ -181,6 +209,61 @@ const validateAdr = () => {
   for (const route of AUTHORIZED_ROUTE_HANDLERS) evidence.push(route.path, route.file);
   evidence.forEach((value) => assert(adr.includes(value), `Public Service/API ADR lacks required evidence: ${value}`));
   return adr;
+};
+
+const validateFinalFreezeAdr = () => {
+  const adr = readFileSync(FINAL_FREEZE_ADR_PATH, 'utf8');
+  const evidence = [
+    HARDENING_BASE_SHA,
+    'PR `#5` fica encerrado para crescimento funcional',
+    'branch filha',
+    'whitelists explícitas',
+    'Object spread',
+    'additionalProperties: false',
+    'MVP_SKUS_PAUSED=36',
+    'DEFERRED_SKUS=30',
+    'COMMERCIAL_SKUS_ACTIVATED=0',
+    'PUBLIC_CANONICAL_CATALOG_EMPTY=true',
+    'nenhuma integração da Home foi iniciada',
+    'produção',
+  ];
+  for (const route of AUTHORIZED_ROUTE_HANDLERS) evidence.push(route.path);
+  evidence.forEach((value) => assert(adr.includes(value), `Final freeze ADR lacks required evidence: ${value}`));
+  return adr;
+};
+
+const validateExplicitPublicMapping = () => {
+  const source = readFileSync(PUBLIC_API_ADAPTER_PATH, 'utf8');
+  assert(!source.includes('...'), 'Public adapter contains object spread instead of an explicit whitelist');
+
+  const publicProductFields = [
+    'id',
+    'sku',
+    'name',
+    'categoryId',
+    'salePriceCents',
+    'currency',
+    'availability',
+    'isPack',
+    'iceIncluded',
+    'maxPerOrder',
+    'containsAlcohol',
+    'minimumAge',
+    'bundleComponents',
+  ];
+  for (const field of publicProductFields.filter((field) => field !== 'bundleComponents')) {
+    assert(source.includes(`${field}: product.${field}`), `PublicProduct does not map ${field} explicitly`);
+  }
+
+  for (const field of ['productId', 'sku', 'name', 'quantity']) {
+    assert(source.includes(`${field}: component.${field}`), `PublicBundleComponent does not map ${field} explicitly`);
+  }
+
+  for (const field of ['deliveryBaseFeeCents', 'deliveryFeePerKmCents', 'maximumRoadDistanceKm']) {
+    assert(source.includes(field), `Delivery settings whitelist lacks ${field}`);
+  }
+
+  return { publicProductFields };
 };
 
 const validateRouteHandlers = () => {
@@ -330,6 +413,18 @@ const validateTests = () => {
     'OUT_OF_AREA',
     'correlationId',
   ]) assert(tests.includes(evidence), `Public Service/API tests lack evidence: ${evidence}`);
+
+  const conformanceTest = readFileSync(OPENAPI_CONFORMANCE_TEST_PATH, 'utf8');
+  for (const evidence of [
+    OPENAPI_V1_1_PATH,
+    'additionalProperties',
+    'PublicError',
+    'bundleComponents',
+    'physicalStock',
+    'purchaseCost',
+    "responseSchema('/catalog/products', 'get', 400)",
+    "responseSchema('/catalog/products/{productId}', 'get', 404)",
+  ]) assert(conformanceTest.includes(evidence), `OpenAPI response conformance tests lack evidence: ${evidence}`);
 };
 
 const validateScope = () => {
@@ -343,16 +438,42 @@ const validateScope = () => {
   return changedFiles;
 };
 
+const validateHardeningScope = () => {
+  if (process.env.GITHUB_ACTIONS !== 'true') return [];
+  const changedFiles = execFileSync('git', ['diff', '--name-only', `${HARDENING_BASE_SHA}..HEAD`], { encoding: 'utf8' })
+    .trim()
+    .split('\n')
+    .filter(Boolean);
+  const unauthorized = changedFiles.filter((path) => !HARDENING_CHANGED_FILES.has(path));
+  assert(unauthorized.length === 0, `Unauthorized files changed in Public Service API hardening/freeze Gate: ${unauthorized.join(', ')}`);
+  for (const path of REQUIRED_HARDENING_CHANGES) {
+    assert(changedFiles.includes(path), `Required hardening/freeze change is missing: ${path}`);
+  }
+  assert(!changedFiles.some((path) => (
+    path.startsWith('.dev-migrations/')
+      || path.startsWith('contracts/openapi/')
+      || path.startsWith('contracts/catalog/')
+      || path.startsWith('packages/ui/')
+      || path.startsWith('packages/location/')
+      || path.startsWith('apps/ui-lab/app/')
+      || path.startsWith('apps/ui-lab/src/')
+  )), 'Hardening/freeze Gate changed a frozen contract, migration, UI, location or handler source');
+  return changedFiles;
+};
+
 export const validateMvpLocal36PublicServiceApi = () => {
   validateFrozenOpenApi();
   validateImplementationProfile();
   validateArchitectureProfile();
   validateAdr();
+  validateFinalFreezeAdr();
+  const explicitMapping = validateExplicitPublicMapping();
   const routeHandlers = validateRouteHandlers();
   const boundaries = validateModuleBoundaries();
   const integrations = validateReadOnlyAndNoRealIntegrations();
   validateTests();
   const changedFiles = validateScope();
+  const hardeningChangedFiles = validateHardeningScope();
 
   return {
     routeHandlers,
@@ -361,12 +482,15 @@ export const validateMvpLocal36PublicServiceApi = () => {
     forbiddenDependencies: boundaries.forbiddenDependencies,
     executablePaths: integrations.executablePaths,
     changedFiles,
+    hardeningChangedFiles,
+    explicitMapping,
   };
 };
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const report = validateMvpLocal36PublicServiceApi();
   console.log(`CERTIFIED_BASE_SHA=${CERTIFIED_BASE_SHA}`);
+  console.log(`HARDENING_BASE_SHA=${HARDENING_BASE_SHA}`);
   console.log(`AUTHORIZED_ROUTE_HANDLERS=${report.routeHandlers.length}`);
   console.log('IMPLEMENTED_ENDPOINTS=GET /catalog/categories,GET /catalog/products,GET /catalog/products/{productId},POST /delivery/quote');
   console.log('API_ARCHITECTURE=MODULAR_TYPESCRIPT_MONOLITH');
@@ -375,6 +499,15 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   console.log('API_BASE_PATH=/api/v1');
   console.log('APPLICATION_SERVICES_VALID=true');
   console.log('PUBLIC_API_READ_ONLY=true');
+  console.log('PUBLIC_ADAPTER_EXPLICIT_MAPPING=true');
+  console.log('PUBLIC_PRODUCT_WHITELIST=true');
+  console.log('PUBLIC_COMPONENT_WHITELIST=true');
+  console.log('OBJECT_SPREAD_IN_PUBLIC_MAPPING=false');
+  console.log('OPENAPI_RESPONSE_CONFORMANCE=true');
+  console.log('ADDITIONAL_PROPERTIES_BLOCKED=true');
+  console.log('PUBLIC_SERVICE_API_FINAL_FREEZE=true');
+  console.log('FOUNDATION_FUNCTIONAL_SCOPE_CLOSED=true');
+  console.log('NEXT_IMPLEMENTATION_REQUIRES_CHILD_BRANCH=true');
   console.log('REAL_MAP_PROVIDER=false');
   console.log('AUTHENTICATION_REQUIRED=false');
   console.log('CART_VALIDATION_STATUS=DEFERRED_AUTH_CART_LAYER');

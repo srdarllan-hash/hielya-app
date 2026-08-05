@@ -40,6 +40,7 @@ test('C-005 integration canonical EMPTY is WCAG 2.1 AA clean', async ({ page }) 
 });
 
 test('C-005 integration ERROR is WCAG 2.1 AA clean', async ({ page }) => {
+  runtimeErrors.allowHttpStatus(400);
   await installCatalogErrorRoutes(page);
   await page.goto('/');
   await expect(page.locator('[data-home-catalog-state="HOME_CATALOG_ERROR"]')).toBeVisible();

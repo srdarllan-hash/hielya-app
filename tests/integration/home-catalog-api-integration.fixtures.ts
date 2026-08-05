@@ -2,15 +2,28 @@ import type { Page, Route } from '@playwright/test';
 
 export interface RuntimeErrorCollector {
   errors: string[];
+  allowHttpStatus(status: number): void;
 }
 
 export const collectRuntimeErrors = (page: Page): RuntimeErrorCollector => {
   const errors: string[] = [];
+  const allowedHttpStatuses = new Set<number>();
   page.on('console', (message) => {
-    if (message.type() === 'error') errors.push(`console: ${message.text()}`);
+    if (message.type() !== 'error') return;
+    const text = message.text();
+    const expectedHttpFailure = text.match(
+      /^Failed to load resource: the server responded with a status of (\d{3}) \(/,
+    );
+    if (expectedHttpFailure && allowedHttpStatuses.has(Number(expectedHttpFailure[1]))) return;
+    errors.push(`console: ${text}`);
   });
   page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
-  return { errors };
+  return {
+    errors,
+    allowHttpStatus(status) {
+      allowedHttpStatuses.add(status);
+    },
+  };
 };
 
 export const CATEGORY_BEER_ID = '11111111-1111-4111-8111-111111111111';

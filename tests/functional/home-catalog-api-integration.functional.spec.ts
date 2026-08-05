@@ -128,6 +128,7 @@ test('an empty filtered result preserves controls and can recover without a fall
 });
 
 test('HTTP 400 exposes only the safe public message', async ({ page }) => {
+  runtimeErrors.allowHttpStatus(400);
   await installCatalogErrorRoutes(page, 400, 'Solicitud de catálogo inválida.');
   await page.goto('/');
   await expect(page.locator('[data-home-catalog-state="HOME_CATALOG_ERROR"]')).toBeVisible();
@@ -136,6 +137,7 @@ test('HTTP 400 exposes only the safe public message', async ({ page }) => {
 });
 
 test('unexpected server failure is controlled and does not expose internal details', async ({ page }) => {
+  runtimeErrors.allowHttpStatus(500);
   await page.route(/\/api\/v1\/catalog\/(?:categories|products)(?:\?.*)?$/, async (route) => {
     await route.fulfill({
       status: 500,

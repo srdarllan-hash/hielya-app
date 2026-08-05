@@ -71,6 +71,7 @@ test('C-005 Home Catalog API Integration EMPTY visual', async ({ page }, testInf
 });
 
 test('C-005 Home Catalog API Integration ERROR visual', async ({ page }, testInfo) => {
+  runtimeErrors.allowHttpStatus(400);
   await installCatalogErrorRoutes(page);
   await page.goto('/');
   await expect(page.locator('[data-home-catalog-state="HOME_CATALOG_ERROR"]')).toBeVisible();

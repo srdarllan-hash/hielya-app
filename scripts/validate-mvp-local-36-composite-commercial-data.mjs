@@ -4,6 +4,8 @@ import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 
+import { HOME_CATALOG_API_INTEGRATION_CHANGED_FILES } from './mvp-local-36-home-catalog-api-integration-changed-files.mjs';
+
 export const CERTIFIED_BASE_SHA = '4ca838d4937555f50b3f5e11fddece5e042e1ee9';
 export const ARTIFACT_PATH = 'contracts/catalog/HIELYA_MVP_LOCAL_36_COMPOSITE_COMMERCIAL_DATA_V1_0.json';
 export const ARTIFACT_SHA256 = 'c2db49b2f7aa66cf0e75d3bfe18fb34296c40ef836cd0d8354a1993cc7f4d6b7';
@@ -185,6 +187,7 @@ const ALLOWED_CHANGED_FILES = new Set([
   'tests/unit/mvp-public-application.test.ts',
   'docs/decisions/ADR-MVP-LOCAL-36-PUBLIC-SERVICE-API-FINAL-FREEZE.md',
   'tests/unit/mvp-public-api-openapi-conformance.test.ts',
+  ...HOME_CATALOG_API_INTEGRATION_CHANGED_FILES,
 ]);
 
 const assert = (condition, message) => {

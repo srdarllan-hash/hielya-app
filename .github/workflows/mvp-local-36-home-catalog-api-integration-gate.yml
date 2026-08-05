@@ -1,0 +1,472 @@
+name: MVP Local 36 Home Catalog API Integration Gate
+
+on:
+  push:
+    branches:
+      - hielya/mvp-local-36-home-catalog-api-integration
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: mvp-local-36-home-catalog-api-integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      FROZEN_PARENT_SHA: fe62966daca8bda94610aa1a63702a1e543b0ce6
+      FROZEN_PARENT_BRANCH: hielya/mvp-local-36-implementation
+    steps:
+      - name: Checkout exact child commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Verify child source, frozen ancestry and parent drift
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+          git cat-file -e "$FROZEN_PARENT_SHA^{commit}"
+          git merge-base --is-ancestor "$FROZEN_PARENT_SHA" HEAD
+          git fetch --no-tags --force origin \
+            "refs/heads/$FROZEN_PARENT_BRANCH:refs/remotes/origin/$FROZEN_PARENT_BRANCH"
+          test "$(git rev-parse "refs/remotes/origin/$FROZEN_PARENT_BRANCH")" = "$FROZEN_PARENT_SHA"
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate branch scope, frozen C-005 evidence and HTTP boundary
+        run: node scripts/validate-mvp-local-36-home-catalog-api-integration.mjs
+      - name: Revalidate frozen contracts and public API
+        run: |
+          node scripts/validate-mvp-local-36-openapi.mjs
+          node scripts/validate-mvp-local-36-composite-commercial-data.mjs
+          node scripts/validate-mvp-local-36-catalog-read-model.mjs
+          node scripts/validate-mvp-local-36-public-service-api.mjs
+      - name: Unit and HTTP integration tests
+        run: pnpm test
+      - name: Lint
+        run: pnpm lint
+      - name: Type-check
+        run: pnpm type-check
+      - name: Next.js build
+        run: pnpm build
+      - name: Storybook build
+        run: pnpm build-storybook
+      - name: Upload integration validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-catalog-api-integration-validation-${{ github.sha }}
+          if-no-files-found: error
+          include-hidden-files: true
+          path: |
+            qa/screen-gates/C-005-HOME-CATALOG-API-INTEGRATION-V1/
+            manifests/C-005-HOME-CATALOG-API-INTEGRATION-V1.json
+
+  c001-regression:
+    uses: ./.github/workflows/reusable-screen-gate.yml
+    with:
+      sourceSha: ${{ github.sha }}
+      screenId: C-001
+      route: /splash
+      states: '["initial","loading","transition","offline","error","timeout","maintenance","ready-location","ready-home","reduced-motion"]'
+      baseSha: fe62966daca8bda94610aa1a63702a1e543b0ce6
+      protectedPaths: '["apps/ui-lab/app/splash/","packages/ui/src/screens/splash/","tests/unit/splash","tests/accessibility/splash","tests/functional/splash","tests/visual/splash","manifests/C-001"]'
+      testSuites: '["unit","axe","functional","console","visual","responsive"]'
+      requiredViewports: '["360x800","390x844","1170x2532"]'
+      manifestPath: manifests/C-001.json
+      baselineMode: GATE_VALIDATION
+
+  c002-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GATE_SOURCE_SHA: ${{ github.sha }}
+      GATE_SOURCE_BRANCH: ${{ github.ref_name }}
+      SCREEN_ID: C-002
+      SCREEN_ROUTE: /location
+      SCREEN_STATES: '["idle","requesting_permission","locating","reverse_geocoding","manual_entry","validating_manual_address","resolved","checking_service_area","permission_denied","location_unavailable","timeout","offline","network_error","invalid_address","out_of_area","retrying","success","reduced_motion","long_address","hotel","condominium"]'
+      BASE_SHA: fe62966daca8bda94610aa1a63702a1e543b0ce6
+      C002_BASE_SHA: fe62966daca8bda94610aa1a63702a1e543b0ce6
+      PROTECTED_PATHS: '["apps/ui-lab/app/location/","packages/location/","packages/ui/src/screens/location/","tests/unit/location","tests/accessibility/location","tests/functional/location","tests/visual/location","manifests/C-002"]'
+      TEST_SUITES: '["unit","coverage","axe","functional","console","visual","responsive","frozen-baseline"]'
+      REQUIRED_VIEWPORTS: '["360x800","390x844","1170x2532"]'
+      MANIFEST_PATH: manifests/C-002.json
+      BASELINE_MODE: GATE_VALIDATION
+    steps:
+      - name: Checkout exact child commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Verify child source and frozen parent ancestry
+        run: |
+          test "$(git rev-parse HEAD)" = "$GATE_SOURCE_SHA"
+          git cat-file -e "$BASE_SHA^{commit}"
+          git merge-base --is-ancestor "$BASE_SHA" HEAD
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate generated Design Tokens
+        run: pnpm tokens:check
+      - name: Lint, type-check, unit, coverage and builds
+        run: |
+          pnpm lint
+          pnpm type-check
+          pnpm test
+          pnpm test:coverage
+          pnpm build
+          pnpm build-storybook
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: C-002 frozen regression
+        run: |
+          pnpm test:c002:a11y
+          pnpm test:c002:functional
+          pnpm test:c002:visual
+          git diff --exit-code "$BASE_SHA" -- \
+            apps/ui-lab/app/location/ \
+            packages/location/ \
+            packages/ui/src/screens/location/ \
+            tests/unit/location \
+            tests/accessibility/location \
+            tests/functional/location \
+            tests/visual/location \
+            manifests/C-002.json \
+            manifests/C-002-assets.json \
+            manifests/C-002-visual-baseline.json
+          test "$(git rev-parse HEAD:manifests/C-002.json)" = "20a8980659774590c2a42a27fcc74f5c0d3015c3"
+          test "$(git rev-parse HEAD:manifests/C-002-assets.json)" = "cadb916200edda1dba1515ce1d75abd3e19647e6"
+          test "$(git rev-parse HEAD:manifests/C-002-visual-baseline.json)" = "5b655732d5df284b2336565ee1e2e2eee4774848"
+          test "$(git rev-parse HEAD:tests/visual/location.visual.spec.ts-snapshots)" = "ab35f0e0495c19a6cb765be7610cfbb99859d589"
+          pnpm audit:all
+      - name: Upload C-002 regression artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c002-regression-${{ github.sha }}
+          if-no-files-found: error
+          include-hidden-files: true
+          path: |
+            playwright-report/
+            test-results/
+            screenshots/
+            coverage/
+            tests/visual/location.visual.spec.ts-snapshots/
+
+  c005-frozen-regression:
+    uses: ./.github/workflows/reusable-screen-gate.yml
+    with:
+      sourceSha: fe62966daca8bda94610aa1a63702a1e543b0ce6
+      screenId: C-005
+      route: /
+      states: '["ready","loading","closed","high-demand","error","empty-cart","alcohol-cutoff","out-of-area"]'
+      baseSha: c2857afe538b2cf5ba44635edd56dbd422c0e2f0
+      protectedPaths: '["packages/ui/src/screens/home/","tests/unit/home","tests/accessibility/home","tests/functional/home","tests/visual/home","manifests/C-005"]'
+      testSuites: '["unit","axe","functional","console","visual","responsive"]'
+      requiredViewports: '["360x800","390x844","1170x2532"]'
+      manifestPath: manifests/C-005.json
+      baselineMode: GATE_VALIDATION
+
+  c005-integration-gate:
+    needs: integration-validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GATE_SOURCE_SHA: ${{ github.sha }}
+      GATE_SOURCE_BRANCH: ${{ github.ref_name }}
+      INTEGRATION_SNAPSHOT_PATH: tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots
+      BASELINE_REVIEW_PATH: manifests/C-005-HOME-CATALOG-API-INTEGRATION-V1-BASELINE-REVIEW.json
+    steps:
+      - name: Checkout exact child commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate integration scope for candidate evidence
+        id: candidate_scope
+        run: node scripts/validate-mvp-local-36-home-catalog-api-integration.mjs
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Select isolated integration baseline mode
+        id: baseline
+        run: |
+          tracked_count="$(git ls-files "$INTEGRATION_SNAPSHOT_PATH/*.png" | wc -l | tr -d ' ')"
+          if [ "$tracked_count" = "0" ]; then
+            test ! -e "$BASELINE_REVIEW_PATH"
+            echo "mode=BASELINE_AUTHORING" >> "$GITHUB_OUTPUT"
+            echo "tracked_count=0" >> "$GITHUB_OUTPUT"
+          elif [ "$tracked_count" = "12" ]; then
+            test -f "$BASELINE_REVIEW_PATH"
+            echo "mode=GATE_VALIDATION" >> "$GITHUB_OUTPUT"
+            echo "tracked_count=12" >> "$GITHUB_OUTPUT"
+          else
+            echo "Expected either zero bootstrap snapshots or exactly 12 tracked integration snapshots; found $tracked_count" >&2
+            exit 1
+          fi
+      - name: Verify reviewed baseline artifact provenance
+        id: provenance
+        if: steps.baseline.outputs.mode == 'GATE_VALIDATION'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const review = JSON.parse(fs.readFileSync(process.env.BASELINE_REVIEW_PATH, 'utf8'));
+            const runId = Number(review.candidateWorkflowRunId);
+            const { data: run } = await github.rest.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId,
+            });
+            if (run.head_sha !== review.candidateCommitSha) {
+              core.setFailed('Baseline candidate workflow SHA differs from the review manifest.');
+              return;
+            }
+            if (run.head_branch !== 'hielya/mvp-local-36-home-catalog-api-integration') {
+              core.setFailed('Baseline candidate workflow branch differs.');
+              return;
+            }
+            if (run.name !== 'MVP Local 36 Home Catalog API Integration Gate') {
+              core.setFailed('Baseline candidate workflow identity differs.');
+              return;
+            }
+            if (run.event !== 'push') {
+              core.setFailed('Baseline candidate workflow must come from a push event.');
+              return;
+            }
+            if (run.status !== 'completed' || run.conclusion !== 'failure') {
+              core.setFailed('Baseline authoring run must have completed with the deliberate pending-review failure.');
+              return;
+            }
+            const { data } = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId,
+              per_page: 100,
+            });
+            const matches = data.artifacts.filter(({ name }) => name === review.candidateArtifactName);
+            if (matches.length !== 1) {
+              core.setFailed('Exactly one baseline candidate artifact is required.');
+              return;
+            }
+            const [artifact] = matches;
+            if (artifact.expired) {
+              core.setFailed('The reviewed baseline candidate artifact is expired.');
+              return;
+            }
+            if (artifact.digest !== review.candidateArtifactDigest) {
+              core.setFailed('Baseline candidate artifact digest differs from the review manifest.');
+              return;
+            }
+            const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId,
+              per_page: 100,
+            });
+            const gateJobs = jobs.filter(({ name }) => name === 'c005-integration-gate');
+            if (gateJobs.length !== 1 || gateJobs[0].conclusion !== 'failure') {
+              core.setFailed('Exactly one deliberately failed c005-integration-gate job is required.');
+              return;
+            }
+            const expectedSteps = new Map([
+              ['Validate integration scope for candidate evidence', 'success'],
+              ['Select isolated integration baseline mode', 'success'],
+              ['Home catalog integration accessibility', 'success'],
+              ['Home catalog integration functional and console validation', 'success'],
+              ['Author isolated versioned integration baseline candidate', 'success'],
+              ['Verify frozen C-005', 'success'],
+              ['Derive fail-closed evidence status', 'success'],
+              ['Generate status-aware versioned evidence', 'success'],
+              ['Upload versioned Home catalog integration evidence', 'success'],
+              ['Require baseline materialization and review manifest before certification', 'failure'],
+            ]);
+            for (const [name, conclusion] of expectedSteps) {
+              const matches = gateJobs[0].steps.filter((step) => step.name === name);
+              if (matches.length !== 1 || matches[0].conclusion !== conclusion) {
+                core.setFailed(`Candidate step provenance differs: ${name} must be ${conclusion}.`);
+                return;
+              }
+            }
+            core.setOutput('artifact-id', String(artifact.id));
+      - name: Download and validate reviewed candidate artifact contents
+        id: candidate_artifact
+        if: steps.baseline.outputs.mode == 'GATE_VALIDATION'
+        env:
+          ARTIFACT_ID: ${{ steps.provenance.outputs.artifact-id }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          artifact_zip="$RUNNER_TEMP/c005-home-catalog-api-integration-${GITHUB_RUN_ID}.zip"
+          artifact_directory="$(mktemp -d "$RUNNER_TEMP/c005-home-catalog-api-integration.XXXXXX")"
+          curl --fail --silent --show-error --location --retry 3 \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header "Accept: application/vnd.github+json" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" \
+            --output "$artifact_zip"
+          unzip -q "$artifact_zip" -d "$artifact_directory"
+          node scripts/validate-c005-home-catalog-api-integration-baseline-artifact.mjs "$artifact_directory"
+      - name: Home catalog integration accessibility
+        id: a11y
+        env:
+          PLAYWRIGHT_EVIDENCE_PHASE: a11y
+        run: pnpm exec playwright test tests/accessibility/home-catalog-api-integration.a11y.spec.ts --config playwright.home-catalog-api-integration.config.ts
+      - name: Home catalog integration functional and console validation
+        id: functional
+        env:
+          PLAYWRIGHT_EVIDENCE_PHASE: functional
+        run: pnpm exec playwright test tests/functional/home-catalog-api-integration.functional.spec.ts --config playwright.home-catalog-api-integration.config.ts
+      - name: Author isolated versioned integration baseline candidate
+        id: authoring
+        if: steps.baseline.outputs.mode == 'BASELINE_AUTHORING'
+        env:
+          BASELINE_MODE: BASELINE_AUTHORING
+          PLAYWRIGHT_EVIDENCE_PHASE: visual
+        run: |
+          pnpm exec playwright test tests/visual/home-catalog-api-integration.visual.spec.ts --config playwright.home-catalog-api-integration.config.ts
+          generated_count="$(find "$INTEGRATION_SNAPSHOT_PATH" -maxdepth 1 -type f -name '*.png' | wc -l | tr -d ' ')"
+          test "$generated_count" = "12"
+      - name: Home catalog integration strict versioned visual regression
+        id: strict_visual
+        if: steps.baseline.outputs.mode == 'GATE_VALIDATION'
+        env:
+          BASELINE_MODE: GATE_VALIDATION
+          PLAYWRIGHT_EVIDENCE_PHASE: visual
+        run: pnpm exec playwright test tests/visual/home-catalog-api-integration.visual.spec.ts --config playwright.home-catalog-api-integration.config.ts
+      - name: Verify frozen C-005
+        id: frozen
+        if: always()
+        run: |
+          git diff --exit-code fe62966daca8bda94610aa1a63702a1e543b0ce6 -- \
+            manifests/C-005.json \
+            manifests/certifications.json \
+            manifests/screens.json \
+            tests/unit/home.unit.test.tsx \
+            tests/accessibility/home.a11y.spec.ts \
+            tests/functional/home.functional.spec.ts \
+            tests/visual/home.visual.spec.ts \
+            tests/visual/home.visual.spec.ts-snapshots
+      - name: Derive fail-closed evidence status
+        id: evidence_status
+        if: always()
+        env:
+          BASELINE_MODE: ${{ steps.baseline.outputs.mode }}
+          CANDIDATE_SCOPE_OUTCOME: ${{ steps.candidate_scope.outcome }}
+          PROVENANCE_OUTCOME: ${{ steps.provenance.outcome }}
+          CANDIDATE_ARTIFACT_OUTCOME: ${{ steps.candidate_artifact.outcome }}
+          A11Y_OUTCOME: ${{ steps.a11y.outcome }}
+          FUNCTIONAL_OUTCOME: ${{ steps.functional.outcome }}
+          AUTHORING_OUTCOME: ${{ steps.authoring.outcome }}
+          STRICT_VISUAL_OUTCOME: ${{ steps.strict_visual.outcome }}
+          FROZEN_OUTCOME: ${{ steps.frozen.outcome }}
+        run: |
+          status="QA_FAILED_OR_INCOMPLETE"
+          if [ "$BASELINE_MODE" = "BASELINE_AUTHORING" ] \
+            && [ "$CANDIDATE_SCOPE_OUTCOME" = "success" ] \
+            && [ "$A11Y_OUTCOME" = "success" ] \
+            && [ "$FUNCTIONAL_OUTCOME" = "success" ] \
+            && [ "$AUTHORING_OUTCOME" = "success" ] \
+            && [ "$FROZEN_OUTCOME" = "success" ]; then
+            status="BASELINE_CANDIDATE"
+          elif [ "$BASELINE_MODE" = "GATE_VALIDATION" ] \
+            && [ "$CANDIDATE_SCOPE_OUTCOME" = "success" ] \
+            && [ "$PROVENANCE_OUTCOME" = "success" ] \
+            && [ "$CANDIDATE_ARTIFACT_OUTCOME" = "success" ] \
+            && [ "$A11Y_OUTCOME" = "success" ] \
+            && [ "$FUNCTIONAL_OUTCOME" = "success" ] \
+            && [ "$STRICT_VISUAL_OUTCOME" = "success" ] \
+            && [ "$FROZEN_OUTCOME" = "success" ]; then
+            status="QA_PASSED_CANDIDATE"
+          fi
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+      - name: Generate status-aware versioned evidence
+        if: always()
+        env:
+          EVIDENCE_STATUS: ${{ steps.evidence_status.outputs.status }}
+        run: |
+          node scripts/generate-c005-home-catalog-api-integration-evidence.mjs
+      - name: Upload versioned Home catalog integration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c005-home-catalog-api-integration-v1-${{ github.sha }}
+          if-no-files-found: error
+          include-hidden-files: true
+          path: |
+            playwright-report/C-005-HOME-CATALOG-API-INTEGRATION-V1/
+            test-results/C-005-HOME-CATALOG-API-INTEGRATION-V1/
+            screenshots/C-005-HOME-CATALOG-API-INTEGRATION-V1/
+            qa/screen-gates/C-005-HOME-CATALOG-API-INTEGRATION-V1/
+            manifests/C-005-HOME-CATALOG-API-INTEGRATION-V1-BASELINE-REVIEW.json
+            manifests/C-005-HOME-CATALOG-API-INTEGRATION-V1.json
+            tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots/
+      - name: Require baseline materialization and review manifest before certification
+        if: steps.baseline.outputs.mode == 'BASELINE_AUTHORING'
+        run: |
+          echo "BASELINE_AUTHORING_PENDING=true"
+          echo "Download and visually inspect the candidate artifact, then add the 12 isolated PNGs and their hash-bound baseline review manifest in a second commit." >&2
+          exit 1
+
+  gate-summary:
+    needs:
+      - integration-validation
+      - c001-regression
+      - c002-regression
+      - c005-frozen-regression
+      - c005-integration-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record Home Catalog API Integration Gate outcome
+        run: |
+          echo "HOME_CATALOG_API_INTEGRATION_VALIDATED=true"
+          echo "FROZEN_PARENT_SHA=fe62966daca8bda94610aa1a63702a1e543b0ce6"
+          echo "PARENT_PR_CHANGED=false"
+          echo "C001_REGRESSION=true"
+          echo "C002_REGRESSION=true"
+          echo "C005_FROZEN_REGRESSION=true"
+          echo "OLD_C005_BASELINES_PRESERVED=true"
+          echo "NEW_INTEGRATION_EVIDENCE=true"
+          echo "HOME_RUNTIME_DATA_SOURCE=HTTP_PUBLIC_API"
+          echo "HOME_API_ENDPOINTS=GET_CATEGORIES,GET_PRODUCTS"
+          echo "PRODUCT_DETAIL_ENDPOINT_CONSUMED=false"
+          echo "DELIVERY_QUOTE_ENDPOINT_CONSUMED=false"
+          echo "CANONICAL_PUBLIC_CATALOG_EMPTY=true"
+          echo "COMMERCIAL_SKUS_ACTIVATED=0"
+          echo "PERSISTENCE_MUTATIONS=0"
+          echo "AUTH_STARTED=false"
+          echo "CART_STARTED=false"
+          echo "PAYMENT_STARTED=false"
+          echo "PRODUCTION_AUTHORIZED=false"
+          echo "MAIN_CHANGED=false"
+          echo "MERGE_PERFORMED=false"
+          echo "NEXT_LAYER_STARTED=false"

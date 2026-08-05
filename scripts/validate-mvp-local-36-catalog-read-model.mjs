@@ -8,6 +8,8 @@ import {
 import { join, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { HOME_CATALOG_API_INTEGRATION_CHANGED_FILES } from './mvp-local-36-home-catalog-api-integration-changed-files.mjs';
+
 export const CERTIFIED_BASE_SHA = '5c9c1e632102ba902fb8858eb2ae8b5e118d2497';
 export const UNIT_CATALOG_PATH = 'contracts/catalog/HIELYA_MVP_LOCAL_36_UNIT_COMMERCIAL_DATA_V1_1.json';
 export const UNIT_CATALOG_ARTIFACT_SHA256 = 'c0563388f5f7fff90cc4cef2e7eaad3a6648a43f6c56ddb98ffbdff256654baf';
@@ -66,6 +68,7 @@ export const GATE_CHANGED_FILES = [
   'tests/unit/mvp-public-application.test.ts',
   'docs/decisions/ADR-MVP-LOCAL-36-PUBLIC-SERVICE-API-FINAL-FREEZE.md',
   'tests/unit/mvp-public-api-openapi-conformance.test.ts',
+  ...HOME_CATALOG_API_INTEGRATION_CHANGED_FILES,
 ];
 
 const ALLOWED_CHANGED_FILES = new Set(GATE_CHANGED_FILES);

@@ -1,5 +1,5 @@
-import { HomeScreen, coerceHomeState } from '@hielya/ui';
-export default async function Page({ searchParams }: { searchParams: Promise<{ state?: string }> }) {
-  const params = await searchParams;
-  return <HomeScreen state={coerceHomeState(params.state)} />;
+import { HomeCatalogRuntime } from '../src/client/mvp-local-36/HomeCatalogRuntime';
+
+export default function Page() {
+  return <HomeCatalogRuntime />;
 }

@@ -4,7 +4,7 @@ import React from 'react';
 
 export interface CategoryChipProps {
   label: string;
-  image: string;
+  image?: string | null;
   value?: string;
   active?: boolean;
   disabled?: boolean;
@@ -34,7 +34,9 @@ export function CategoryChip({
       disabled={blocked}
       onClick={() => onSelect?.(value)}
     >
-      <span className="hly-category-chip__visual"><img src={image} alt="" /></span>
+      <span className="hly-category-chip__visual">
+        {image ? <img src={image} alt="" /> : <span aria-hidden="true">{label.slice(0, 1)}</span>}
+      </span>
       <span>{label}</span>
     </button>
   );

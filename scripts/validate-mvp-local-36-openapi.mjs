@@ -3,6 +3,8 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
+import { HOME_CATALOG_API_INTEGRATION_CHANGED_FILES } from './mvp-local-36-home-catalog-api-integration-changed-files.mjs';
+
 export const CERTIFIED_BASE_SHA = 'abc9380c968c7533316bd27cd3f85a73f7020b8f';
 export const ORIGINAL_PATH = 'contracts/openapi/HIELYA_OPENAPI_V1_0.yaml';
 export const ORIGINAL_SHA256 = 'a2c027c6294b44c94cf4be21d18fbd251b0323102e3c9ba2cba912a96d810ae9';
@@ -82,6 +84,7 @@ const ALLOWED_CHANGED_FILES = new Set([
   'tests/unit/mvp-public-application.test.ts',
   'docs/decisions/ADR-MVP-LOCAL-36-PUBLIC-SERVICE-API-FINAL-FREEZE.md',
   'tests/unit/mvp-public-api-openapi-conformance.test.ts',
+  ...HOME_CATALOG_API_INTEGRATION_CHANGED_FILES,
 ]);
 const HTTP_METHODS = new Set(['get', 'post', 'put', 'patch', 'delete', 'options', 'head', 'trace']);
 

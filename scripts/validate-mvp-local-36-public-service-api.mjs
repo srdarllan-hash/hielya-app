@@ -9,6 +9,8 @@ import { join, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 
+import { HOME_CATALOG_API_INTEGRATION_CHANGED_FILES } from './mvp-local-36-home-catalog-api-integration-changed-files.mjs';
+
 export const CERTIFIED_BASE_SHA = 'f1a533a3e4bcf76ea5634979536e58445432bb11';
 export const HARDENING_BASE_SHA = 'fb35d2fd3e9cd4eb64be0c1196e22cc2d55003e6';
 export const OPENAPI_V1_0_PATH = 'contracts/openapi/HIELYA_OPENAPI_V1_0.yaml';
@@ -75,6 +77,7 @@ export const GATE_CHANGED_FILES = [
   'tests/unit/mvp-public-api-integration.test.ts',
   'tests/unit/mvp-public-application.test.ts',
   OPENAPI_CONFORMANCE_TEST_PATH,
+  ...HOME_CATALOG_API_INTEGRATION_CHANGED_FILES,
 ];
 
 const ALLOWED_CHANGED_FILES = new Set(GATE_CHANGED_FILES);
@@ -97,6 +100,7 @@ const HARDENING_CHANGED_FILES = new Set([
   'scripts/validate-mvp-local-36-public-service-api.mjs',
   'tests/unit/mvp-public-api-adapters.test.ts',
   OPENAPI_CONFORMANCE_TEST_PATH,
+  ...HOME_CATALOG_API_INTEGRATION_CHANGED_FILES,
 ]);
 
 const REQUIRED_HARDENING_CHANGES = [
@@ -444,12 +448,14 @@ const validateHardeningScope = () => {
     .trim()
     .split('\n')
     .filter(Boolean);
-  const unauthorized = changedFiles.filter((path) => !HARDENING_CHANGED_FILES.has(path));
+  const integrationChanges = new Set(HOME_CATALOG_API_INTEGRATION_CHANGED_FILES);
+  const hardeningChangedFiles = changedFiles.filter((path) => !integrationChanges.has(path));
+  const unauthorized = hardeningChangedFiles.filter((path) => !HARDENING_CHANGED_FILES.has(path));
   assert(unauthorized.length === 0, `Unauthorized files changed in Public Service API hardening/freeze Gate: ${unauthorized.join(', ')}`);
   for (const path of REQUIRED_HARDENING_CHANGES) {
-    assert(changedFiles.includes(path), `Required hardening/freeze change is missing: ${path}`);
+    assert(hardeningChangedFiles.includes(path), `Required hardening/freeze change is missing: ${path}`);
   }
-  assert(!changedFiles.some((path) => (
+  assert(!hardeningChangedFiles.some((path) => (
     path.startsWith('.dev-migrations/')
       || path.startsWith('contracts/openapi/')
       || path.startsWith('contracts/catalog/')

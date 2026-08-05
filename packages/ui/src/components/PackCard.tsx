@@ -7,9 +7,10 @@ export interface PackCardProps {
   name: string;
   description: string[];
   price: string;
-  discount: string;
-  image: string;
+  discount?: string | null;
+  image?: string | null;
   packId?: string;
+  unavailable?: boolean;
   disabled?: boolean;
   loading?: boolean;
   onAdd?: (packId: string) => void;
@@ -22,18 +23,19 @@ export function PackCard({
   discount,
   image,
   packId = name,
+  unavailable = false,
   disabled = false,
   loading = false,
   onAdd,
 }: PackCardProps) {
-  const blocked = disabled || loading || !onAdd;
+  const blocked = unavailable || disabled || loading || !onAdd;
   return (
     <article className={`hly-pack-card${blocked ? ' is-disabled' : ''}`} aria-busy={loading || undefined}>
-      <img src={image} alt="" />
+      {image ? <img src={image} alt="" /> : <span aria-hidden="true">{name.slice(0, 1)}</span>}
       <div className="hly-pack-card__copy">
         <h3>{name}</h3>
         {description.map((line) => <p key={line}>• {line}</p>)}
-        <div><strong>{price}</strong><span>{discount}</span></div>
+        <div><strong>{price}</strong>{discount ? <span>{discount}</span> : null}</div>
       </div>
       <button
         type="button"

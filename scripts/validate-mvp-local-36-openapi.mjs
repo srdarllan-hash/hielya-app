@@ -46,6 +46,10 @@ const ALLOWED_CHANGED_FILES = new Set([
   'docs/decisions/ADR-MVP-LOCAL-36-OPENAPI-V1-1.md',
   'scripts/validate-mvp-local-36-openapi.mjs',
   'tests/unit/mvp-local-36-openapi.test.ts',
+  'contracts/catalog/HIELYA_MVP_LOCAL_36_COMPOSITE_COMMERCIAL_DATA_V1_0.json',
+  'docs/decisions/ADR-MVP-LOCAL-36-COMPOSITE-COMMERCIAL-DATA.md',
+  'scripts/validate-mvp-local-36-composite-commercial-data.mjs',
+  'tests/unit/mvp-local-36-composite-commercial-data.test.ts',
 ]);
 const HTTP_METHODS = new Set(['get', 'post', 'put', 'patch', 'delete', 'options', 'head', 'trace']);
 

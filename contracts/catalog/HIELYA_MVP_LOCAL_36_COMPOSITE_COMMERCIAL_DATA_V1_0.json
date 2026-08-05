@@ -1,0 +1,125 @@
+{
+  "profile": "MVP_LOCAL_36",
+  "version": "1.0.0",
+  "status": "OWNER_APPROVED_FROZEN",
+  "currency": "EUR",
+  "pricePolicy": {
+    "initialBasis": "SUM_OF_COMPONENT_SALE_PRICES",
+    "discountCents": 0,
+    "automaticRecalculation": false
+  },
+  "maxPerOrderPolicy": {
+    "initialBasis": "LIMITING_COMPONENT",
+    "automaticRecalculation": false
+  },
+  "commercialActivationAuthorized": false,
+  "composites": [
+    {
+      "sku": "HYA-CMB-001",
+      "name": "Pack Mahou Frío 6 + Hielo 2 kg",
+      "salePriceCents": 1193,
+      "currency": "EUR",
+      "maxPerOrder": 4,
+      "containsAlcohol": true,
+      "minimumAge": 18,
+      "isPack": true,
+      "iceIncluded": true,
+      "mvpStatus": "PAUSED",
+      "commerciallyActive": false,
+      "components": [
+        { "sku": "HYA-CER-001", "quantity": 6 },
+        { "sku": "HYA-GEL-051", "quantity": 1 }
+      ]
+    },
+    {
+      "sku": "HYA-CMB-002",
+      "name": "Pack Heineken Frío 6 + Hielo 2 kg",
+      "salePriceCents": 1253,
+      "currency": "EUR",
+      "maxPerOrder": 4,
+      "containsAlcohol": true,
+      "minimumAge": 18,
+      "isPack": true,
+      "iceIncluded": true,
+      "mvpStatus": "PAUSED",
+      "commerciallyActive": false,
+      "components": [
+        { "sku": "HYA-CER-003", "quantity": 6 },
+        { "sku": "HYA-GEL-051", "quantity": 1 }
+      ]
+    },
+    {
+      "sku": "HYA-CMB-003",
+      "name": "Pack Estrella Galicia Frío 6 + Hielo 2 kg",
+      "salePriceCents": 1253,
+      "currency": "EUR",
+      "maxPerOrder": 4,
+      "containsAlcohol": true,
+      "minimumAge": 18,
+      "isPack": true,
+      "iceIncluded": true,
+      "mvpStatus": "PAUSED",
+      "commerciallyActive": false,
+      "components": [
+        { "sku": "HYA-CER-006", "quantity": 6 },
+        { "sku": "HYA-GEL-051", "quantity": 1 }
+      ]
+    },
+    {
+      "sku": "HYA-CMB-004",
+      "name": "Pack Cruzcampo Frío 6 + Hielo 2 kg",
+      "salePriceCents": 1133,
+      "currency": "EUR",
+      "maxPerOrder": 4,
+      "containsAlcohol": true,
+      "minimumAge": 18,
+      "isPack": true,
+      "iceIncluded": true,
+      "mvpStatus": "PAUSED",
+      "commerciallyActive": false,
+      "components": [
+        { "sku": "HYA-CER-009", "quantity": 6 },
+        { "sku": "HYA-GEL-051", "quantity": 1 }
+      ]
+    },
+    {
+      "sku": "HYA-CMB-005",
+      "name": "Combo Gin Tonic Larios + Hielo",
+      "salePriceCents": 3500,
+      "currency": "EUR",
+      "maxPerOrder": 3,
+      "containsAlcohol": true,
+      "minimumAge": 18,
+      "isPack": true,
+      "iceIncluded": true,
+      "mvpStatus": "PAUSED",
+      "commerciallyActive": false,
+      "components": [
+        { "sku": "HYA-DES-036", "quantity": 1 },
+        { "sku": "HYA-REF-023", "quantity": 6 },
+        { "sku": "HYA-GEL-051", "quantity": 1 },
+        { "sku": "HYA-CON-059", "quantity": 1 },
+        { "sku": "HYA-CON-060", "quantity": 1 }
+      ]
+    },
+    {
+      "sku": "HYA-CMB-006",
+      "name": "Combo Vodka Energy Absolut + Hielo",
+      "salePriceCents": 3563,
+      "currency": "EUR",
+      "maxPerOrder": 3,
+      "containsAlcohol": true,
+      "minimumAge": 18,
+      "isPack": true,
+      "iceIncluded": true,
+      "mvpStatus": "PAUSED",
+      "commerciallyActive": false,
+      "components": [
+        { "sku": "HYA-DES-040", "quantity": 1 },
+        { "sku": "HYA-ENE-026", "quantity": 4 },
+        { "sku": "HYA-GEL-051", "quantity": 1 },
+        { "sku": "HYA-CON-059", "quantity": 1 }
+      ]
+    }
+  ]
+}

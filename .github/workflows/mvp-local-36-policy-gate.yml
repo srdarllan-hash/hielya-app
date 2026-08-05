@@ -41,6 +41,10 @@ jobs:
         run: |
           pnpm --package=@redocly/cli@2.44.1 dlx redocly lint contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_1.yaml
           node scripts/validate-mvp-local-36-openapi.mjs
+      - name: Validate frozen composite commercial data
+        run: |
+          node scripts/validate-mvp-local-36-composite-commercial-data.mjs
+          pnpm exec vitest run tests/unit/mvp-local-36-composite-commercial-data.test.ts
       - name: Validate persistence schema
         run: node scripts/validate-mvp-persistence-schema.mjs
       - name: Validate development migrations
@@ -118,3 +122,8 @@ jobs:
           echo "AUTH_STARTED=false"
           echo "CART_LAYER_STARTED=false"
           echo "PAYMENT_STARTED=false"
+          echo "MVP_LOCAL_36_COMPOSITE_COMMERCIAL_DATA_FROZEN=true"
+          echo "OWNER_APPROVAL_RECORDED=true"
+          echo "COMPOSITE_COUNT=6"
+          echo "COMMERCIAL_SKUS_ACTIVATED=0"
+          echo "NEXT_LAYER_STARTED=false"

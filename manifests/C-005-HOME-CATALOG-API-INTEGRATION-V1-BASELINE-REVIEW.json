@@ -1,0 +1,57 @@
+{
+  "candidateCommitSha": "057b118db62908a5230d08062744786bc06ac7b6",
+  "candidateWorkflowRunId": 31050930175,
+  "candidateArtifactName": "c005-home-catalog-api-integration-v1-057b118db62908a5230d08062744786bc06ac7b6",
+  "candidateArtifactDigest": "sha256:bdaff4268c938ce7bd1a237079095a876e061b67690dcd6e115ab3b1fb130146",
+  "reviewMethod": "WORK_VISUAL_INSPECTION",
+  "entries": [
+    {
+      "path": "tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots/C-005-HOME-CATALOG-API-INTEGRATION-V1-empty-hires-1170-linux.png",
+      "sha256": "4ad8a68a399921e276d0c9ac25cf76767f2f7b3d8aa022878f49251c45aaa31b"
+    },
+    {
+      "path": "tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots/C-005-HOME-CATALOG-API-INTEGRATION-V1-empty-mobile-360-linux.png",
+      "sha256": "803f8a230703c1c939389fd413f97459a43750fa4a85fbdee69d3147de27834a"
+    },
+    {
+      "path": "tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots/C-005-HOME-CATALOG-API-INTEGRATION-V1-empty-mobile-390-linux.png",
+      "sha256": "7936e7a528f9c30f206158a459bf82c800f769978936a361d37941ecb5d51a54"
+    },
+    {
+      "path": "tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots/C-005-HOME-CATALOG-API-INTEGRATION-V1-error-hires-1170-linux.png",
+      "sha256": "a641c11427a4fb1f20e2a511075a33de9b3969c3ce70f660f05de4f841eb86ca"
+    },
+    {
+      "path": "tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots/C-005-HOME-CATALOG-API-INTEGRATION-V1-error-mobile-360-linux.png",
+      "sha256": "f60be90ec2371976cb877c63984979ac2082b7f45c7130878363524239e1934b"
+    },
+    {
+      "path": "tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots/C-005-HOME-CATALOG-API-INTEGRATION-V1-error-mobile-390-linux.png",
+      "sha256": "7a30936dbbdb36ba3d56c96ea0db3682f1b48094894442c5537f237f48edbba8"
+    },
+    {
+      "path": "tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots/C-005-HOME-CATALOG-API-INTEGRATION-V1-loading-hires-1170-linux.png",
+      "sha256": "6b8b2a80f2dd2037250a0334a7112446cd5a72c42ee87e13496cf00677e8a5df"
+    },
+    {
+      "path": "tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots/C-005-HOME-CATALOG-API-INTEGRATION-V1-loading-mobile-360-linux.png",
+      "sha256": "624fd9acd720966c4570233dd7aca1a81c67646a3c8dd110901c2e0f9d673201"
+    },
+    {
+      "path": "tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots/C-005-HOME-CATALOG-API-INTEGRATION-V1-loading-mobile-390-linux.png",
+      "sha256": "74dffa6e98ab7cfb7b0544958615226fbb6f5ef9602e07a655c3a172ea99e6a3"
+    },
+    {
+      "path": "tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots/C-005-HOME-CATALOG-API-INTEGRATION-V1-ready-hires-1170-linux.png",
+      "sha256": "6eaa6d54ecd6f8e421ffd424d81be0849e88784b514208c95c8946fa4e638d32"
+    },
+    {
+      "path": "tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots/C-005-HOME-CATALOG-API-INTEGRATION-V1-ready-mobile-360-linux.png",
+      "sha256": "4c02b22c2377d9a7fc253404fe331c0db575049eb214b7e7c3e150096730fb33"
+    },
+    {
+      "path": "tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots/C-005-HOME-CATALOG-API-INTEGRATION-V1-ready-mobile-390-linux.png",
+      "sha256": "b454728222ec6a2e125487bf8996b431879620c131725eb102070695580f4db4"
+    }
+  ]
+}

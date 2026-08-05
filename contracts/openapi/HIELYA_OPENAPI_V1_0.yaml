@@ -1,0 +1,3242 @@
+openapi: 3.1.1
+info:
+  title: HIELYA API
+  version: 1.0.0
+  summary: Contrato inicial do MVP da conveniência local HIELYA.
+  description: API REST para cliente, painel administrativo, estoque, pagamentos, entrega e webhooks. O Source of Truth V1.1
+    prevalece sobre mockups.
+  contact:
+    name: HIELYA Product & Technology
+    email: support@hielya.example
+  license:
+    name: Proprietary
+servers:
+- url: https://api.staging.hielya.example/v1
+  description: Staging
+- url: https://api.hielya.example/v1
+  description: Production (blocked until external validation)
+tags:
+- name: Auth
+- name: Customer
+- name: Store
+- name: Catalog
+- name: Cart
+- name: Checkout
+- name: Orders
+- name: Payments
+- name: Devices
+- name: Admin Orders
+- name: Admin Inventory
+- name: Admin Store
+- name: Admin Finance
+- name: Webhooks
+- name: Admin Auth
+- name: Admin Audit
+- name: Admin Reports
+- name: Coupons
+- name: Notifications
+- name: Admin Coupons
+paths:
+  /auth/otp/request:
+    post:
+      tags:
+      - Auth
+      summary: Request customer OTP
+      operationId: requestOtp
+      responses:
+        '202':
+          description: OTP challenge created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtpChallenge'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      security: &id001 []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpRequest'
+  /auth/otp/verify:
+    post:
+      tags:
+      - Auth
+      summary: Verify customer OTP
+      operationId: verifyOtp
+      responses:
+        '200':
+          description: Authenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      security: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpVerify'
+  /auth/refresh:
+    post:
+      tags:
+      - Auth
+      summary: Refresh customer token
+      operationId: refreshToken
+      responses:
+        '200':
+          description: New token pair.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      security: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+  /auth/logout:
+    post:
+      tags:
+      - Auth
+      summary: Logout current session
+      operationId: logout
+      responses:
+        '204':
+          description: Session revoked.
+      security: &id002
+      - customerBearer: []
+  /me:
+    get:
+      tags:
+      - Customer
+      summary: Get current customer
+      operationId: getMe
+      responses:
+        '200':
+          description: Customer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+      security: *id002
+    patch:
+      tags:
+      - Customer
+      summary: Update current customer
+      operationId: updateMe
+      responses:
+        '200':
+          description: Updated customer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+      security: *id002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerPatch'
+  /addresses:
+    get:
+      tags:
+      - Customer
+      summary: List customer addresses
+      operationId: listAddresses
+      responses:
+        '200':
+          description: Address list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Address'
+      security: *id002
+    post:
+      tags:
+      - Customer
+      summary: Create customer address
+      operationId: createAddress
+      responses:
+        '201':
+          description: Created address.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+      security: *id002
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressInput'
+  /addresses/{addressId}:
+    parameters:
+    - name: addressId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    patch:
+      tags:
+      - Customer
+      summary: Update customer address
+      operationId: updateAddress
+      responses:
+        '200':
+          description: Updated address.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security: *id002
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressInput'
+    delete:
+      tags:
+      - Customer
+      summary: Delete customer address
+      operationId: deleteAddress
+      responses:
+        '204':
+          description: Address disabled.
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security: *id002
+  /store/status:
+    get:
+      tags:
+      - Store
+      summary: Get public store status
+      operationId: getStoreStatus
+      responses:
+        '200':
+          description: Current store status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreStatus'
+      security: *id001
+  /delivery/quote:
+    post:
+      tags:
+      - Store
+      summary: Quote delivery route
+      operationId: quoteDelivery
+      responses:
+        '200':
+          description: Delivery quote.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryQuote'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+      security: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryQuoteRequest'
+  /catalog/categories:
+    get:
+      tags:
+      - Catalog
+      summary: List active categories
+      operationId: listCategories
+      responses:
+        '200':
+          description: Categories.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+      security: *id001
+  /catalog/products:
+    get:
+      tags:
+      - Catalog
+      summary: Search and list active products
+      operationId: listProducts
+      responses:
+        '200':
+          description: Product page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPage'
+      security: *id001
+      parameters:
+      - name: q
+        in: query
+        schema:
+          type: string
+      - name: category
+        in: query
+        schema:
+          type: string
+      - name: availableOnly
+        in: query
+        schema:
+          type: boolean
+          default: false
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PageSize'
+  /catalog/products/{productId}:
+    get:
+      tags:
+      - Catalog
+      summary: Get product detail
+      operationId: getProduct
+      responses:
+        '200':
+          description: Product.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security: *id001
+      parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /carts:
+    post:
+      tags:
+      - Cart
+      summary: Create active cart
+      operationId: createCart
+      responses:
+        '201':
+          description: Cart created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+      security: *id001
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+  /carts/{cartId}:
+    get:
+      tags:
+      - Cart
+      summary: Get cart
+      operationId: getCart
+      responses:
+        '200':
+          description: Cart.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security: *id001
+      parameters:
+      - name: cartId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /carts/{cartId}/items:
+    post:
+      tags:
+      - Cart
+      summary: Add product to cart
+      operationId: addCartItem
+      responses:
+        '200':
+          description: Updated cart.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security: *id001
+      parameters:
+      - name: cartId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CartItemInput'
+  /carts/{cartId}/items/{itemId}:
+    patch:
+      tags:
+      - Cart
+      summary: Change cart item quantity
+      operationId: updateCartItem
+      responses:
+        '200':
+          description: Updated cart.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+      security: *id001
+      parameters:
+      - name: cartId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: itemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - quantity
+              properties:
+                quantity:
+                  type: integer
+                  minimum: 1
+    delete:
+      tags:
+      - Cart
+      summary: Remove cart item
+      operationId: deleteCartItem
+      responses:
+        '200':
+          description: Updated cart.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+      security: *id001
+      parameters:
+      - name: cartId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: itemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /carts/{cartId}/validate:
+    post:
+      tags:
+      - Checkout
+      summary: Validate cart against all MVP rules
+      operationId: validateCart
+      responses:
+        '200':
+          description: Validation result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartValidation'
+      security: *id002
+      parameters:
+      - name: cartId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - addressId
+              properties:
+                addressId:
+                  type: string
+                  format: uuid
+                couponCode:
+                  type:
+                  - string
+                  - 'null'
+                tipCents:
+                  type: integer
+                  description: Amount in euro cents.
+                  minimum: 0
+                  example: 2999
+  /checkout/reservations:
+    post:
+      tags:
+      - Checkout
+      summary: Reserve inventory for checkout
+      operationId: createReservation
+      responses:
+        '201':
+          description: Reservation created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security: *id002
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - cartId
+              - addressId
+              properties:
+                cartId:
+                  type: string
+                  format: uuid
+                addressId:
+                  type: string
+                  format: uuid
+  /orders:
+    post:
+      tags:
+      - Orders
+      summary: Create order from validated cart
+      operationId: createOrder
+      responses:
+        '201':
+          description: Order created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security: *id002
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderInput'
+    get:
+      tags:
+      - Orders
+      summary: List current customer orders
+      operationId: listOrders
+      responses:
+        '200':
+          description: Orders.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+      security: *id002
+      parameters:
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PageSize'
+  /orders/{orderId}:
+    get:
+      tags:
+      - Orders
+      summary: Get customer order
+      operationId: getOrder
+      responses:
+        '200':
+          description: Order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security: *id002
+      parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /orders/{orderId}/cancel:
+    post:
+      tags:
+      - Orders
+      summary: Request order cancellation
+      operationId: cancelOrder
+      responses:
+        '200':
+          description: Cancellation accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+      security: *id002
+      parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 300
+  /payments/intents:
+    post:
+      tags:
+      - Payments
+      summary: Create or reuse Stripe PaymentIntent
+      operationId: createPaymentIntent
+      responses:
+        '201':
+          description: Payment intent ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security: *id002
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentIntentRequest'
+      description: Creates one PaymentIntent per order with capture_method=manual. The server never accepts an arbitrary amount
+        from the client.
+  /payments/{paymentId}:
+    get:
+      tags:
+      - Payments
+      summary: Get payment state
+      operationId: getPayment
+      responses:
+        '200':
+          description: Payment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntentResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security: *id002
+      parameters:
+      - name: paymentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /devices:
+    post:
+      tags:
+      - Devices
+      summary: Register push device token
+      operationId: registerDevice
+      responses:
+        '201':
+          description: Device registered.
+      security: *id002
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceTokenInput'
+  /devices/{deviceId}:
+    delete:
+      tags:
+      - Devices
+      summary: Revoke push device token
+      operationId: revokeDevice
+      responses:
+        '204':
+          description: Token revoked.
+      security: *id002
+      parameters:
+      - name: deviceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /admin/dashboard:
+    get:
+      tags:
+      - Admin Orders
+      summary: Get Today dashboard
+      operationId: getAdminDashboard
+      responses:
+        '200':
+          description: Operational dashboard.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+      security: &id003
+      - adminBearer: []
+  /admin/orders:
+    get:
+      tags:
+      - Admin Orders
+      summary: List operational order queue
+      operationId: listAdminOrders
+      responses:
+        '200':
+          description: Order queue.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdminOrderSummary'
+      security: *id003
+      parameters:
+      - name: status
+        in: query
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderStatus'
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PageSize'
+  /admin/orders/{orderId}:
+    get:
+      tags:
+      - Admin Orders
+      summary: Get operational order detail
+      operationId: getAdminOrder
+      responses:
+        '200':
+          description: Order detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminOrderSummary'
+      security: *id003
+      parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /admin/orders/{orderId}/start-picking:
+    post:
+      tags:
+      - Admin Orders
+      summary: Start picking order
+      operationId: startPicking
+      responses:
+        '200':
+          description: Picking started.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security: *id003
+      parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/IdempotencyKey'
+  /admin/orders/{orderId}/confirm-items:
+    post:
+      tags:
+      - Admin Orders
+      summary: Confirm physically available order items
+      operationId: confirmOrderItems
+      responses:
+        '200':
+          description: Order recalculated and ready for capture.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+      security: *id003
+      parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmItemsInput'
+  /admin/orders/{orderId}/capture:
+    post:
+      tags:
+      - Admin Finance
+      summary: Capture authorized Stripe payment
+      operationId: captureOrderPayment
+      responses:
+        '200':
+          description: Captured order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security: *id003
+      parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaptureInput'
+      description: The amount must be calculated by the server and must be <= amount_capturable.
+  /admin/orders/{orderId}/mark-ready:
+    post:
+      tags:
+      - Admin Orders
+      summary: Mark order ready for delivery
+      operationId: markOrderReady
+      responses:
+        '200':
+          description: Order ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+      security: *id003
+      parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/IdempotencyKey'
+  /admin/deliveries/{deliveryId}/start:
+    post:
+      tags:
+      - Admin Orders
+      summary: Start delivery
+      operationId: startDelivery
+      responses:
+        '200':
+          description: Delivery started.
+      security: *id003
+      parameters:
+      - name: deliveryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/IdempotencyKey'
+  /admin/deliveries/{deliveryId}/arrive:
+    post:
+      tags:
+      - Admin Orders
+      summary: Mark rider arrived
+      operationId: markDeliveryArrived
+      responses:
+        '200':
+          description: Arrival recorded.
+      security: *id003
+      parameters:
+      - name: deliveryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/IdempotencyKey'
+  /admin/deliveries/{deliveryId}/age-check:
+    post:
+      tags:
+      - Admin Orders
+      summary: Record alcohol age and identity check
+      operationId: recordAgeCheck
+      responses:
+        '200':
+          description: Age check recorded.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+      security: *id003
+      parameters:
+      - name: deliveryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgeCheckInput'
+  /admin/deliveries/{deliveryId}/verify-pin:
+    post:
+      tags:
+      - Admin Orders
+      summary: Verify delivery PIN and complete delivery
+      operationId: verifyDeliveryPin
+      responses:
+        '200':
+          description: PIN valid; delivery completed.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      security: *id003
+      parameters:
+      - name: deliveryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PinVerifyInput'
+  /admin/deliveries/{deliveryId}/fail:
+    post:
+      tags:
+      - Admin Orders
+      summary: Record failed delivery
+      operationId: failDelivery
+      responses:
+        '200':
+          description: Failure recorded and return workflow started.
+      security: *id003
+      parameters:
+      - name: deliveryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryFailureInput'
+  /admin/inventory/receipts:
+    post:
+      tags:
+      - Admin Inventory
+      summary: Receive supplier inventory
+      operationId: receiveInventory
+      responses:
+        '201':
+          description: Batches and movements created.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+      security: *id003
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryReceiptInput'
+  /admin/inventory/adjustments:
+    post:
+      tags:
+      - Admin Inventory
+      summary: Create immutable inventory adjustment
+      operationId: adjustInventory
+      responses:
+        '201':
+          description: Adjustment movement created.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+      security: *id003
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryAdjustmentInput'
+  /admin/refunds:
+    post:
+      tags:
+      - Admin Finance
+      summary: Create full or partial refund
+      operationId: createRefund
+      responses:
+        '201':
+          description: Refund requested.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refund'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+      security: *id003
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundInput'
+  /admin/store/settings:
+    get:
+      tags:
+      - Admin Store
+      summary: Get operational store settings
+      operationId: getStoreSettings
+      responses:
+        '200':
+          description: Store settings.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreStatus'
+      security: *id003
+    patch:
+      tags:
+      - Admin Store
+      summary: Update operational store settings
+      operationId: updateStoreSettings
+      responses:
+        '200':
+          description: Settings updated.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+      security: *id003
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreSettingsPatch'
+  /webhooks/stripe:
+    post:
+      tags:
+      - Webhooks
+      summary: Receive Stripe webhook
+      operationId: stripeWebhook
+      responses:
+        '200':
+          description: Event accepted.
+        '400':
+          description: Invalid signature or malformed event.
+      security: *id001
+      description: Verify Stripe-Signature against the raw body; deduplicate by provider event ID; persist before asynchronous
+        processing.
+  /admin/auth/login:
+    post:
+      tags:
+      - Admin Auth
+      summary: Start internal-user authentication and 2FA challenge
+      operationId: adminLogin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminLoginInput'
+      responses:
+        '200':
+          description: Second-factor challenge created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminLoginChallenge'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /admin/auth/2fa/verify:
+    post:
+      tags:
+      - Admin Auth
+      summary: Verify internal-user second factor
+      operationId: verifyAdminTwoFactor
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminTwoFactorInput'
+      responses:
+        '200':
+          description: Authenticated internal-user session.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminTokenPair'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /admin/auth/refresh:
+    post:
+      tags:
+      - Admin Auth
+      summary: Refresh internal-user session tokens
+      operationId: refreshAdminSession
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminRefreshInput'
+      responses:
+        '200':
+          description: New token pair.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminTokenPair'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /admin/auth/logout:
+    post:
+      tags:
+      - Admin Auth
+      summary: Revoke internal-user session
+      operationId: adminLogout
+      security:
+      - adminBearer: []
+      responses:
+        '204':
+          description: Session revoked.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /admin/inventory:
+    get:
+      tags:
+      - Admin Inventory
+      summary: List operational inventory position
+      operationId: listAdminInventory
+      security:
+      - adminBearer: []
+      parameters:
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - NORMAL
+          - LOW
+          - CRITICAL
+          - OUT_OF_STOCK
+          - DIVERGENT
+          - PAUSED
+      - name: search
+        in: query
+        schema:
+          type: string
+          maxLength: 100
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Inventory position.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdminInventoryItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /admin/audit-logs:
+    get:
+      tags:
+      - Admin Audit
+      summary: Query immutable operational audit log
+      operationId: listAuditLogs
+      security:
+      - adminBearer: []
+      parameters:
+      - name: entityType
+        in: query
+        schema:
+          type: string
+      - name: entityId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: action
+        in: query
+        schema:
+          type: string
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date-time
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Audit entries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLogEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /admin/reports/summary:
+    get:
+      tags:
+      - Admin Reports
+      summary: Get operational and financial summary
+      operationId: getAdminReportSummary
+      security:
+      - adminBearer: []
+      parameters:
+      - name: from
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: Report summary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportSummary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /carts/{cartId}/coupon:
+    post:
+      tags:
+      - Coupons
+      summary: Apply one coupon to cart
+      operationId: applyCartCoupon
+      security:
+      - customerBearer: []
+      parameters:
+      - name: cartId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CouponApplyInput'
+      responses:
+        '200':
+          description: Cart recalculated with coupon.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags:
+      - Coupons
+      summary: Remove coupon from cart
+      operationId: removeCartCoupon
+      security:
+      - customerBearer: []
+      parameters:
+      - name: cartId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Cart recalculated without coupon.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /notifications:
+    get:
+      tags:
+      - Notifications
+      summary: List customer notifications
+      operationId: listNotifications
+      security:
+      - customerBearer: []
+      parameters:
+      - name: unreadOnly
+        in: query
+        schema:
+          type: boolean
+          default: false
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Notifications.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /notifications/{notificationId}/read:
+    post:
+      tags:
+      - Notifications
+      summary: Mark notification as read
+      operationId: markNotificationRead
+      security:
+      - customerBearer: []
+      parameters:
+      - name: notificationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '204':
+          description: Marked as read.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /admin/coupons:
+    get:
+      tags:
+      - Admin Coupons
+      summary: List coupons
+      operationId: listAdminCoupons
+      security:
+      - adminBearer: []
+      parameters:
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum:
+          - DRAFT
+          - ACTIVE
+          - PAUSED
+          - EXPIRED
+      - $ref: '#/components/parameters/Page'
+      - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Coupons.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Coupon'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+      - Admin Coupons
+      summary: Create coupon
+      operationId: createAdminCoupon
+      security:
+      - adminBearer: []
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CouponInput'
+      responses:
+        '201':
+          description: Coupon created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coupon'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /admin/coupons/{couponId}:
+    patch:
+      tags:
+      - Admin Coupons
+      summary: Update or pause coupon
+      operationId: updateAdminCoupon
+      security:
+      - adminBearer: []
+      parameters:
+      - name: couponId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CouponInput'
+      responses:
+        '200':
+          description: Coupon updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coupon'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /admin/refunds/{refundId}:
+    get:
+      tags:
+      - Admin Finance
+      summary: Get refund status
+      operationId: getAdminRefund
+      security:
+      - adminBearer: []
+      parameters:
+      - name: refundId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Refund details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refund'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    customerBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Customer access token.
+    adminBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Internal-user token; admin login requires 2FA.
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 16
+        maxLength: 128
+      description: Required for commands that create or mutate financial, order or inventory state.
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        format: uuid
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: pageSize
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+  responses:
+    BadRequest:
+      description: Invalid request or business-rule violation.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication required or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Insufficient permission.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Concurrent state conflict or duplicate command.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    TooManyRequests:
+      description: Rate limit exceeded.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Error:
+      type: object
+      required:
+      - code
+      - message
+      - correlationId
+      properties:
+        code:
+          type: string
+          example: CART_MINIMUM_NOT_REACHED
+        message:
+          type: string
+          example: Faltam €4,30 para atingir o pedido mínimo.
+        correlationId:
+          type: string
+          format: uuid
+        details:
+          type:
+          - object
+          - 'null'
+          additionalProperties: true
+    OtpRequest:
+      type: object
+      required:
+      - phoneE164
+      - locale
+      properties:
+        phoneE164:
+          type: string
+          pattern: ^\+[1-9][0-9]{7,14}$
+          example: '+34612345678'
+        locale:
+          type: string
+          enum:
+          - es-ES
+          - en-GB
+          - pt-BR
+          default: es-ES
+    OtpChallenge:
+      type: object
+      required:
+      - challengeId
+      - expiresInSeconds
+      - resendAfterSeconds
+      properties:
+        challengeId:
+          type: string
+          format: uuid
+        expiresInSeconds:
+          type: integer
+          example: 300
+        resendAfterSeconds:
+          type: integer
+          example: 45
+    OtpVerify:
+      type: object
+      required:
+      - challengeId
+      - code
+      properties:
+        challengeId:
+          type: string
+          format: uuid
+        code:
+          type: string
+          pattern: ^[0-9]{6}$
+          example: '482915'
+    Customer:
+      type: object
+      required:
+      - id
+      - phoneE164
+      - preferredLocale
+      - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        phoneE164:
+          type: string
+        email:
+          type:
+          - string
+          - 'null'
+          format: email
+        fullName:
+          type:
+          - string
+          - 'null'
+        birthDate:
+          type:
+          - string
+          - 'null'
+          format: date
+        preferredLocale:
+          type: string
+          enum:
+          - es-ES
+          - en-GB
+          - pt-BR
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - BLOCKED
+          - DELETED
+    CustomerPatch:
+      type: object
+      properties:
+        email:
+          type:
+          - string
+          - 'null'
+          format: email
+        fullName:
+          type:
+          - string
+          - 'null'
+          maxLength: 120
+        birthDate:
+          type:
+          - string
+          - 'null'
+          format: date
+        preferredLocale:
+          type: string
+          enum:
+          - es-ES
+          - en-GB
+          - pt-BR
+    TokenPair:
+      type: object
+      required:
+      - accessToken
+      - refreshToken
+      - expiresInSeconds
+      - customer
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresInSeconds:
+          type: integer
+        customer:
+          $ref: '#/components/schemas/Customer'
+    Address:
+      type: object
+      required:
+      - id
+      - type
+      - line1
+      - postalCode
+      - city
+      - countryCode
+      - latitude
+      - longitude
+      - isWithinArea
+      properties:
+        id:
+          type: string
+          format: uuid
+        type: &id004
+          type: string
+          enum:
+          - HOME
+          - HOTEL
+          - BUSINESS
+          - OTHER
+        label: &id005
+          type:
+          - string
+          - 'null'
+        recipientName: &id006
+          type: string
+        recipientPhoneE164: &id007
+          type: string
+        line1: &id008
+          type: string
+        line2: &id009
+          type:
+          - string
+          - 'null'
+        buildingName: &id010
+          type:
+          - string
+          - 'null'
+        floor: &id011
+          type:
+          - string
+          - 'null'
+        apartment: &id012
+          type:
+          - string
+          - 'null'
+        intercom: &id013
+          type:
+          - string
+          - 'null'
+        hotelName: &id014
+          type:
+          - string
+          - 'null'
+        roomNumber: &id015
+          type:
+          - string
+          - 'null'
+        companyName: &id016
+          type:
+          - string
+          - 'null'
+        postalCode: &id017
+          type: string
+        city: &id018
+          type: string
+        region: &id019
+          type: string
+        countryCode: &id020
+          type: string
+          minLength: 2
+          maxLength: 2
+        latitude: &id021
+          type: number
+          format: double
+        longitude: &id022
+          type: number
+          format: double
+        instructions: &id023
+          type:
+          - string
+          - 'null'
+          maxLength: 500
+        routeDistanceKm:
+          type:
+          - number
+          - 'null'
+        isWithinArea:
+          type: boolean
+        deliveryFeeCents:
+          type:
+          - integer
+          - 'null'
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+    AddressInput:
+      type: object
+      required:
+      - type
+      - recipientName
+      - recipientPhoneE164
+      - line1
+      - postalCode
+      - city
+      - region
+      - countryCode
+      - latitude
+      - longitude
+      properties:
+        type: *id004
+        label: *id005
+        recipientName: *id006
+        recipientPhoneE164: *id007
+        line1: *id008
+        line2: *id009
+        buildingName: *id010
+        floor: *id011
+        apartment: *id012
+        intercom: *id013
+        hotelName: *id014
+        roomNumber: *id015
+        companyName: *id016
+        postalCode: *id017
+        city: *id018
+        region: *id019
+        countryCode: *id020
+        latitude: *id021
+        longitude: *id022
+        instructions: *id023
+    StoreStatus:
+      type: object
+      required:
+      - state
+      - opensAt
+      - closesAt
+      - timezone
+      - minimumSubtotalCents
+      - deliveryRadiusKm
+      - maxActiveOrders
+      properties:
+        state:
+          type: string
+          enum:
+          - OPEN
+          - PAUSED
+          - CLOSED
+        pauseReason:
+          type:
+          - string
+          - 'null'
+        opensAt:
+          type: string
+          example: '10:00'
+        closesAt:
+          type: string
+          example: '22:00'
+        timezone:
+          type: string
+          example: Europe/Madrid
+        minimumSubtotalCents:
+          type: integer
+          const: 2500
+        deliveryRadiusKm:
+          type: number
+          const: 4
+        maxActiveOrders:
+          type: integer
+          const: 3
+        activeOrders:
+          type: integer
+        alcoholCheckoutAllowed:
+          type: boolean
+        alcoholCutoffAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+    DeliveryQuoteRequest:
+      type: object
+      required:
+      - latitude
+      - longitude
+      properties:
+        latitude:
+          type: number
+        longitude:
+          type: number
+        addressType:
+          type: string
+          enum:
+          - HOME
+          - HOTEL
+          - BUSINESS
+          - OTHER
+    DeliveryQuote:
+      type: object
+      required:
+      - withinArea
+      - routeDistanceKm
+      - feeCents
+      - etaMinMinutes
+      - etaMaxMinutes
+      properties:
+        withinArea:
+          type: boolean
+        routeDistanceKm:
+          type: number
+        feeCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        etaMinMinutes:
+          type: integer
+        etaMaxMinutes:
+          type: integer
+        publicSpaceBlocked:
+          type: boolean
+    Category:
+      type: object
+      required:
+      - id
+      - slug
+      - name
+      - sortOrder
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        name:
+          type: string
+        imageUrl:
+          type:
+          - string
+          - 'null'
+          format: uri
+        sortOrder:
+          type: integer
+    Product:
+      type: object
+      required:
+      - id
+      - sku
+      - name
+      - categoryId
+      - salePriceCents
+      - currency
+      - status
+      - availableQuantity
+      - maxPerOrder
+      - containsAlcohol
+      properties:
+        id:
+          type: string
+          format: uuid
+        sku:
+          type: string
+          example: HYA-CER-003
+        ean:
+          type:
+          - string
+          - 'null'
+        name:
+          type: string
+        brand:
+          type: string
+        categoryId:
+          type: string
+          format: uuid
+        subcategory:
+          type:
+          - string
+          - 'null'
+        volumeLabel:
+          type: string
+        grossWeightKg:
+          type: number
+        estimatedVolumeLiters:
+          type:
+          - number
+          - 'null'
+        salePriceCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        currency:
+          type: string
+          const: EUR
+        unitPriceLabel:
+          type:
+          - string
+          - 'null'
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - LOW_STOCK
+          - OUT_OF_STOCK
+          - PAUSED
+          - BLOCKED
+        availableQuantity:
+          type: integer
+          minimum: 0
+        maxPerOrder:
+          type: integer
+          minimum: 1
+        temperatureProfile:
+          type: string
+          enum:
+          - CHILLED
+          - FROZEN
+          - CELLAR
+          - AMBIENT
+        readyToConsume:
+          type: boolean
+        containsAlcohol:
+          type: boolean
+        minimumAge:
+          type:
+          - integer
+          - 'null'
+        alcoholPercentage:
+          type:
+          - number
+          - 'null'
+        isCore:
+          type: boolean
+        imageUrl:
+          type:
+          - string
+          - 'null'
+          format: uri
+        keywords:
+          type: array
+          items:
+            type: string
+    ProductPage:
+      type: object
+      required:
+      - items
+      - page
+      - pageSize
+      - total
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+    CartItem:
+      type: object
+      required:
+      - id
+      - product
+      - quantity
+      - unitPriceCents
+      - lineTotalCents
+      properties:
+        id:
+          type: string
+          format: uuid
+        product:
+          $ref: '#/components/schemas/Product'
+        quantity:
+          type: integer
+          minimum: 1
+        unitPriceCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        lineTotalCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+    Cart:
+      type: object
+      required:
+      - id
+      - status
+      - items
+      - productSubtotalCents
+      - deliveryFeeCents
+      - discountCents
+      - tipCents
+      - totalCents
+      - minimumReached
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - RESERVED
+          - CONVERTED
+          - EXPIRED
+          - ABANDONED
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        productSubtotalCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        deliveryFeeCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        discountCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        tipCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        totalCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        minimumReached:
+          type: boolean
+        amountMissingForMinimumCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        totalWeightKg:
+          type: number
+        totalVolumeLiters:
+          type: number
+        containsAlcohol:
+          type: boolean
+        expiresAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+    CartItemInput:
+      type: object
+      required:
+      - productId
+      - quantity
+      properties:
+        productId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+    CartValidation:
+      type: object
+      required:
+      - valid
+      - violations
+      - cart
+      properties:
+        valid:
+          type: boolean
+        violations:
+          type: array
+          items:
+            type: string
+            enum:
+            - STORE_CLOSED
+            - OUTSIDE_AREA
+            - MINIMUM_NOT_REACHED
+            - OUT_OF_STOCK
+            - MAX_WEIGHT_EXCEEDED
+            - MAX_VOLUME_EXCEEDED
+            - SKU_LIMIT_EXCEEDED
+            - CAPACITY_REACHED
+            - ALCOHOL_CUTOFF
+            - PUBLIC_SPACE_BLOCKED
+        cart:
+          $ref: '#/components/schemas/Cart'
+    Reservation:
+      type: object
+      required:
+      - id
+      - cartId
+      - status
+      - expiresAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        cartId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - CONVERTED
+          - EXPIRED
+          - CANCELLED
+        expiresAt:
+          type: string
+          format: date-time
+    CreateOrderInput:
+      type: object
+      required:
+      - cartId
+      - reservationId
+      - addressId
+      - ageDeclarationsAccepted
+      properties:
+        cartId:
+          type: string
+          format: uuid
+        reservationId:
+          type: string
+          format: uuid
+        addressId:
+          type: string
+          format: uuid
+        couponCode:
+          type:
+          - string
+          - 'null'
+        tipCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        deliveryInstructions:
+          type:
+          - string
+          - 'null'
+          maxLength: 500
+        ageDeclarationsAccepted:
+          type: boolean
+    OrderStatus:
+      type: string
+      enum:
+      - AWAITING_PAYMENT
+      - PAYMENT_AUTHORIZED
+      - AWAITING_PICKING
+      - PICKING
+      - AWAITING_CONFIRMATION
+      - PREPARING
+      - READY
+      - OUT_FOR_DELIVERY
+      - DELIVERED
+      - CANCELLED
+      - DELIVERY_FAILED
+      - RETURNING
+      - RETURNED
+    PaymentStatus:
+      type: string
+      enum:
+      - NOT_STARTED
+      - REQUIRES_PAYMENT_METHOD
+      - REQUIRES_ACTION
+      - PROCESSING
+      - AUTHORIZED
+      - REQUIRES_CAPTURE
+      - CAPTURING
+      - CAPTURED
+      - PARTIALLY_CAPTURED
+      - CANCELLED
+      - FAILED
+      - PARTIALLY_REFUNDED
+      - REFUNDED
+      - DISPUTED
+    DeliveryStatus:
+      type: string
+      enum:
+      - NOT_ASSIGNED
+      - ASSIGNED
+      - READY
+      - OUT_FOR_DELIVERY
+      - ARRIVED
+      - DELIVERED
+      - FAILED
+      - RETURNING
+      - RETURNED
+    Order:
+      type: object
+      required:
+      - id
+      - orderNumber
+      - status
+      - paymentStatus
+      - deliveryStatus
+      - productSubtotalCents
+      - deliveryFeeCents
+      - totalCents
+      - containsAlcohol
+      - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderNumber:
+          type: string
+          example: HLY-20260729-1059
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        paymentStatus:
+          $ref: '#/components/schemas/PaymentStatus'
+        deliveryStatus:
+          $ref: '#/components/schemas/DeliveryStatus'
+        productSubtotalCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        deliveryFeeCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        discountCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        tipCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        totalCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        authorizedCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        capturedCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        refundedCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        containsAlcohol:
+          type: boolean
+        etaMinAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        etaMaxAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    PaymentIntentRequest:
+      type: object
+      required:
+      - orderId
+      - paymentMethodType
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        paymentMethodType:
+          type: string
+          enum:
+          - CARD
+          - APPLE_PAY
+          - GOOGLE_PAY
+        returnUrl:
+          type: string
+          format: uri
+    PaymentIntentResponse:
+      type: object
+      required:
+      - paymentId
+      - providerPaymentIntentId
+      - status
+      - authorizedAmountCents
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+        providerPaymentIntentId:
+          type: string
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        clientSecret:
+          type:
+          - string
+          - 'null'
+        authorizedAmountCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+    AdminOrderSummary:
+      allOf:
+      - $ref: '#/components/schemas/Order'
+      description: Order plus operational fields for internal users.
+    ConfirmItemsInput:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required:
+            - orderItemId
+            - confirmedQuantity
+            properties:
+              orderItemId:
+                type: string
+                format: uuid
+              confirmedQuantity:
+                type: integer
+                minimum: 0
+              batchAllocations:
+                type: array
+                items:
+                  type: object
+                  required:
+                  - batchId
+                  - quantity
+                  properties:
+                    batchId:
+                      type: string
+                      format: uuid
+                    quantity:
+                      type: integer
+                      minimum: 1
+              reason:
+                type:
+                - string
+                - 'null'
+    CaptureInput:
+      type: object
+      required:
+      - amountCents
+      properties:
+        amountCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+    RefundInput:
+      type: object
+      required:
+      - orderId
+      - amountCents
+      - reason
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        amountCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        reason:
+          type: string
+          enum:
+          - CUSTOMER_REQUEST
+          - PRODUCT_MISSING
+          - PRODUCT_DAMAGED
+          - TEMPERATURE_ISSUE
+          - HIELYA_CANCELLATION
+          - DUPLICATE_CHARGE
+          - OTHER
+        notes:
+          type:
+          - string
+          - 'null'
+    Refund:
+      type: object
+      required:
+      - id
+      - orderId
+      - amountCents
+      - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        amountCents:
+          type: integer
+          description: Amount in euro cents.
+          minimum: 0
+          example: 2999
+        status:
+          type: string
+          enum:
+          - REQUESTED
+          - PENDING
+          - SUCCEEDED
+          - FAILED
+          - CANCELLED
+        providerRefundId:
+          type:
+          - string
+          - 'null'
+    InventoryReceiptInput:
+      type: object
+      required:
+      - supplierId
+      - documentReference
+      - items
+      properties:
+        supplierId:
+          type: string
+          format: uuid
+        documentReference:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            required:
+            - productId
+            - quantity
+            - purchaseCostCents
+            - lotNumber
+            - expirationDate
+            properties:
+              productId:
+                type: string
+                format: uuid
+              quantity:
+                type: integer
+                minimum: 1
+              purchaseCostCents:
+                type: integer
+                description: Amount in euro cents.
+                minimum: 0
+                example: 2999
+              lotNumber:
+                type: string
+              expirationDate:
+                type: string
+                format: date
+    InventoryAdjustmentInput:
+      type: object
+      required:
+      - productId
+      - quantityDelta
+      - reason
+      properties:
+        productId:
+          type: string
+          format: uuid
+        batchId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        quantityDelta:
+          type: integer
+        reason:
+          type: string
+          enum:
+          - COUNT_CORRECTION
+          - DAMAGE
+          - EXPIRATION
+          - THEFT
+          - INTERNAL_USE
+          - RETURN_TO_STOCK
+          - DISCARD
+          - OTHER
+        notes:
+          type:
+          - string
+          - 'null'
+    AgeCheckInput:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          type: string
+          enum:
+          - APPROVED
+          - FAILED
+        documentType:
+          type:
+          - string
+          - 'null'
+          enum:
+          - DNI
+          - TIE
+          - PASSPORT
+          - DRIVING_LICENSE
+          - EU_ID
+          - null
+        failureReason:
+          type:
+          - string
+          - 'null'
+          enum:
+          - UNDER_18
+          - NO_DOCUMENT
+          - INVALID_DOCUMENT
+          - IDENTITY_MISMATCH
+          - UNSAFE_RECIPIENT
+          - OTHER
+          - null
+    PinVerifyInput:
+      type: object
+      required:
+      - pin
+      properties:
+        pin:
+          type: string
+          pattern: ^[0-9]{4}$
+    DeliveryFailureInput:
+      type: object
+      required:
+      - reason
+      properties:
+        reason:
+          type: string
+          enum:
+          - CUSTOMER_ABSENT
+          - UNDER_18
+          - NO_DOCUMENT
+          - INVALID_DOCUMENT
+          - IDENTITY_MISMATCH
+          - WRONG_PIN
+          - PIN_BLOCKED
+          - WRONG_ADDRESS
+          - ACCESS_BLOCKED
+          - RECIPIENT_REFUSED
+          - UNSAFE_SITUATION
+          - ALCOHOL_DEADLINE_EXCEEDED
+          - VEHICLE_FAILURE
+          - WEATHER_RISK
+          - OTHER
+        notes:
+          type:
+          - string
+          - 'null'
+    DeviceTokenInput:
+      type: object
+      required:
+      - platform
+      - token
+      properties:
+        platform:
+          type: string
+          enum:
+          - WEB
+          - ANDROID
+          - IOS
+        token:
+          type: string
+    StoreSettingsPatch:
+      type: object
+      properties:
+        state:
+          type: string
+          enum:
+          - OPEN
+          - PAUSED
+          - CLOSED
+        pauseReason:
+          type:
+          - string
+          - 'null'
+        minimumSubtotalCents:
+          type: integer
+          minimum: 2500
+        deliveryRadiusKm:
+          type: number
+          maximum: 4
+        maxActiveOrders:
+          type: integer
+          maximum: 3
+        maxOrdersPerRoute:
+          type: integer
+          maximum: 2
+    AdminLoginInput:
+      type: object
+      additionalProperties: false
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 12
+          maxLength: 128
+    AdminLoginChallenge:
+      type: object
+      additionalProperties: false
+      required:
+      - challengeId
+      - method
+      - expiresInSeconds
+      properties:
+        challengeId:
+          type: string
+          format: uuid
+        method:
+          type: string
+          enum:
+          - TOTP
+          - EMAIL_OTP
+        expiresInSeconds:
+          type: integer
+          minimum: 30
+          maximum: 600
+    AdminTwoFactorInput:
+      type: object
+      additionalProperties: false
+      required:
+      - challengeId
+      - code
+      properties:
+        challengeId:
+          type: string
+          format: uuid
+        code:
+          type: string
+          pattern: ^[0-9]{6}$
+    AdminRefreshInput:
+      type: object
+      additionalProperties: false
+      required:
+      - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          minLength: 20
+    AdminTokenPair:
+      type: object
+      additionalProperties: false
+      required:
+      - accessToken
+      - refreshToken
+      - expiresInSeconds
+      - internalUser
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresInSeconds:
+          type: integer
+        internalUser:
+          type: object
+          additionalProperties: false
+          required:
+          - id
+          - email
+          - displayName
+          - roles
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+              format: email
+            displayName:
+              type: string
+            roles:
+              type: array
+              items:
+                type: string
+    AdminInventoryItem:
+      type: object
+      additionalProperties: false
+      required:
+      - productId
+      - sku
+      - name
+      - physicalQuantity
+      - reservedQuantity
+      - sellableQuantity
+      - status
+      properties:
+        productId:
+          type: string
+          format: uuid
+        sku:
+          type: string
+        name:
+          type: string
+        physicalQuantity:
+          type: integer
+          minimum: 0
+        reservedQuantity:
+          type: integer
+          minimum: 0
+        sellableQuantity:
+          type: integer
+          minimum: 0
+        minimumStock:
+          type: integer
+          minimum: 0
+        reorderPoint:
+          type: integer
+          minimum: 0
+        expiresSoonQuantity:
+          type: integer
+          minimum: 0
+        status:
+          type: string
+          enum:
+          - NORMAL
+          - LOW
+          - CRITICAL
+          - OUT_OF_STOCK
+          - DIVERGENT
+          - PAUSED
+    AuditLogEntry:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - occurredAt
+      - actorType
+      - action
+      - entityType
+      properties:
+        id:
+          type: string
+          format: uuid
+        occurredAt:
+          type: string
+          format: date-time
+        actorType:
+          type: string
+          enum:
+          - CUSTOMER
+          - INTERNAL_USER
+          - SYSTEM
+          - WEBHOOK
+        actorId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        action:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        reason:
+          type:
+          - string
+          - 'null'
+        correlationId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        metadata:
+          type: object
+          additionalProperties: true
+    ReportSummary:
+      type: object
+      additionalProperties: false
+      required:
+      - periodStart
+      - periodEnd
+      - orders
+      - grossRevenue
+      - refunds
+      - averageTicket
+      properties:
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+        orders:
+          type: integer
+          minimum: 0
+        grossRevenue:
+          type: number
+          format: double
+        deliveryRevenue:
+          type: number
+          format: double
+        discounts:
+          type: number
+          format: double
+        refunds:
+          type: number
+          format: double
+        averageTicket:
+          type: number
+          format: double
+        estimatedGrossMargin:
+          type:
+          - number
+          - 'null'
+          format: double
+        preparationTimeMinutesP50:
+          type:
+          - number
+          - 'null'
+        deliveryTimeMinutesP50:
+          type:
+          - number
+          - 'null'
+    CouponApplyInput:
+      type: object
+      additionalProperties: false
+      required:
+      - code
+      properties:
+        code:
+          type: string
+          minLength: 3
+          maxLength: 40
+          pattern: ^[A-Za-z0-9_-]+$
+    Coupon:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - code
+      - type
+      - status
+      - startsAt
+      - endsAt
+      - usageLimitPerCustomer
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        type:
+          type: string
+          enum:
+          - FIXED_AMOUNT
+          - FREE_DELIVERY
+        value:
+          type:
+          - number
+          - 'null'
+          format: double
+        maximumDiscount:
+          type:
+          - number
+          - 'null'
+          format: double
+        minimumProductSubtotal:
+          type:
+          - number
+          - 'null'
+          format: double
+        startsAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: string
+          format: date-time
+        usageLimitTotal:
+          type:
+          - integer
+          - 'null'
+          minimum: 1
+        usageLimitPerCustomer:
+          type: integer
+          minimum: 1
+          default: 1
+        budgetAmount:
+          type:
+          - number
+          - 'null'
+          format: double
+        status:
+          type: string
+          enum:
+          - DRAFT
+          - ACTIVE
+          - PAUSED
+          - EXPIRED
+    CouponInput:
+      type: object
+      additionalProperties: false
+      required:
+      - code
+      - type
+      - startsAt
+      - endsAt
+      properties:
+        code:
+          type: string
+          minLength: 3
+          maxLength: 40
+          pattern: ^[A-Za-z0-9_-]+$
+        type:
+          type: string
+          enum:
+          - FIXED_AMOUNT
+          - FREE_DELIVERY
+        value:
+          type:
+          - number
+          - 'null'
+          format: double
+          minimum: 0
+        maximumDiscount:
+          type:
+          - number
+          - 'null'
+          format: double
+          minimum: 0
+        minimumProductSubtotal:
+          type:
+          - number
+          - 'null'
+          format: double
+          minimum: 0
+        startsAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: string
+          format: date-time
+        usageLimitTotal:
+          type:
+          - integer
+          - 'null'
+          minimum: 1
+        usageLimitPerCustomer:
+          type: integer
+          minimum: 1
+          default: 1
+        budgetAmount:
+          type:
+          - number
+          - 'null'
+          format: double
+          minimum: 0
+        status:
+          type: string
+          enum:
+          - DRAFT
+          - ACTIVE
+          - PAUSED
+    Notification:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - category
+      - title
+      - body
+      - createdAt
+      - read
+      properties:
+        id:
+          type: string
+          format: uuid
+        category:
+          type: string
+          enum:
+          - ORDER
+          - PAYMENT
+          - DELIVERY
+          - REFUND
+          - SYSTEM
+          - PROMOTION
+        title:
+          type: string
+        body:
+          type: string
+        orderId:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        read:
+          type: boolean

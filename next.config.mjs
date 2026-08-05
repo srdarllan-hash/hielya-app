@@ -2,6 +2,11 @@
 const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
-  transpilePackages: ['@hielya/ui', '@hielya/design-tokens'],
+  transpilePackages: [
+    '@hielya/application',
+    '@hielya/design-tokens',
+    '@hielya/persistence',
+    '@hielya/ui',
+  ],
 };
 export default nextConfig;

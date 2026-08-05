@@ -19,7 +19,15 @@ export const OPENAPI_V1_0_SHA256 = 'a2c027c6294b44c94cf4be21d18fbd251b0323102e3c
 export const OPENAPI_V1_1_PATH = 'contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_1.yaml';
 export const OPENAPI_V1_1_SHA256 = '92e1ebcc1d817718a7f2fe9ef1ce93df60194e049d3e0349855bd4ddd24d2ec8';
 export const ADR_PATH = 'docs/decisions/ADR-MVP-LOCAL-36-API-HOST-ARCHITECTURE.md';
+export const PUBLIC_API_ADR_PATH = 'docs/decisions/ADR-MVP-LOCAL-36-PUBLIC-SERVICE-API-LAYER.md';
 export const ARCHITECTURE_PROFILE_PATH = 'docs/architecture/MVP_LOCAL_36_API_HOST_PROFILE.json';
+
+const AUTHORIZED_ROUTE_HANDLERS = [
+  { method: 'GET', path: '/catalog/categories', file: 'apps/ui-lab/app/api/v1/catalog/categories/route.ts' },
+  { method: 'GET', path: '/catalog/products', file: 'apps/ui-lab/app/api/v1/catalog/products/route.ts' },
+  { method: 'GET', path: '/catalog/products/{productId}', file: 'apps/ui-lab/app/api/v1/catalog/products/[productId]/route.ts' },
+  { method: 'POST', path: '/delivery/quote', file: 'apps/ui-lab/app/api/v1/delivery/quote/route.ts' },
+];
 
 export const GATE_CHANGED_FILES = [
   '.dev-migrations/0002_mvp_local_36_catalog_read_model.sql',
@@ -36,6 +44,26 @@ export const GATE_CHANGED_FILES = [
   'tests/unit/mvp-catalog-read-model.test.ts',
   'tests/unit/mvp-local-36-api-host-architecture.test.ts',
   'tests/unit/mvp-persistence.test.ts',
+  'apps/ui-lab/app/api/v1/catalog/categories/route.ts',
+  'apps/ui-lab/app/api/v1/catalog/products/[productId]/route.ts',
+  'apps/ui-lab/app/api/v1/catalog/products/route.ts',
+  'apps/ui-lab/app/api/v1/delivery/quote/route.ts',
+  'apps/ui-lab/package.json',
+  'apps/ui-lab/src/server/mvp-local-36/container.ts',
+  'apps/ui-lab/src/server/mvp-local-36/http.ts',
+  'next.config.mjs',
+  'contracts/openapi/MVP_LOCAL_36_IMPLEMENTATION_PROFILE.json',
+  PUBLIC_API_ADR_PATH,
+  'packages/application/package.json',
+  'packages/application/src/index.ts',
+  'packages/persistence/package.json',
+  'packages/persistence/src/public-api-read-adapter.ts',
+  'pnpm-lock.yaml',
+  'scripts/validate-mvp-local-36-public-service-api.mjs',
+  'tests/unit/mvp-public-api-adapters.test.ts',
+  'tests/unit/mvp-public-api-handlers.test.ts',
+  'tests/unit/mvp-public-api-integration.test.ts',
+  'tests/unit/mvp-public-application.test.ts',
 ];
 
 const ALLOWED_CHANGED_FILES = new Set(GATE_CHANGED_FILES);
@@ -93,6 +121,7 @@ const parseJson = (path) => {
 const walkFiles = (directory, files = []) => {
   if (!existsSync(directory)) return files;
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    if (entry.isDirectory() && ['.next', 'node_modules'].includes(entry.name)) continue;
     const path = join(directory, entry.name);
     if (entry.isDirectory()) walkFiles(path, files);
     else files.push(path.split(sep).join('/'));
@@ -218,14 +247,22 @@ const validateArchitecture = () => {
     runtime: 'NEXTJS',
     host: 'apps/ui-lab',
     basePath: '/api/v1',
-    routeHandlersAuthorized: false,
+    routeHandlersAuthorized: true,
     secondRuntimeAuthorized: false,
     microservicesAuthorized: false,
+    realMapProviderAuthorized: false,
+    authenticationAuthorized: false,
+    cartLayerAuthorized: false,
+    inventoryMutationAuthorized: false,
     productionAuthorized: false,
   };
   for (const [key, value] of Object.entries(expectedProfile)) {
     assert(profile[key] === value, `API host architecture profile differs at ${key}`);
   }
+  assert(
+    JSON.stringify(profile.authorizedRouteHandlers) === JSON.stringify(AUTHORIZED_ROUTE_HANDLERS),
+    'API host architecture profile differs at authorizedRouteHandlers',
+  );
 
   const adr = readFileSync(ADR_PATH, 'utf8');
   const requiredAdrEvidence = [
@@ -243,6 +280,11 @@ const validateArchitecture = () => {
     'produção',
   ];
   requiredAdrEvidence.forEach((value) => assert(adr.includes(value), `API host ADR lacks required evidence: ${value}`));
+  const publicApiAdr = readFileSync(PUBLIC_API_ADR_PATH, 'utf8');
+  for (const route of AUTHORIZED_ROUTE_HANDLERS) {
+    assert(publicApiAdr.includes(route.path) && publicApiAdr.includes(route.file), `Public Service/API ADR lacks route evidence: ${route.path}`);
+  }
+  assert(publicApiAdr.includes('RoutingDistancePort'), 'Public Service/API ADR lacks the routing port decision');
 
   const applications = readdirSync('apps', { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
@@ -271,8 +313,14 @@ const validateArchitecture = () => {
   assert(microserviceDependencies.length === 0, `A parallel microservice dependency exists: ${microserviceDependencies.join(', ')}`);
 
   const routeHandlers = walkFiles('apps').filter((path) => /\/app\/api\/(?:.*\/)?route\.(?:ts|tsx|js|jsx|mjs|cjs)$/.test(path));
-  assert(routeHandlers.length === 0, `Route Handlers are not authorized in this Gate: ${routeHandlers.join(', ')}`);
-  assert(!existsSync('packages/application'), 'Application services are not authorized in this Gate');
+  const expectedRouteHandlers = AUTHORIZED_ROUTE_HANDLERS.map((route) => route.file).sort();
+  assert(
+    JSON.stringify(routeHandlers.sort()) === JSON.stringify(expectedRouteHandlers),
+    `Route Handler set differs from the four authorized operations: ${routeHandlers.join(', ')}`,
+  );
+  assert(existsSync('packages/application/src/index.ts'), 'Authorized application services package is missing');
+  const applicationSource = readFileSync('packages/application/src/index.ts', 'utf8');
+  assert(!/from\s+['"](?:next(?:\/|['"])|react(?:\/|['"])|node:sqlite|apps\/ui-lab)/.test(applicationSource), 'Application services depend on a forbidden runtime or host');
 
   const persistencePackage = JSON.parse(readFileSync('packages/persistence/package.json', 'utf8'));
   const persistenceDependencies = {
@@ -290,7 +338,7 @@ const validateArchitecture = () => {
 
   return {
     profileSource: profileResult.source,
-    adr,
+    adr: `${adr}\n${publicApiAdr}`,
     applications,
     routeHandlers,
     microserviceDependencies,
@@ -394,8 +442,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   console.log('API_BASE_PATH=/api/v1');
   console.log(`SECOND_RUNTIME_CREATED=${report.applications.length === 1 ? 'false' : 'true'}`);
   console.log(`MICROSERVICE_CREATED=${report.microserviceDependencies.length === 0 ? 'false' : 'true'}`);
-  console.log(`ROUTE_HANDLERS_CREATED=${report.routeHandlers.length === 0 ? 'false' : 'true'}`);
-  console.log('PUBLIC_ENDPOINTS_IMPLEMENTED=false');
+  console.log(`ROUTE_HANDLERS_CREATED=${report.routeHandlers.length === 4 ? 'true' : 'false'}`);
+  console.log(`PUBLIC_ENDPOINTS_IMPLEMENTED=${report.routeHandlers.length === 4 ? 'true' : 'false'}`);
   console.log('OPENAPI_V1_0_MODIFIED=false');
   console.log('OPENAPI_V1_1_MODIFIED=false');
   console.log(`SECRETS_FOUND=${report.secrets.length}`);

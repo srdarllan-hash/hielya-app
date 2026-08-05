@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 
 import {
@@ -38,10 +38,9 @@ type SqliteDatabase = {
   close: () => void;
 };
 
-const require = createRequire(import.meta.url);
-const { DatabaseSync } = require('node:sqlite') as {
-  DatabaseSync: new (filename: string) => SqliteDatabase;
-};
+export interface MvpPersistenceDatabaseOptions {
+  readOnly?: boolean;
+}
 
 export type CommercialAvailability = 'AVAILABLE' | 'UNAVAILABLE' | 'TEMPORARILY_UNAVAILABLE';
 
@@ -219,8 +218,9 @@ export class MvpPersistenceDatabase {
   constructor(
     filename = ':memory:',
     migrationDirectory = resolveDevelopmentMigrationDirectory(import.meta.url),
+    options: MvpPersistenceDatabaseOptions = {},
   ) {
-    this.db = new DatabaseSync(filename);
+    this.db = new DatabaseSync(filename, { readOnly: options.readOnly }) as unknown as SqliteDatabase;
     this.migrationDirectory = migrationDirectory;
     this.db.exec('PRAGMA foreign_keys = ON');
   }
@@ -657,3 +657,8 @@ export class MvpPersistenceDatabase {
     return Math.max(0, this.settings().minimumProductSubtotalCents - productSubtotalCents);
   }
 }
+
+export {
+  MvpCatalogReadAdapter,
+  MvpOperationalSettingsReadAdapter,
+} from './public-api-read-adapter';

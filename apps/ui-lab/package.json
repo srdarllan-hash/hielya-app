@@ -8,7 +8,9 @@
     "start": "next start"
   },
   "dependencies": {
+    "@hielya/application": "workspace:*",
     "@hielya/design-tokens": "workspace:*",
+    "@hielya/persistence": "workspace:*",
     "@hielya/ui": "workspace:*",
     "next": "16.2.7",
     "react": "19.2.7",

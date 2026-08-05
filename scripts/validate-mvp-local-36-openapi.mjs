@@ -61,6 +61,25 @@ const ALLOWED_CHANGED_FILES = new Set([
   'tests/unit/mvp-catalog-read-model.test.ts',
   'tests/unit/mvp-local-36-api-host-architecture.test.ts',
   'tests/unit/mvp-persistence.test.ts',
+  'apps/ui-lab/app/api/v1/catalog/categories/route.ts',
+  'apps/ui-lab/app/api/v1/catalog/products/[productId]/route.ts',
+  'apps/ui-lab/app/api/v1/catalog/products/route.ts',
+  'apps/ui-lab/app/api/v1/delivery/quote/route.ts',
+  'apps/ui-lab/package.json',
+  'apps/ui-lab/src/server/mvp-local-36/container.ts',
+  'apps/ui-lab/src/server/mvp-local-36/http.ts',
+  'next.config.mjs',
+  'docs/decisions/ADR-MVP-LOCAL-36-PUBLIC-SERVICE-API-LAYER.md',
+  'packages/application/package.json',
+  'packages/application/src/index.ts',
+  'packages/persistence/package.json',
+  'packages/persistence/src/public-api-read-adapter.ts',
+  'pnpm-lock.yaml',
+  'scripts/validate-mvp-local-36-public-service-api.mjs',
+  'tests/unit/mvp-public-api-adapters.test.ts',
+  'tests/unit/mvp-public-api-handlers.test.ts',
+  'tests/unit/mvp-public-api-integration.test.ts',
+  'tests/unit/mvp-public-application.test.ts',
 ]);
 const HTTP_METHODS = new Set(['get', 'post', 'put', 'patch', 'delete', 'options', 'head', 'trace']);
 
@@ -177,7 +196,12 @@ const validateProfile = (profile) => {
   assert(profile.baseline.file === ORIGINAL_PATH && profile.baseline.sha256 === ORIGINAL_SHA256 && profile.baseline.modified === false, 'Profile baseline identity differs');
   assert(profile.IMPLEMENT_NOW.length === 4, 'IMPLEMENT_NOW must contain exactly four operations');
   assert(profile.controls && Object.values(profile.controls).every((value) => value === false || value === true), 'Profile controls are invalid');
-  assert(profile.controls.apiImplementationAuthorized === false, 'API implementation must remain blocked');
+  assert(profile.controls.apiImplementationAuthorized === true, 'Public API implementation must be authorized');
+  assert(profile.controls.serviceLayerAuthorized === true, 'Application service layer must be authorized');
+  for (const control of ['authenticationAuthorized', 'cartLayerAuthorized', 'paymentAuthorized', 'productionAuthorized', 'mergeAuthorized']) {
+    assert(profile.controls[control] === false, `${control} must remain blocked`);
+  }
+  assert(profile.controls.prDraftRequired === true, 'The PR must remain draft');
 };
 
 const validateScope = () => {
@@ -248,5 +272,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   console.log('PUBLIC_INTERNAL_DTO_SEPARATION=true');
   console.log('DELIVERY_QUOTE_CONTRACT=SERVER_CALCULATED');
   console.log('CART_VALIDATION_STATUS=DEFERRED_AUTH_CART_LAYER');
-  console.log('API_IMPLEMENTATION_STARTED=false');
+  console.log('API_IMPLEMENTATION_STARTED=true');
+  console.log('SERVICE_LAYER_STARTED=true');
 }

@@ -49,6 +49,14 @@ jobs:
         run: |
           node scripts/validate-mvp-local-36-catalog-read-model.mjs
           pnpm exec vitest run tests/unit/mvp-catalog-read-model.test.ts tests/unit/mvp-local-36-api-host-architecture.test.ts
+      - name: Validate Public Service API scope, architecture, contracts and read-only behavior
+        run: |
+          node scripts/validate-mvp-local-36-public-service-api.mjs
+          pnpm exec vitest run \
+            tests/unit/mvp-public-application.test.ts \
+            tests/unit/mvp-public-api-adapters.test.ts \
+            tests/unit/mvp-public-api-handlers.test.ts \
+            tests/unit/mvp-public-api-integration.test.ts
       - name: Validate persistence schema
         run: node scripts/validate-mvp-persistence-schema.mjs
       - name: Validate development migrations
@@ -119,13 +127,17 @@ jobs:
           echo "PR_DRAFT_REQUIRED=true"
           echo "MERGE_AUTHORIZED=false"
           echo "MAIN_CHANGE_AUTHORIZED=false"
-          echo "SECOND_LAYER_AUTHORIZED=false"
           echo "MVP_LOCAL_36_OPENAPI_V1_1_VALIDATED=true"
-          echo "API_IMPLEMENTATION_STARTED=false"
-          echo "SERVICE_LAYER_STARTED=false"
+          echo "MVP_LOCAL_36_PUBLIC_SERVICE_API_VALIDATED=true"
+          echo "API_IMPLEMENTATION_STARTED=true"
+          echo "SERVICE_LAYER_STARTED=true"
           echo "AUTH_STARTED=false"
+          echo "C003_STARTED=false"
+          echo "C004_STARTED=false"
           echo "CART_LAYER_STARTED=false"
+          echo "ORDER_STARTED=false"
           echo "PAYMENT_STARTED=false"
+          echo "CLIENT_UI_STARTED=false"
           echo "MVP_LOCAL_36_COMPOSITE_COMMERCIAL_DATA_FROZEN=true"
           echo "OWNER_APPROVAL_RECORDED=true"
           echo "COMPOSITE_COUNT=6"
@@ -141,7 +153,13 @@ jobs:
           echo "API_BASE_PATH=/api/v1"
           echo "SECOND_RUNTIME_CREATED=false"
           echo "MICROSERVICE_CREATED=false"
-          echo "ROUTE_HANDLERS_CREATED=false"
-          echo "PUBLIC_ENDPOINTS_IMPLEMENTED=false"
+          echo "ROUTE_HANDLERS_CREATED=true"
+          echo "ROUTE_HANDLER_COUNT=4"
+          echo "PUBLIC_ENDPOINTS_IMPLEMENTED=true"
+          echo "PUBLIC_ENDPOINT_COUNT=4"
+          echo "PUBLIC_API_READ_ONLY=true"
+          echo "REAL_MAP_PROVIDER=false"
+          echo "INVENTORY_MUTATIONS=0"
+          echo "CART_VALIDATION_STATUS=DEFERRED_AUTH_CART_LAYER"
           echo "PRODUCTION_AUTHORIZED=false"
           echo "NEXT_LAYER_STARTED=false"

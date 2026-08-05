@@ -42,8 +42,8 @@
     { "method": "POST", "path": "/checkout/validate" }
   ],
   "controls": {
-    "apiImplementationAuthorized": false,
-    "serviceLayerAuthorized": false,
+    "apiImplementationAuthorized": true,
+    "serviceLayerAuthorized": true,
     "authenticationAuthorized": false,
     "cartLayerAuthorized": false,
     "paymentAuthorized": false,

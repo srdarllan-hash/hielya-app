@@ -37,6 +37,12 @@ jobs:
           cache: pnpm
       - name: Install frozen dependencies
         run: pnpm install --frozen-lockfile
+      - name: Validate persistence schema
+        run: node scripts/validate-mvp-persistence-schema.mjs
+      - name: Validate development migrations
+        run: pnpm exec vitest run tests/unit/mvp-persistence.test.ts --testNamePattern "applies the migration"
+      - name: Persistence integration and transaction tests
+        run: pnpm exec vitest run tests/unit/mvp-persistence.test.ts
       - name: Lint
         run: pnpm lint
       - name: Type-check

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   CapturingLocationCompletionPort,
   FakeAddressSearchService,
@@ -10,6 +10,8 @@ import {
   createLocationDependencies,
   createLocationStore,
   fakeAddresses,
+  type ServiceAreaResult,
+  type ServiceAreaService,
 } from '@hielya/location';
 
 describe('C-002 ports and fake adapters', () => {
@@ -72,5 +74,59 @@ describe('C-002 ports and fake adapters', () => {
     await expect(new FakeGeolocationAdapter('denied').getCurrentPosition({
       enableHighAccuracy: false, timeoutMs: 1000, maximumAgeMs: 0,
     })).rejects.toThrow();
+  });
+
+  it('propagates and aborts the active ServiceAreaService signal', async () => {
+    let resolveQuote!: (result: ServiceAreaResult) => void;
+    let receivedSignal: AbortSignal | undefined;
+    const serviceArea: ServiceAreaService = {
+      validate: vi.fn((_location, signal) => {
+        receivedSignal = signal;
+        return new Promise<ServiceAreaResult>((resolve) => {
+          resolveQuote = resolve;
+        });
+      }),
+    };
+    const repository = new MemoryLocationRepository();
+    const dependencies = {
+      ...createLocationDependencies({ geolocationMode: 'fake', repository }),
+      serviceArea,
+    };
+    const candidate = {
+      source: 'manual' as const,
+      coordinates: fakeAddresses[0].coordinates,
+      address: fakeAddresses[0],
+      confidence: 'exact' as const,
+      confirmedByUser: false,
+      confirmedAt: null,
+      serviceArea: null,
+      deliveryQuoteId: null,
+    };
+    const controller = createLocationController(
+      dependencies,
+      createLocationStore({ state: 'resolved', candidate }),
+    );
+
+    const confirmation = controller.dispatch({ type: 'CONFIRM_ADDRESS' });
+    expect(receivedSignal).toBeInstanceOf(AbortSignal);
+    expect(receivedSignal?.aborted).toBe(false);
+
+    controller.cancel();
+    expect(receivedSignal?.aborted).toBe(true);
+
+    resolveQuote({
+      serviceable: true,
+      reason: 'SERVICEABLE',
+      distanceMeters: 2_500,
+      distanceMethod: 'route',
+      radiusMeters: null,
+      storeId: null,
+      deliveryFeeCents: 350,
+      estimatedMinutes: null,
+      quoteId: null,
+      expiresAt: null,
+    });
+    await confirmation;
+    expect(await repository.getCurrent()).toBeNull();
   });
 });

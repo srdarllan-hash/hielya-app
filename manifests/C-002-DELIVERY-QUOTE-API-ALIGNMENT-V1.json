@@ -1,0 +1,103 @@
+{
+  "screenId": "C-002-DELIVERY-QUOTE-API-ALIGNMENT",
+  "name": "C-002 Delivery Quote API Alignment",
+  "version": "1.0.0",
+  "status": "GATE_CANDIDATE",
+  "issueNumber": 8,
+  "parentPr": 7,
+  "parentBranch": "hielya/mvp-local-36-product-detail-api-integration",
+  "parentFrozenSha": "1470e294404084119308812b049d94601926ce55",
+  "childBranch": "hielya/mvp-local-36-c002-delivery-quote-api-alignment",
+  "route": "/location",
+  "runtimeServiceAreaSource": "HTTP_PUBLIC_DELIVERY_QUOTE",
+  "endpoint": "POST /api/v1/delivery/quote",
+  "requestFields": [
+    "latitude",
+    "longitude"
+  ],
+  "clientCalculatesDistance": false,
+  "clientCalculatesFee": false,
+  "clientHardcodesRadius": false,
+  "explicitFakeMode": "driver=fake",
+  "fakeRuntimeFallback": false,
+  "onlyServiceAreaFakeLeavesNormalRuntime": true,
+  "reverseGeocodingRemainsFake": true,
+  "addressSearchRemainsFake": true,
+  "addressValidationRemainsFake": true,
+  "quoteId": null,
+  "correlationIdUsedAsQuoteId": false,
+  "continueInScope": false,
+  "continueDisabledWithoutQuoteId": true,
+  "states": [
+    "checking_service_area",
+    "success",
+    "out_of_area",
+    "network_error",
+    "timeout"
+  ],
+  "viewports": [
+    {
+      "css": "360x800",
+      "physical": "360x800"
+    },
+    {
+      "css": "390x844",
+      "physical": "390x844"
+    },
+    {
+      "css": "390x844",
+      "deviceScaleFactor": 3,
+      "physical": "1170x2532"
+    }
+  ],
+  "certifiedServerValues": [
+    { "routeDistanceKm": 0, "feeCents": 200 },
+    { "routeDistanceKm": 1, "feeCents": 260 },
+    { "routeDistanceKm": 2, "feeCents": 320 },
+    { "routeDistanceKm": 2.5, "feeCents": 350 },
+    { "routeDistanceKm": 3, "feeCents": 380 },
+    { "routeDistanceKm": 4, "feeCents": 440 },
+    { "routeDistanceKm": 4.01, "result": "OUT_OF_AREA" }
+  ],
+  "serverValueEvidence": [
+    "tests/unit/mvp-public-application.test.ts",
+    "tests/unit/mvp-public-api-handlers.test.ts"
+  ],
+  "visualFixturePolicy": "PLAYWRIGHT_DELIVERY_QUOTE_INTERCEPTION_ONLY",
+  "visualEvidenceStates": [
+    "checking-service-area",
+    "success-2-5km-350c",
+    "out-of-area",
+    "network-error",
+    "timeout"
+  ],
+  "baselineNamespace": "C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1",
+  "baselinePath": "tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots",
+  "baselineCount": 15,
+  "baselineReviewManifest": "manifests/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-BASELINE-REVIEW.json",
+  "artifactValidationScript": "scripts/validate-c002-delivery-quote-api-alignment-baseline-artifact.mjs",
+  "evidencePath": "qa/screen-gates/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1",
+  "baselineMode": "GATE_VALIDATION",
+  "originalC002BaselinePreserved": true,
+  "priorIntegrationBaselinesPreserved": true,
+  "openApiModified": false,
+  "persistenceModified": false,
+  "applicationModified": false,
+  "newDependencies": [],
+  "commercialSkusActivated": 0,
+  "persistenceMutations": 0,
+  "productionAuthorized": false,
+  "realRoutingProvider": false,
+  "futureLayersStarted": false,
+  "frozenContracts": [
+    "contracts/openapi/HIELYA_OPENAPI_V1_0.yaml",
+    "contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_1.yaml",
+    "packages/application",
+    "packages/persistence",
+    "manifests/C-001.json",
+    "manifests/C-002.json",
+    "manifests/C-005.json",
+    "manifests/C-005-HOME-CATALOG-API-INTEGRATION-V1.json",
+    "manifests/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1.json"
+  ]
+}

@@ -114,6 +114,66 @@ describe('C-002 location state machine', () => {
     expect(result.context.state).toBe('out_of_area');
   });
 
+  it.each(['NETWORK_ERROR', 'DELIVERY_QUOTE_REJECTED'] as const)(
+    'maps service-area %s to a retryable network state',
+    (code) => {
+      const resolved = reduce(initialLocationContext, {
+        type: 'ADDRESS_RESOLVED',
+        address: fakeAddresses[0],
+        source: 'manual',
+      });
+      const checking = reduce(resolved.context, { type: 'CONFIRM_ADDRESS' });
+      const failed = reduce(checking.context, {
+        type: 'ADDRESS_REJECTED',
+        error: createLocationError(code, 'service_area'),
+      });
+      const retry = reduce(failed.context, { type: 'RETRY' });
+
+      expect(failed.context.state).toBe('network_error');
+      expect(retry.context.state).toBe('retrying');
+      expect(retry.effects[0]?.type).toBe('CHECK_SERVICE_AREA');
+    },
+  );
+
+  it('accepts a server quote without an exposed service-area radius', () => {
+    const resolved = reduce(initialLocationContext, {
+      type: 'ADDRESS_RESOLVED',
+      address: fakeAddresses[0],
+      source: 'manual',
+    });
+    const checking = reduce(resolved.context, { type: 'CONFIRM_ADDRESS' });
+    const accepted = reduce(checking.context, {
+      type: 'SERVICE_AREA_ACCEPTED',
+      result: {
+        serviceable: true,
+        reason: 'SERVICEABLE',
+        distanceMeters: 2_500,
+        distanceMethod: 'route',
+        radiusMeters: null,
+        storeId: null,
+        deliveryFeeCents: 350,
+        estimatedMinutes: null,
+        quoteId: null,
+        expiresAt: null,
+      },
+    });
+
+    expect(accepted.context.state).toBe('success');
+    expect(accepted.context.confirmed?.serviceArea?.radiusMeters).toBeNull();
+    expect(accepted.context.confirmed?.deliveryQuoteId).toBeNull();
+  });
+
+  it('maps a service-area timeout to the existing timeout state', () => {
+    const result = reduce(initialLocationContext, {
+      type: 'OPERATION_TIMEOUT',
+      operation: 'service_area',
+      error: createLocationError('POSITION_TIMEOUT', 'service_area'),
+    });
+
+    expect(result.context.state).toBe('timeout');
+    expect(result.context.error?.operation).toBe('service_area');
+  });
+
   it('preserves retry effect after a network error', () => {
     const searching = reduce({ ...initialLocationContext, manualInput: { query: 'Paseo' } }, { type: 'SEARCH_ADDRESS' });
     const failed = reduce(searching.context, { type: 'ADDRESS_SEARCH_FAILED', error: createLocationError('NETWORK_ERROR', 'address_search') });

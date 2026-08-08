@@ -88,10 +88,10 @@ export function createLocationController(
     for (const effect of effects) await execute(effect);
   };
 
-  const withAbort = async <T>(operation: () => Promise<T>) => {
+  const withAbort = async <T>(operation: (signal: AbortSignal) => Promise<T>) => {
     const controller = new AbortController();
     active.add(controller);
-    try { return await operation(); }
+    try { return await operation(controller.signal); }
     finally { active.delete(controller); }
   };
 
@@ -123,44 +123,56 @@ export function createLocationController(
           break;
         }
         case 'GET_CURRENT_POSITION': {
-          const coordinates = await withAbort(() => dependencies.geolocation.getCurrentPosition({
+          const coordinates = await withAbort((signal) => dependencies.geolocation.getCurrentPosition({
             enableHighAccuracy: dependencies.policies.operation.enableHighAccuracy,
             timeoutMs: dependencies.policies.operation.geolocationTimeoutMs,
             maximumAgeMs: dependencies.policies.operation.maximumPositionAgeMs,
+            signal,
           }));
           await run({ type: 'POSITION_RECEIVED', coordinates });
           break;
         }
         case 'REVERSE_GEOCODE': {
-          const address = await withAbort(() => dependencies.reverseGeocoding.reverseGeocode({
+          const address = await withAbort((signal) => dependencies.reverseGeocoding.reverseGeocode({
             coordinates: effect.coordinates,
             locale: dependencies.locale,
             countryCodes: ['ES'],
+            signal,
           }));
           await run({ type: 'ADDRESS_RESOLVED', address, source: 'device' });
           break;
         }
         case 'SEARCH_ADDRESS': {
-          const suggestions = await withAbort(() => dependencies.addressSearch.search({
+          const suggestions = await withAbort((signal) => dependencies.addressSearch.search({
             query: effect.query,
             locale: dependencies.locale,
             countryCodes: ['ES'],
+            signal,
           }));
           await run({ type: 'ADDRESS_SEARCH_RESOLVED', suggestions });
           break;
         }
         case 'RESOLVE_SUGGESTION': {
-          const address = await withAbort(() => dependencies.addressSearch.resolveSuggestion(effect.suggestion));
+          const address = await withAbort((signal) => dependencies.addressSearch.resolveSuggestion(
+            effect.suggestion,
+            signal,
+          ));
           await run({ type: 'ADDRESS_RESOLVED', address, source: 'manual' });
           break;
         }
         case 'VALIDATE_MANUAL_ADDRESS': {
-          const address = await withAbort(() => dependencies.addressValidation.validateManualAddress(effect.input));
+          const address = await withAbort((signal) => dependencies.addressValidation.validateManualAddress(
+            effect.input,
+            signal,
+          ));
           await run({ type: 'ADDRESS_RESOLVED', address, source: 'manual' });
           break;
         }
         case 'CHECK_SERVICE_AREA': {
-          const result = await withAbort(() => dependencies.serviceArea.validate(effect.location));
+          const result = await withAbort((signal) => dependencies.serviceArea.validate(
+            effect.location,
+            signal,
+          ));
           await run(result.serviceable
             ? { type: 'SERVICE_AREA_ACCEPTED', result }
             : { type: 'SERVICE_AREA_REJECTED', result });

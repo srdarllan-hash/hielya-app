@@ -153,8 +153,15 @@ export function transitionLocation(context: LocationContext, event: LocationEven
         effects: [],
       };
     }
-    case 'ADDRESS_REJECTED':
-      return withError(context, event.error.code === 'NETWORK_OFFLINE' ? 'offline' : 'invalid_address', event.error);
+    case 'ADDRESS_REJECTED': {
+      const state = event.error.code === 'NETWORK_OFFLINE'
+        ? 'offline'
+        : event.error.operation === 'service_area'
+          && (event.error.code === 'NETWORK_ERROR' || event.error.code === 'DELIVERY_QUOTE_REJECTED')
+          ? 'network_error'
+          : 'invalid_address';
+      return withError(context, state, event.error);
+    }
     case 'CONFIRM_ADDRESS': {
       if (!context.candidate) {
         return withError(context, 'invalid_address', createLocationError('ADDRESS_INVALID', 'address_validation'));

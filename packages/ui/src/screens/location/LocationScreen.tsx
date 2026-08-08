@@ -1,7 +1,12 @@
 'use client';
 
 import React from 'react';
-import type { LocationDependencies, LocationLocale, LocationState } from '@hielya/location';
+import {
+  canContinueWithLocation,
+  type LocationDependencies,
+  type LocationLocale,
+  type LocationState,
+} from '@hielya/location';
 import { AppShell } from '../../components/AppShell';
 import { BrandLockup } from '../../components/BrandLockup';
 import { Button } from '../../components/Button';
@@ -21,6 +26,7 @@ export interface LocationScreenProps {
   scenario?: LocationScenario;
   demoVariant?: LocationDemoVariant;
   dependencies?: LocationDependencies;
+  lockServiceAreaNavigation?: boolean;
 }
 
 const loadingStates = new Set<LocationState>([
@@ -41,6 +47,7 @@ export function LocationScreen({
   scenario = 'serviceable',
   demoVariant = 'default',
   dependencies,
+  lockServiceAreaNavigation = false,
 }: LocationScreenProps) {
   const copy = getLocationCopy(locale);
   const { context, dispatch, dependencies: runtime } = useLocationController({
@@ -58,6 +65,11 @@ export function LocationScreen({
   const variant = feedbackVariant(state);
   const manual = state === 'manual_entry' || state === 'validating_manual_address' || state === 'invalid_address';
   const selected = state === 'resolved' || state === 'checking_service_area' || state === 'success';
+  const canContinue = canContinueWithLocation(context.confirmed);
+  const serviceAreaNavigationLocked = lockServiceAreaNavigation && (
+    state === 'checking_service_area'
+    || (state === 'retrying' && context.lastOperation === 'service_area')
+  );
 
   const errorActions = {
     primaryAction: state === 'permission_denied'
@@ -110,7 +122,13 @@ export function LocationScreen({
             <h2>{copy.stateTitle[state]}</h2>
             <p>{copy.stateMessage[state]}</p>
             {state !== 'requesting_permission' ? (
-              <Button variant="ghost" onClick={() => void dispatch({ type: 'ENTER_MANUALLY' })}>{copy.enterManually}</Button>
+              <Button
+                variant="ghost"
+                disabled={serviceAreaNavigationLocked}
+                onClick={() => void dispatch({ type: 'ENTER_MANUALLY' })}
+              >
+                {copy.enterManually}
+              </Button>
             ) : null}
           </section>
         ) : null}
@@ -147,7 +165,13 @@ export function LocationScreen({
             />
             <div className={styles.actions}>
               {state === 'success' ? (
-                <Button fullWidth size="lg" leadingIcon="arrow-right" onClick={() => void dispatch({ type: 'CONTINUE' })}>
+                <Button
+                  fullWidth
+                  size="lg"
+                  leadingIcon="arrow-right"
+                  disabled={!canContinue}
+                  onClick={() => void dispatch({ type: 'CONTINUE' })}
+                >
                   {copy.continue}
                 </Button>
               ) : (

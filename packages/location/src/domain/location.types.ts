@@ -62,7 +62,7 @@ export interface ServiceAreaResult {
   reason: ServiceAreaReason;
   distanceMeters: number | null;
   distanceMethod: DistanceMethod;
-  radiusMeters: number;
+  radiusMeters: number | null;
   storeId: string | null;
   deliveryFeeCents: number | null;
   estimatedMinutes: number | null;

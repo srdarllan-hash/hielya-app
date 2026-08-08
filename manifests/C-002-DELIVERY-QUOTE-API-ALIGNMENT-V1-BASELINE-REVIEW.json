@@ -1,0 +1,69 @@
+{
+  "candidateCommitSha": "412e47f802a49a39f11fb4758c6e292e2223f347",
+  "candidateWorkflowRunId": 31281592363,
+  "candidateArtifactName": "c002-delivery-quote-api-alignment-v1-412e47f802a49a39f11fb4758c6e292e2223f347",
+  "candidateArtifactDigest": "sha256:88358dc17e46f90d031a775fd4e1dfcf99164877b78c8aa370b7437ba6cfe536",
+  "reviewMethod": "WORK_VISUAL_INSPECTION",
+  "entries": [
+    {
+      "path": "tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-checking-service-area-hires-1170-linux.png",
+      "sha256": "027b0f819bdb87b320dfbdbefb65ffe24671f130030b38315bd6839633066d1e"
+    },
+    {
+      "path": "tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-checking-service-area-mobile-360-linux.png",
+      "sha256": "e0325cd207cff57b900851d9b9275a05236ed451aa69c38628681f49f5b17b96"
+    },
+    {
+      "path": "tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-checking-service-area-mobile-390-linux.png",
+      "sha256": "f8738286ac386eda1889022a84b78b253d5e6d4029a64b2c22e358917767a8cf"
+    },
+    {
+      "path": "tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-network-error-hires-1170-linux.png",
+      "sha256": "e7a00cc1b05cc6fa630621a16ef4da6ed29414f6a7ccd6d53ebabb09db167fdb"
+    },
+    {
+      "path": "tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-network-error-mobile-360-linux.png",
+      "sha256": "7599336fe5ac41f33b22ba7e5de33a64be176b1eec889863edc8223cea0b34fe"
+    },
+    {
+      "path": "tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-network-error-mobile-390-linux.png",
+      "sha256": "65cd4f538acaa51eec5d760b634e4afcf9ab526b001588e1f9e5dfb05cef9bef"
+    },
+    {
+      "path": "tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-out-of-area-hires-1170-linux.png",
+      "sha256": "f53065f96308058fd0753e967931a1e1c79f0904c581d67a1665033e39085ab0"
+    },
+    {
+      "path": "tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-out-of-area-mobile-360-linux.png",
+      "sha256": "224440e603476d114748df14bfa4cce05afd68732d6357312d4d78020012a914"
+    },
+    {
+      "path": "tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-out-of-area-mobile-390-linux.png",
+      "sha256": "3184b863fa2794ee15ec75551686c92520e4ac3b1cd4c6851ee3bf25ede29e4d"
+    },
+    {
+      "path": "tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-success-2-5km-350c-hires-1170-linux.png",
+      "sha256": "510b42f05307207fcf4106679c02331675e9e60f3a856c2ef8a0811320634c96"
+    },
+    {
+      "path": "tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-success-2-5km-350c-mobile-360-linux.png",
+      "sha256": "e991cda94473e3c5f9a1cb8c3e729326fe646420c0ed715590f0c9f5b1020a2e"
+    },
+    {
+      "path": "tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-success-2-5km-350c-mobile-390-linux.png",
+      "sha256": "0b494e9536a0ac026bb9e045267ee0159a6a21abcfd81a6660c350d4219abf4a"
+    },
+    {
+      "path": "tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-timeout-hires-1170-linux.png",
+      "sha256": "e14de8af9b40898854de4eac5a97c7d9c1465ac0bda151a63f3cb330e148e971"
+    },
+    {
+      "path": "tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-timeout-mobile-360-linux.png",
+      "sha256": "b7c835f700930a91efad7a1c56e95f32062675f3202ad981c4f20fa09649941f"
+    },
+    {
+      "path": "tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-timeout-mobile-390-linux.png",
+      "sha256": "57c222761c26001bde733f6b0d8f87019fe4692f4ceaa30a2c7e695b4f137244"
+    }
+  ]
+}

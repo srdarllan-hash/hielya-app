@@ -79,7 +79,9 @@ for (const value of [
 for (const value of [
   'customer_otp_one_pending_per_phone', 'phone_e164 TEXT NOT NULL UNIQUE',
   'otp_salt TEXT NOT NULL', 'otp_hash TEXT NOT NULL', 'token_hash TEXT NOT NULL UNIQUE',
-  "DEFAULT 'SIMULATED'", 'NOT NULL DEFAULT 2592000',
+  "DEFAULT 'SIMULATED'", "status IN ('PENDING', 'DELIVERED', 'FAILED')",
+  'simulated_sms_delivery_terminal_state_is_irreversible',
+  'NOT NULL DEFAULT 2592000',
 ]) assert(migration.includes(value), `Missing authentication persistence contract: ${value}`);
 
 for (const forbidden of ['jsonwebtoken', 'jose', 'bcrypt', 'argon2', 'twilio', 'otp_code', 'session_token']) {
@@ -89,6 +91,9 @@ for (const forbidden of ['jsonwebtoken', 'jose', 'bcrypt', 'argon2', 'twilio', '
 for (const evidence of [
   'never persists the raw OTP or raw session token',
   'locks on the fifth invalid attempt',
+  'enforces resend cooldown after lock instead of resetting the attempt budget',
+  'dispatches simulated SMS outside the write transaction and records failures safely',
+  'rejects malformed entropy before persisting an OTP or session',
   'expires challenges and sessions at the exact absolute deadline',
 ]) assert(lifecycleTests.includes(evidence), `Missing lifecycle evidence: ${evidence}`);
 for (const evidence of [

@@ -14,6 +14,7 @@ export type CustomerAuthenticationErrorCode =
   | 'INVALID_OTP'
   | 'OTP_EXPIRED'
   | 'OTP_LOCKED'
+  | 'OTP_RESEND_COOLDOWN'
   | 'OTP_UNAVAILABLE'
   | 'SESSION_INVALID';
 
@@ -94,6 +95,18 @@ interface OtpChallengeRow {
   expires_at: string;
   resend_available_at: string;
   created_at: string;
+  delivery_status?: 'PENDING' | 'DELIVERED' | 'FAILED';
+}
+
+interface PreparedOtpChallenge {
+  challengeId: string;
+  deliveryId: string;
+  phoneE164: string;
+  otp: string;
+  salt: string;
+  otpHash: string;
+  expiresAt: string;
+  resendAvailableAt: string;
 }
 
 interface SessionRow {
@@ -130,6 +143,7 @@ const hashOtp = (otp: string, saltHex: string): Buffer => scryptSync(
 );
 
 const tokenHash = (token: string): string => createHash('sha256').update(token).digest('hex');
+const DUMMY_OTP_SALT = '00000000000000000000000000000000';
 
 export const normalizeSpanishPhone = (
   input: string,
@@ -176,65 +190,132 @@ export class CustomerAuthenticationService {
     const settings = this.persistence.customerAuthenticationPolicy();
     const phoneE164 = normalizeSpanishPhone(phone, settings);
     const current = timestamp(now);
+    const otp = this.otpGenerator(settings.otpLength);
+    if (!new RegExp(`^\\d{${settings.otpLength}}$`).test(otp)) {
+      throw new Error('OTP generator returned an invalid value');
+    }
+    const saltBytes = this.entropy(16);
+    if (!Buffer.isBuffer(saltBytes) || saltBytes.length !== 16) {
+      throw new Error('OTP entropy source returned an invalid value');
+    }
+    const salt = saltBytes.toString('hex');
+    const prepared: PreparedOtpChallenge = {
+      challengeId: this.randomId(),
+      deliveryId: this.randomId(),
+      phoneE164,
+      otp,
+      salt,
+      otpHash: hashOtp(otp, salt).toString('hex'),
+      expiresAt: addSeconds(current, settings.otpTtlSeconds),
+      resendAvailableAt: addSeconds(current, settings.otpResendCooldownSeconds),
+    };
 
-    return this.persistence.transaction(() => {
-      const pending = this.persistence.db.prepare(`
-        SELECT * FROM customer_otp_challenges
-        WHERE phone_e164=? AND status='PENDING'
+    const result = this.persistence.transaction<OtpChallengeResult>(() => {
+      const latest = this.persistence.db.prepare(`
+        SELECT challenge.*,delivery.status AS delivery_status
+        FROM customer_otp_challenges challenge
+        LEFT JOIN simulated_sms_deliveries delivery
+          ON delivery.challenge_id=challenge.challenge_id
+        WHERE challenge.phone_e164=?
+        ORDER BY challenge.created_at DESC, challenge.rowid DESC
+        LIMIT 1
       `).get<OtpChallengeRow>(phoneE164);
-      if (pending && pending.expires_at <= current) {
+      if (latest?.status === 'PENDING' && latest.expires_at <= current) {
         this.persistence.db.prepare(`
           UPDATE customer_otp_challenges
           SET status='EXPIRED',updated_at=?
           WHERE challenge_id=? AND status='PENDING'
-        `).run(current, pending.challenge_id);
-      } else if (pending && pending.resend_available_at > current) {
+        `).run(current, latest.challenge_id);
+      }
+      if (latest && latest.resend_available_at > current) {
+        if (latest.status !== 'PENDING' || latest.expires_at <= current) {
+          throw new CustomerAuthenticationError('OTP_RESEND_COOLDOWN');
+        }
+        if (latest.delivery_status !== 'DELIVERED') {
+          throw new CustomerAuthenticationError('OTP_UNAVAILABLE');
+        }
         return {
-          challengeId: pending.challenge_id,
+          challengeId: latest.challenge_id,
           phoneE164,
-          expiresAt: pending.expires_at,
-          resendAvailableAt: pending.resend_available_at,
+          expiresAt: latest.expires_at,
+          resendAvailableAt: latest.resend_available_at,
           reused: true,
         };
-      } else if (pending) {
+      }
+      if (latest?.status === 'PENDING') {
         this.persistence.db.prepare(`
           UPDATE customer_otp_challenges
           SET status='SUPERSEDED',updated_at=?
           WHERE challenge_id=? AND status='PENDING'
-        `).run(current, pending.challenge_id);
+        `).run(current, latest.challenge_id);
       }
 
-      const otp = this.otpGenerator(settings.otpLength);
-      if (!new RegExp(`^\\d{${settings.otpLength}}$`).test(otp)) {
-        throw new Error('OTP generator returned an invalid value');
-      }
-      const challengeId = this.randomId();
-      const salt = this.entropy(16).toString('hex');
-      const expiresAt = addSeconds(current, settings.otpTtlSeconds);
-      const resendAvailableAt = addSeconds(current, settings.otpResendCooldownSeconds);
       this.persistence.db.prepare(`
         INSERT INTO customer_otp_challenges (
           challenge_id,phone_e164,otp_salt,otp_hash,status,attempts_used,
           expires_at,resend_available_at,created_at,updated_at
         ) VALUES (?,?,?,?, 'PENDING',0,?,?,?,?)
       `).run(
-        challengeId,
+        prepared.challengeId,
         phoneE164,
-        salt,
-        hashOtp(otp, salt).toString('hex'),
-        expiresAt,
-        resendAvailableAt,
+        prepared.salt,
+        prepared.otpHash,
+        prepared.expiresAt,
+        prepared.resendAvailableAt,
         current,
         current,
       );
-      this.smsGateway.send({ challengeId, phoneE164, otp, expiresAt });
       this.persistence.db.prepare(`
         INSERT INTO simulated_sms_deliveries (
-          delivery_id,challenge_id,phone_e164,provider,status,delivered_at
-        ) VALUES (?,?,?,'SIMULATED','DELIVERED',?)
-      `).run(this.randomId(), challengeId, phoneE164, current);
-      return { challengeId, phoneE164, expiresAt, resendAvailableAt, reused: false };
+          delivery_id,challenge_id,phone_e164,provider,status,created_at,updated_at
+        ) VALUES (?,?,?,'SIMULATED','PENDING',?,?)
+      `).run(prepared.deliveryId, prepared.challengeId, phoneE164, current, current);
+      return {
+        challengeId: prepared.challengeId,
+        phoneE164,
+        expiresAt: prepared.expiresAt,
+        resendAvailableAt: prepared.resendAvailableAt,
+        reused: false,
+      };
     });
+
+    if (result.reused) return result;
+    try {
+      this.smsGateway.send({
+        challengeId: prepared.challengeId,
+        phoneE164,
+        otp: prepared.otp,
+        expiresAt: prepared.expiresAt,
+      });
+      this.persistence.transaction(() => {
+        this.persistence.db.prepare(`
+          UPDATE simulated_sms_deliveries
+          SET status='DELIVERED',delivered_at=?,updated_at=?
+          WHERE delivery_id=? AND status='PENDING'
+        `).run(current, current, prepared.deliveryId);
+        const delivery = this.persistence.db.prepare(`
+          SELECT status FROM simulated_sms_deliveries WHERE delivery_id=?
+        `).get<{ status: string }>(prepared.deliveryId);
+        if (delivery?.status !== 'DELIVERED') {
+          throw new Error('simulated SMS delivery state is invalid');
+        }
+      });
+      return result;
+    } catch (error) {
+      this.persistence.transaction(() => {
+        this.persistence.db.prepare(`
+          UPDATE simulated_sms_deliveries
+          SET status='FAILED',failed_at=?,updated_at=?
+          WHERE delivery_id=? AND status='PENDING'
+        `).run(current, current, prepared.deliveryId);
+        this.persistence.db.prepare(`
+          UPDATE customer_otp_challenges
+          SET status='SUPERSEDED',resend_available_at=?,updated_at=?
+          WHERE challenge_id=? AND status='PENDING'
+        `).run(current, current, prepared.challengeId);
+      });
+      throw error;
+    }
   }
 
   verifyOtp(input: {
@@ -249,6 +330,15 @@ export class CustomerAuthenticationService {
     if (!new RegExp(`^\\d{${settings.otpLength}}$`).test(input.otp)) {
       throw new CustomerAuthenticationError('INVALID_OTP');
     }
+
+    const snapshot = this.persistence.db.prepare(`
+      SELECT * FROM customer_otp_challenges
+      WHERE challenge_id=? AND phone_e164=?
+    `).get<OtpChallengeRow>(input.challengeId, phoneE164);
+    const snapshotSalt = snapshot && /^[0-9a-f]{32}$/.test(snapshot.otp_salt)
+      ? snapshot.otp_salt
+      : DUMMY_OTP_SALT;
+    const actual = hashOtp(input.otp, snapshotSalt);
 
     const outcome = this.persistence.transaction<
       OtpVerificationResult | { error: CustomerAuthenticationErrorCode }
@@ -271,7 +361,7 @@ export class CustomerAuthenticationService {
         return { error: 'OTP_EXPIRED' };
       }
 
-      const actual = hashOtp(input.otp, challenge.otp_salt);
+      if (challenge.otp_salt !== snapshotSalt) return { error: 'OTP_UNAVAILABLE' };
       const expected = Buffer.from(challenge.otp_hash, 'hex');
       const matches = expected.length === actual.length && timingSafeEqual(actual, expected);
       if (!matches) {
@@ -304,7 +394,11 @@ export class CustomerAuthenticationService {
         WHERE challenge_id=? AND status='PENDING'
       `).run(current, current, challenge.challenge_id);
 
-      const token = this.entropy(32).toString('hex');
+      const tokenBytes = this.entropy(32);
+      if (!Buffer.isBuffer(tokenBytes) || tokenBytes.length !== 32) {
+        throw new Error('session entropy source returned an invalid value');
+      }
+      const token = tokenBytes.toString('hex');
       const sessionId = this.randomId();
       const expiresAt = addSeconds(current, settings.customerSessionTtlSeconds);
       this.persistence.db.prepare(`

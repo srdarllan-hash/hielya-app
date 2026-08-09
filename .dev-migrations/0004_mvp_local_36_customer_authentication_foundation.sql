@@ -65,8 +65,16 @@ CREATE TABLE IF NOT EXISTS simulated_sms_deliveries (
     REFERENCES customer_otp_challenges(challenge_id) ON DELETE RESTRICT,
   phone_e164 TEXT NOT NULL,
   provider TEXT NOT NULL CHECK (provider = 'SIMULATED'),
-  status TEXT NOT NULL CHECK (status = 'DELIVERED'),
-  delivered_at TEXT NOT NULL
+  status TEXT NOT NULL CHECK (status IN ('PENDING', 'DELIVERED', 'FAILED')),
+  created_at TEXT NOT NULL,
+  delivered_at TEXT,
+  failed_at TEXT,
+  updated_at TEXT NOT NULL,
+  CHECK (
+    (status = 'PENDING' AND delivered_at IS NULL AND failed_at IS NULL)
+    OR (status = 'DELIVERED' AND delivered_at IS NOT NULL AND failed_at IS NULL)
+    OR (status = 'FAILED' AND delivered_at IS NULL AND failed_at IS NOT NULL)
+  )
 );
 
 CREATE TABLE IF NOT EXISTS customer_sessions (
@@ -105,6 +113,19 @@ CREATE TRIGGER IF NOT EXISTS customer_otp_terminal_state_is_irreversible
 BEFORE UPDATE OF status ON customer_otp_challenges
 WHEN OLD.status <> 'PENDING' AND NEW.status <> OLD.status
 BEGIN SELECT RAISE(ABORT, 'OTP challenge terminal state is irreversible'); END;
+
+CREATE TRIGGER IF NOT EXISTS simulated_sms_delivery_identity_is_immutable
+BEFORE UPDATE OF challenge_id,phone_e164,provider,created_at ON simulated_sms_deliveries
+WHEN NEW.challenge_id <> OLD.challenge_id
+  OR NEW.phone_e164 <> OLD.phone_e164
+  OR NEW.provider <> OLD.provider
+  OR NEW.created_at <> OLD.created_at
+BEGIN SELECT RAISE(ABORT, 'simulated SMS delivery identity is immutable'); END;
+
+CREATE TRIGGER IF NOT EXISTS simulated_sms_delivery_terminal_state_is_irreversible
+BEFORE UPDATE OF status ON simulated_sms_deliveries
+WHEN OLD.status <> 'PENDING' AND NEW.status <> OLD.status
+BEGIN SELECT RAISE(ABORT, 'simulated SMS delivery terminal state is irreversible'); END;
 
 CREATE TRIGGER IF NOT EXISTS customer_session_hash_is_immutable
 BEFORE UPDATE OF token_hash,customer_id,created_at,expires_at ON customer_sessions

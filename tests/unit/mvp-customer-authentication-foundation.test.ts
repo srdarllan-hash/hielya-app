@@ -181,18 +181,91 @@ describe('MVP Local 36 customer authentication foundation', () => {
     persistence.close();
   });
 
-  it('rolls back the challenge when simulated delivery fails', () => {
+  it('dispatches simulated SMS outside the write transaction and records failures safely', () => {
     const persistence = new MvpPersistenceDatabase();
     persistence.migrate();
     persistence.seed(settings);
+    let gatewayObservedTransaction = true;
     const auth = new CustomerAuthenticationService(persistence, {
       otpGenerator: () => '123456',
-      smsGateway: { send: () => { throw new Error('simulated delivery unavailable'); } },
+      smsGateway: { send: () => {
+        gatewayObservedTransaction = Boolean((persistence.db as unknown as { isTransaction: boolean }).isTransaction);
+        throw new Error('simulated delivery unavailable');
+      } },
     });
     expect(() => auth.requestOtp('+34612345678', NOW)).toThrow('simulated delivery unavailable');
+    expect(gatewayObservedTransaction).toBe(false);
+    expect(persistence.db.prepare('SELECT status,resend_available_at FROM customer_otp_challenges')
+      .get<{ status: string; resend_available_at: string }>()).toEqual({
+        status: 'SUPERSEDED', resend_available_at: NOW,
+      });
+    expect(persistence.db.prepare('SELECT status,delivered_at,failed_at FROM simulated_sms_deliveries')
+      .get<{ status: string; delivered_at: string | null; failed_at: string | null }>()).toEqual({
+        status: 'FAILED', delivered_at: null, failed_at: NOW,
+      });
+    const retrySms = new RecordingSimulatedSmsGateway();
+    const retry = new CustomerAuthenticationService(persistence, {
+      smsGateway: retrySms,
+      otpGenerator: () => '123456',
+    }).requestOtp('+34612345678', NOW);
+    expect(retry.reused).toBe(false);
+    expect(retrySms.messages).toHaveLength(1);
+    persistence.close();
+  });
+
+  it('enforces resend cooldown after lock instead of resetting the attempt budget', () => {
+    const { persistence, auth } = setup();
+    const challenge = auth.requestOtp('+34612345678', NOW);
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      expectCode(() => auth.verifyOtp({
+        challengeId: challenge.challengeId,
+        phone: '+34612345678',
+        otp: '000000',
+        now: `2030-01-01T12:00:0${attempt}.000Z`,
+      }), attempt === 4 ? 'OTP_LOCKED' : 'INVALID_OTP');
+    }
+    expectCode(
+      () => auth.requestOtp('+34612345678', '2030-01-01T12:00:59.999Z'),
+      'OTP_RESEND_COOLDOWN',
+    );
+    const replacement = auth.requestOtp('+34612345678', '2030-01-01T12:01:00.000Z');
+    expect(replacement.challengeId).not.toBe(challenge.challengeId);
+    persistence.close();
+  });
+
+  it('rejects malformed entropy before persisting an OTP or session', () => {
+    const persistence = new MvpPersistenceDatabase();
+    persistence.migrate();
+    persistence.seed(settings);
+    const badOtpEntropy = new CustomerAuthenticationService(persistence, {
+      otpGenerator: () => '123456',
+      randomBytes: () => Buffer.alloc(15),
+    });
+    expect(() => badOtpEntropy.requestOtp('+34612345678', NOW))
+      .toThrow('OTP entropy source returned an invalid value');
     expect(persistence.db.prepare('SELECT COUNT(*) AS count FROM customer_otp_challenges')
       .get<{ count: number }>()?.count).toBe(0);
-    expect(persistence.db.prepare('SELECT COUNT(*) AS count FROM simulated_sms_deliveries')
+
+    let entropyCall = 0;
+    const badSessionEntropy = new CustomerAuthenticationService(persistence, {
+      otpGenerator: () => '123456',
+      randomBytes: (size) => {
+        entropyCall += 1;
+        return entropyCall === 1 ? Buffer.alloc(size, 1) : Buffer.alloc(31, 2);
+      },
+    });
+    const challenge = badSessionEntropy.requestOtp('+34612345678', NOW);
+    expect(() => badSessionEntropy.verifyOtp({
+      challengeId: challenge.challengeId,
+      phone: '+34612345678',
+      otp: '123456',
+      now: NOW,
+    })).toThrow('session entropy source returned an invalid value');
+    expect(persistence.db.prepare('SELECT status FROM customer_otp_challenges WHERE challenge_id=?')
+      .get<{ status: string }>(challenge.challengeId)?.status).toBe('PENDING');
+    expect(persistence.db.prepare('SELECT COUNT(*) AS count FROM customers')
+      .get<{ count: number }>()?.count).toBe(0);
+    expect(persistence.db.prepare('SELECT COUNT(*) AS count FROM customer_sessions')
       .get<{ count: number }>()?.count).toBe(0);
     persistence.close();
   });

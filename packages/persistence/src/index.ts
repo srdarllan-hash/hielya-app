@@ -51,6 +51,44 @@ export interface OperationalSettings {
   maximumRoadDistanceKm: number;
   maximumPinAttempts: number;
   tipsEnabled: boolean;
+  inventoryReservationTtlSeconds: number;
+}
+
+export type OperationalSettingsInput = Omit<OperationalSettings, 'inventoryReservationTtlSeconds'> & {
+  inventoryReservationTtlSeconds?: number;
+};
+
+export type ReservationStatus = 'ACTIVE' | 'RELEASED' | 'CONVERTED';
+export type ReservationReleaseReason = 'MANUAL' | 'EXPIRED';
+
+export interface ReserveInventoryItem {
+  productSku: string;
+  quantity: number;
+}
+
+export interface ReserveInventoryInput {
+  referenceId: string;
+  items: readonly ReserveInventoryItem[];
+  now?: Date | string;
+}
+
+export interface InventoryReservationItemReadModel {
+  productSku: string;
+  quantity: number;
+}
+
+export interface InventoryReservationReadModel {
+  reservationId: string;
+  referenceId: string;
+  status: ReservationStatus;
+  createdAt: string;
+  expiresAt: string;
+  releasedAt: string | null;
+  convertedAt: string | null;
+  releaseReason: ReservationReleaseReason | null;
+  requestFingerprint: string;
+  updatedAt: string;
+  items: InventoryReservationItemReadModel[];
 }
 
 export interface PublicCatalogProductDto {
@@ -146,9 +184,66 @@ interface CategoryCatalogRow {
   public_visible: number;
 }
 
+interface ReservationRow {
+  reservation_id: string;
+  reference_id: string;
+  status: ReservationStatus;
+  created_at: string;
+  expires_at: string;
+  released_at: string | null;
+  converted_at: string | null;
+  release_reason: ReservationReleaseReason | null;
+  request_fingerprint: string;
+  updated_at: string;
+}
+
+interface RequestedProductRow {
+  sku: string;
+  kind: 'UNIT' | 'COMPOSITE';
+}
+
+export const REQUEST_FINGERPRINT_PREFIX = 'request-v1:';
+export const LEGACY_FINGERPRINT_PREFIX = 'legacy-v1:';
+export const DEFAULT_INVENTORY_RESERVATION_TTL_SECONDS = 600;
+
+const utcTimestamp = (value: Date | string = new Date()): string => {
+  const date = value instanceof Date ? value : new Date(value);
+  if (!Number.isFinite(date.getTime())) throw new Error('invalid reservation timestamp');
+  return date.toISOString();
+};
+
+const plusSeconds = (timestamp: string, seconds: number): string => (
+  new Date(new Date(timestamp).getTime() + seconds * 1_000).toISOString()
+);
+
+const normalizeRequestedItems = (
+  items: readonly ReserveInventoryItem[],
+): ReserveInventoryItem[] => {
+  if (!Array.isArray(items) || items.length === 0) throw new Error('reservation items are required');
+  const normalized = new Map<string, number>();
+  for (const item of items) {
+    const productSku = typeof item?.productSku === 'string' ? item.productSku.trim() : '';
+    if (!productSku) throw new Error('reservation product SKU is required');
+    if (!Number.isInteger(item.quantity) || item.quantity <= 0) {
+      throw new Error('reservation quantity must be a positive integer');
+    }
+    const quantity = (normalized.get(productSku) ?? 0) + item.quantity;
+    if (!Number.isSafeInteger(quantity)) throw new Error('reservation quantity is outside the safe integer range');
+    normalized.set(productSku, quantity);
+  }
+  return [...normalized.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([productSku, quantity]) => ({ productSku, quantity }));
+};
+
+const requestFingerprint = (items: readonly ReserveInventoryItem[]): string => (
+  `${REQUEST_FINGERPRINT_PREFIX}${createHash('sha256').update(JSON.stringify(items)).digest('hex')}`
+);
+
 export const DEVELOPMENT_MIGRATIONS = [
   '0001_mvp_local_36_persistence.sql',
   '0002_mvp_local_36_catalog_read_model.sql',
+  '0003_mvp_local_36_inventory_reservation_lifecycle.sql',
 ] as const;
 
 export const resolveDevelopmentMigrationDirectory = (moduleUrl: string): string => moduleUrl.startsWith('file:')
@@ -271,7 +366,16 @@ export class MvpPersistenceDatabase {
     }
   }
 
-  private writeSettings(settings: OperationalSettings): void {
+  private writeSettings(settings: OperationalSettingsInput): void {
+    const inventoryReservationTtlSeconds = settings.inventoryReservationTtlSeconds
+      ?? row<{ inventory_reservation_ttl_seconds: number }>(
+        this.db,
+        'SELECT inventory_reservation_ttl_seconds FROM operational_settings WHERE id=1',
+      )?.inventory_reservation_ttl_seconds
+      ?? DEFAULT_INVENTORY_RESERVATION_TTL_SECONDS;
+    if (!Number.isInteger(inventoryReservationTtlSeconds) || inventoryReservationTtlSeconds <= 0) {
+      throw new Error('inventory reservation TTL must be a positive integer');
+    }
     this.db.prepare(`
       INSERT INTO operational_settings (
         id,
@@ -280,8 +384,9 @@ export class MvpPersistenceDatabase {
         delivery_fee_per_km_cents,
         maximum_road_distance_km,
         maximum_pin_attempts,
-        tips_enabled
-      ) VALUES (1,?,?,?,?,?,?)
+        tips_enabled,
+        inventory_reservation_ttl_seconds
+      ) VALUES (1,?,?,?,?,?,?,?)
       ON CONFLICT(id) DO UPDATE SET
         minimum_product_subtotal_cents = excluded.minimum_product_subtotal_cents,
         delivery_base_fee_cents = excluded.delivery_base_fee_cents,
@@ -289,6 +394,7 @@ export class MvpPersistenceDatabase {
         maximum_road_distance_km = excluded.maximum_road_distance_km,
         maximum_pin_attempts = excluded.maximum_pin_attempts,
         tips_enabled = excluded.tips_enabled,
+        inventory_reservation_ttl_seconds = excluded.inventory_reservation_ttl_seconds,
         updated_at = CURRENT_TIMESTAMP
     `).run(
       settings.minimumProductSubtotalCents,
@@ -297,10 +403,11 @@ export class MvpPersistenceDatabase {
       settings.maximumRoadDistanceKm,
       settings.maximumPinAttempts,
       settings.tipsEnabled ? 1 : 0,
+      inventoryReservationTtlSeconds,
     );
   }
 
-  seed(settings: OperationalSettings): void {
+  seed(settings: OperationalSettingsInput): void {
     this.transaction(() => {
       for (const category of CATEGORY_COMMERCIAL_SEED) {
         this.db.prepare(
@@ -367,6 +474,7 @@ export class MvpPersistenceDatabase {
       maximum_road_distance_km: number;
       maximum_pin_attempts: number;
       tips_enabled: number;
+      inventory_reservation_ttl_seconds: number;
     }>(this.db, 'SELECT * FROM operational_settings WHERE id = 1');
     if (!value) throw new Error('operational settings missing');
     return {
@@ -376,6 +484,7 @@ export class MvpPersistenceDatabase {
       maximumRoadDistanceKm: value.maximum_road_distance_km,
       maximumPinAttempts: value.maximum_pin_attempts,
       tipsEnabled: value.tips_enabled === 1,
+      inventoryReservationTtlSeconds: value.inventory_reservation_ttl_seconds,
     };
   }
 
@@ -383,80 +492,380 @@ export class MvpPersistenceDatabase {
     return this.settings();
   }
 
-  updateSettings(settings: OperationalSettings): void {
+  updateSettings(settings: OperationalSettingsInput): void {
     this.transaction(() => this.writeSettings(settings));
   }
 
-  adjustInventory(sku: string, delta: number, reason = 'ADJUSTMENT'): void {
+  private activeReservedQuantity(sku: string, now: string): number {
+    const total = row<{ total: number }>(this.db, `
+      SELECT COALESCE(SUM(item.quantity),0) AS total
+      FROM inventory_reservation_items item
+      JOIN inventory_reservations reservation
+        ON reservation.reservation_id = item.reservation_id
+      WHERE reservation.status = 'ACTIVE'
+        AND reservation.expires_at > ?
+        AND item.product_sku = ?
+    `, now, sku)?.total ?? 0;
+    if (!Number.isSafeInteger(total) || total < 0) throw new Error('active reservation invariant violated');
+    return total;
+  }
+
+  getActiveReservedQuantity(sku: string, now: Date | string = new Date()): number {
+    return this.activeReservedQuantity(sku, utcTimestamp(now));
+  }
+
+  adjustInventory(
+    sku: string,
+    delta: number,
+    reason = 'ADJUSTMENT',
+    now: Date | string = new Date(),
+  ): void {
+    if (!Number.isInteger(delta) || delta === 0) throw new Error('inventory delta must be a non-zero integer');
+    const productSku = sku.trim();
+    if (!productSku) throw new Error('inventory product SKU is required');
+    const timestamp = utcTimestamp(now);
     this.transaction(() => {
+      const product = row<RequestedProductRow>(
+        this.db,
+        'SELECT sku,kind FROM products WHERE sku = ?',
+        productSku,
+      );
+      if (!product) throw new Error(`product missing: ${productSku}`);
+      if (product.kind === 'COMPOSITE') throw new Error('composite products have no independent inventory');
       const current = row<{ quantity_on_hand: number }>(
         this.db,
         'SELECT quantity_on_hand FROM inventory_balances WHERE product_sku = ?',
-        sku,
+        productSku,
       )?.quantity_on_hand ?? 0;
       const next = current + delta;
-      if (next < 0) throw new Error('negative inventory is prohibited');
+      if (!Number.isSafeInteger(next) || next < 0) throw new Error('negative inventory is prohibited');
+      const activeReserved = this.activeReservedQuantity(productSku, timestamp);
+      if (next < activeReserved) throw new Error('inventory adjustment would fall below active reservations');
       this.db.prepare(`
-        INSERT INTO inventory_balances (product_sku,quantity_on_hand)
-        VALUES (?,?)
+        INSERT INTO inventory_balances (product_sku,quantity_on_hand,updated_at)
+        VALUES (?,?,?)
         ON CONFLICT(product_sku) DO UPDATE SET
           quantity_on_hand = excluded.quantity_on_hand,
-          updated_at = CURRENT_TIMESTAMP
-      `).run(sku, next);
+          updated_at = excluded.updated_at
+      `).run(productSku, next, timestamp);
       this.db.prepare(`
         INSERT INTO inventory_movements (
-          movement_id,product_sku,delta_quantity,quantity_after,reason,correlation_id
-        ) VALUES (?,?,?,?,?,?)
-      `).run(randomUUID(), sku, delta, next, reason, randomUUID());
+          movement_id,product_sku,delta_quantity,quantity_after,reason,
+          correlation_id,created_at,reservation_id
+        ) VALUES (?,?,?,?,?,?,?,NULL)
+      `).run(randomUUID(), productSku, delta, next, reason, randomUUID(), timestamp);
     });
   }
 
-  internalInventory(sku: string): InternalInventoryDto {
+  internalInventory(sku: string, now: Date | string = new Date()): InternalInventoryDto {
+    const timestamp = utcTimestamp(now);
     const onHand = row<{ quantity_on_hand: number }>(
       this.db,
       'SELECT quantity_on_hand FROM inventory_balances WHERE product_sku = ?',
       sku,
     )?.quantity_on_hand ?? 0;
-    const reserved = row<{ total: number }>(this.db, `
-      SELECT COALESCE(SUM(item.quantity),0) AS total
-      FROM inventory_reservation_items item
-      JOIN inventory_reservations reservation
-        ON reservation.reservation_id = item.reservation_id
-      WHERE reservation.status = 'ACTIVE' AND item.product_sku = ?
-    `, sku)?.total ?? 0;
+    const reserved = this.activeReservedQuantity(sku, timestamp);
+    const available = onHand - reserved;
+    if (!Number.isSafeInteger(onHand) || onHand < 0 || available < 0) {
+      throw new Error('inventory availability invariant violated');
+    }
     return {
       sku,
       quantityOnHand: onHand,
       quantityReserved: reserved,
-      quantityAvailable: onHand - reserved,
+      quantityAvailable: available,
     };
   }
 
-  reserveBundle(bundleSku: string, referenceId: string): string {
-    return this.transaction(() => {
-      const components = rows<{ component_sku: string; quantity: number }>(
+  private reservationItems(reservationId: string): InventoryReservationItemReadModel[] {
+    return rows<{ product_sku: string; quantity: number }>(this.db, `
+      SELECT product_sku,quantity
+      FROM inventory_reservation_items
+      WHERE reservation_id = ?
+      ORDER BY product_sku
+    `, reservationId).map((item) => ({
+      productSku: item.product_sku,
+      quantity: item.quantity,
+    }));
+  }
+
+  private reservationRecord(value: ReservationRow): InventoryReservationReadModel {
+    return {
+      reservationId: value.reservation_id,
+      referenceId: value.reference_id,
+      status: value.status,
+      createdAt: value.created_at,
+      expiresAt: value.expires_at,
+      releasedAt: value.released_at,
+      convertedAt: value.converted_at,
+      releaseReason: value.release_reason,
+      requestFingerprint: value.request_fingerprint,
+      updatedAt: value.updated_at,
+      items: this.reservationItems(value.reservation_id),
+    };
+  }
+
+  findReservationById(reservationId: string): InventoryReservationReadModel | undefined {
+    const value = row<ReservationRow>(
+      this.db,
+      'SELECT * FROM inventory_reservations WHERE reservation_id = ?',
+      reservationId,
+    );
+    return value ? this.reservationRecord(value) : undefined;
+  }
+
+  findReservationByReferenceId(referenceId: string): InventoryReservationReadModel | undefined {
+    const value = row<ReservationRow>(
+      this.db,
+      'SELECT * FROM inventory_reservations WHERE reference_id = ?',
+      referenceId,
+    );
+    return value ? this.reservationRecord(value) : undefined;
+  }
+
+  private expandRequestedItems(items: readonly ReserveInventoryItem[]): InventoryReservationItemReadModel[] {
+    const expanded = new Map<string, number>();
+    const add = (productSku: string, quantity: number) => {
+      const total = (expanded.get(productSku) ?? 0) + quantity;
+      if (!Number.isSafeInteger(total) || total <= 0) {
+        throw new Error('expanded reservation quantity is invalid');
+      }
+      expanded.set(productSku, total);
+    };
+
+    for (const item of items) {
+      const product = row<RequestedProductRow>(
         this.db,
-        'SELECT component_sku,quantity FROM product_bundle_components WHERE bundle_sku=?',
-        bundleSku,
+        'SELECT sku,kind FROM products WHERE sku = ?',
+        item.productSku,
       );
-      if (!components.length) throw new Error('bundle components missing');
+      if (!product) throw new Error(`product missing: ${item.productSku}`);
+      if (product.kind === 'UNIT') {
+        add(product.sku, item.quantity);
+        continue;
+      }
+      const components = rows<{
+        component_sku: string;
+        quantity: number;
+        kind: 'UNIT' | 'COMPOSITE';
+      }>(this.db, `
+        SELECT component.component_sku,component.quantity,product.kind
+        FROM product_bundle_components component
+        JOIN products product ON product.sku = component.component_sku
+        WHERE component.bundle_sku = ?
+        ORDER BY component.component_sku
+      `, product.sku);
+      if (!components.length) throw new Error(`bundle components missing: ${product.sku}`);
       for (const component of components) {
-        if (this.internalInventory(component.component_sku).quantityAvailable < component.quantity) {
-          throw new Error(`component unavailable: ${component.component_sku}`);
+        if (component.kind !== 'UNIT'
+          || !Number.isInteger(component.quantity)
+          || component.quantity <= 0) {
+          throw new Error(`bundle component invalid: ${component.component_sku}`);
+        }
+        const quantity = component.quantity * item.quantity;
+        if (!Number.isSafeInteger(quantity)) throw new Error('expanded reservation quantity is invalid');
+        add(component.component_sku, quantity);
+      }
+    }
+
+    return [...expanded.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([productSku, quantity]) => ({ productSku, quantity }));
+  }
+
+  private legacyOperationalReplayMatches(
+    reservation: InventoryReservationReadModel,
+    expandedItems: readonly InventoryReservationItemReadModel[],
+  ): boolean {
+    if (!reservation.requestFingerprint.startsWith(LEGACY_FINGERPRINT_PREFIX)) return false;
+    return JSON.stringify(reservation.items) === JSON.stringify(expandedItems);
+  }
+
+  private reserveInventoryInternal(
+    input: ReserveInventoryInput,
+    allowLegacyOperationalReplay: boolean,
+  ): InventoryReservationReadModel {
+    const referenceId = typeof input.referenceId === 'string' ? input.referenceId.trim() : '';
+    if (!referenceId) throw new Error('reservation reference is required');
+    const requestedItems = normalizeRequestedItems(input.items);
+    const fingerprint = requestFingerprint(requestedItems);
+    const timestamp = utcTimestamp(input.now);
+
+    return this.transaction(() => {
+      const existing = this.findReservationByReferenceId(referenceId);
+      if (existing) {
+        if (existing.requestFingerprint === fingerprint) return existing;
+        if (!allowLegacyOperationalReplay
+          || requestedItems.length !== 1
+          || requestedItems[0].quantity !== 1) {
+          throw new Error('reservation reference conflicts with a different request fingerprint');
+        }
+        const legacyExpandedItems = this.expandRequestedItems(requestedItems);
+        if (this.legacyOperationalReplayMatches(existing, legacyExpandedItems)) return existing;
+        throw new Error('reservation reference conflicts with a different request fingerprint');
+      }
+
+      const expandedItems = this.expandRequestedItems(requestedItems);
+      for (const item of expandedItems) {
+        const inventory = this.internalInventory(item.productSku, timestamp);
+        if (inventory.quantityAvailable < item.quantity) {
+          throw new Error(`component unavailable: ${item.productSku}`);
         }
       }
+
+      const ttlSeconds = this.settings().inventoryReservationTtlSeconds;
+      if (!Number.isInteger(ttlSeconds) || ttlSeconds <= 0) {
+        throw new Error('inventory reservation TTL is invalid');
+      }
       const reservationId = randomUUID();
+      const expiresAt = plusSeconds(timestamp, ttlSeconds);
       this.db.prepare(`
-        INSERT INTO inventory_reservations (reservation_id,reference_id,status)
-        VALUES (?,?,'ACTIVE')
-      `).run(reservationId, referenceId);
-      for (const component of components) {
+        INSERT INTO inventory_reservations (
+          reservation_id,reference_id,status,created_at,expires_at,released_at,
+          converted_at,release_reason,request_fingerprint,updated_at
+        ) VALUES (?,?,'ACTIVE',?,?,NULL,NULL,NULL,?,?)
+      `).run(reservationId, referenceId, timestamp, expiresAt, fingerprint, timestamp);
+      for (const item of expandedItems) {
         this.db.prepare(`
           INSERT INTO inventory_reservation_items (reservation_id,product_sku,quantity)
           VALUES (?,?,?)
-        `).run(reservationId, component.component_sku, component.quantity);
+        `).run(reservationId, item.productSku, item.quantity);
       }
-      return reservationId;
+      const created = this.findReservationById(reservationId);
+      if (!created) throw new Error('reservation creation failed');
+      return created;
+    });
+  }
+
+  reserveInventory(input: ReserveInventoryInput): InventoryReservationReadModel {
+    return this.reserveInventoryInternal(input, false);
+  }
+
+  reserveBundle(bundleSku: string, referenceId: string, now: Date | string = new Date()): string {
+    return this.reserveInventoryInternal({
+      referenceId,
+      items: [{ productSku: bundleSku, quantity: 1 }],
+      now,
+    }, true).reservationId;
+  }
+
+  releaseReservation(
+    reservationId: string,
+    reason: 'MANUAL' = 'MANUAL',
+    now: Date | string = new Date(),
+  ): InventoryReservationReadModel {
+    const timestamp = utcTimestamp(now);
+    return this.transaction(() => {
+      const reservation = this.findReservationById(reservationId);
+      if (!reservation) throw new Error('reservation missing');
+      if (reservation.status !== 'ACTIVE') return reservation;
+      const releaseReason: ReservationReleaseReason = reservation.expiresAt <= timestamp
+        ? 'EXPIRED'
+        : reason;
+      this.db.prepare(`
+        UPDATE inventory_reservations
+        SET status='RELEASED',released_at=?,release_reason=?,updated_at=?
+        WHERE reservation_id=? AND status='ACTIVE'
+      `).run(timestamp, releaseReason, timestamp, reservationId);
+      const released = this.findReservationById(reservationId);
+      if (!released) throw new Error('reservation release failed');
+      return released;
+    });
+  }
+
+  expireDueReservations(now: Date | string = new Date()): InventoryReservationReadModel[] {
+    const timestamp = utcTimestamp(now);
+    return this.transaction(() => {
+      const due = rows<{ reservation_id: string }>(this.db, `
+        SELECT reservation_id
+        FROM inventory_reservations
+        WHERE status='ACTIVE' AND expires_at <= ?
+        ORDER BY reservation_id
+      `, timestamp);
+      for (const reservation of due) {
+        this.db.prepare(`
+          UPDATE inventory_reservations
+          SET status='RELEASED',released_at=?,release_reason='EXPIRED',updated_at=?
+          WHERE reservation_id=? AND status='ACTIVE'
+        `).run(timestamp, timestamp, reservation.reservation_id);
+      }
+      return due.map(({ reservation_id: reservationId }) => {
+        const expired = this.findReservationById(reservationId);
+        if (!expired) throw new Error('reservation expiration failed');
+        return expired;
+      });
+    });
+  }
+
+  convertReservation(
+    reservationId: string,
+    now: Date | string = new Date(),
+  ): InventoryReservationReadModel {
+    const timestamp = utcTimestamp(now);
+    return this.transaction(() => {
+      const reservation = this.findReservationById(reservationId);
+      if (!reservation) throw new Error('reservation missing');
+      if (reservation.status !== 'ACTIVE') return reservation;
+      if (reservation.expiresAt <= timestamp) {
+        this.db.prepare(`
+          UPDATE inventory_reservations
+          SET status='RELEASED',released_at=?,release_reason='EXPIRED',updated_at=?
+          WHERE reservation_id=? AND status='ACTIVE'
+        `).run(timestamp, timestamp, reservationId);
+        const expired = this.findReservationById(reservationId);
+        if (!expired) throw new Error('reservation expiration failed');
+        return expired;
+      }
+      if (reservation.items.length === 0) throw new Error('reservation items missing');
+
+      const correlationId = randomUUID();
+      for (const item of reservation.items) {
+        if (!Number.isInteger(item.quantity) || item.quantity <= 0) {
+          throw new Error('reservation item invariant violated');
+        }
+        const current = row<{ quantity_on_hand: number }>(
+          this.db,
+          'SELECT quantity_on_hand FROM inventory_balances WHERE product_sku=?',
+          item.productSku,
+        )?.quantity_on_hand;
+        if (current === undefined || !Number.isSafeInteger(current)) {
+          throw new Error(`inventory balance missing: ${item.productSku}`);
+        }
+        const activeReserved = this.activeReservedQuantity(item.productSku, timestamp);
+        const next = current - item.quantity;
+        const remainingReserved = activeReserved - item.quantity;
+        if (remainingReserved < 0 || next < remainingReserved || next < 0) {
+          throw new Error('reservation conversion would violate inventory availability');
+        }
+        this.db.prepare(`
+          UPDATE inventory_balances
+          SET quantity_on_hand=?,updated_at=?
+          WHERE product_sku=?
+        `).run(next, timestamp, item.productSku);
+        this.db.prepare(`
+          INSERT INTO inventory_movements (
+            movement_id,product_sku,delta_quantity,quantity_after,reason,
+            correlation_id,created_at,reservation_id
+          ) VALUES (?,?,?,?,?,?,?,?)
+        `).run(
+          randomUUID(),
+          item.productSku,
+          -item.quantity,
+          next,
+          'RESERVATION_CONVERTED',
+          correlationId,
+          timestamp,
+          reservationId,
+        );
+      }
+      this.db.prepare(`
+        UPDATE inventory_reservations
+        SET status='CONVERTED',converted_at=?,updated_at=?
+        WHERE reservation_id=? AND status='ACTIVE'
+      `).run(timestamp, timestamp, reservationId);
+      const converted = this.findReservationById(reservationId);
+      if (!converted) throw new Error('reservation conversion failed');
+      return converted;
     });
   }
 

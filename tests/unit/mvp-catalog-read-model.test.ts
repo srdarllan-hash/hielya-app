@@ -184,7 +184,10 @@ describe('MVP Local 36 persistent catalog read model', () => {
     expect(persistence.findProductBySku('HYA-NOT-FOUND')).toBeUndefined();
     expect(persistence.findProductById('00000000-0000-5000-8000-000000000000')).toBeUndefined();
     expect(categories.some(({ id }) => id === bySku?.categoryId)).toBe(true);
-    expect(persistence.getOperationalSettings()).toEqual(settings);
+    expect(persistence.getOperationalSettings()).toEqual({
+      ...settings,
+      inventoryReservationTtlSeconds: 600,
+    });
     persistence.close();
   });
 

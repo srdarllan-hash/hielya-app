@@ -53,7 +53,7 @@ jobs:
               'OTP_TTL_SECONDS = 300',
               'OTP_MAX_VERIFICATION_ATTEMPTS = 5',
               'CUSTOMER_SESSION_TTL_SECONDS = 2592000',
-              'duas ou mais conexões SQLite',
+              'two or more SQLite connections',
             ]) if (!(issue.body || '').includes(value)) core.setFailed(`Issue #14 is missing ${value}`);
       - name: Verify frozen parent and bounded linear history
         run: |

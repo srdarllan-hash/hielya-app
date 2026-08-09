@@ -26,6 +26,10 @@ describe('MVP Local 36 persistence contracts', () => {
       'http://vitest.invalid/module.ts',
       DEVELOPMENT_MIGRATIONS[2],
     )).toMatch(/\.dev-migrations\/0003_mvp_local_36_inventory_reservation_lifecycle\.sql$/);
+    expect(resolveDevelopmentMigrationPath(
+      'http://vitest.invalid/module.ts',
+      DEVELOPMENT_MIGRATIONS[3],
+    )).toMatch(/\.dev-migrations\/0004_mvp_local_36_customer_authentication_foundation\.sql$/);
   });
 
   it('seeds 30 selected original SKUs, six composites and preserves 30 deferred baseline SKUs', () => {

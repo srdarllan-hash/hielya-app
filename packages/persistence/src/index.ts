@@ -54,6 +54,21 @@ export interface OperationalSettings {
   inventoryReservationTtlSeconds: number;
 }
 
+export interface CustomerAuthenticationPolicy {
+  phoneScope: 'ES';
+  countryCallingCode: '+34';
+  nationalNumberLength: 9;
+  otpLength: 6;
+  otpTtlSeconds: number;
+  otpResendCooldownSeconds: number;
+  otpMaxVerificationAttempts: number;
+  smsProvider: 'SIMULATED';
+  customerSessionTtlSeconds: number;
+  customerSessionExpiryMode: 'ABSOLUTE';
+  publicBrowsingRequiresLogin: false;
+  checkoutRequiresLogin: true;
+}
+
 export type OperationalSettingsInput = Omit<OperationalSettings, 'inventoryReservationTtlSeconds'> & {
   inventoryReservationTtlSeconds?: number;
 };
@@ -244,6 +259,7 @@ export const DEVELOPMENT_MIGRATIONS = [
   '0001_mvp_local_36_persistence.sql',
   '0002_mvp_local_36_catalog_read_model.sql',
   '0003_mvp_local_36_inventory_reservation_lifecycle.sql',
+  '0004_mvp_local_36_customer_authentication_foundation.sql',
 ] as const;
 
 export const resolveDevelopmentMigrationDirectory = (moduleUrl: string): string => moduleUrl.startsWith('file:')
@@ -485,6 +501,41 @@ export class MvpPersistenceDatabase {
       maximumPinAttempts: value.maximum_pin_attempts,
       tipsEnabled: value.tips_enabled === 1,
       inventoryReservationTtlSeconds: value.inventory_reservation_ttl_seconds,
+    };
+  }
+
+  customerAuthenticationPolicy(): CustomerAuthenticationPolicy {
+    const value = row<{
+      phone_scope: 'ES';
+      country_calling_code: '+34';
+      national_number_length: 9;
+      otp_length: 6;
+      otp_ttl_seconds: number;
+      otp_resend_cooldown_seconds: number;
+      otp_max_verification_attempts: number;
+      sms_provider: 'SIMULATED';
+      customer_session_ttl_seconds: number;
+      customer_session_expiry_mode: 'ABSOLUTE';
+      public_browsing_requires_login: number;
+      checkout_requires_login: number;
+    }>(this.db, 'SELECT * FROM operational_settings WHERE id = 1');
+    if (!value) throw new Error('operational settings missing');
+    if (value.public_browsing_requires_login !== 0 || value.checkout_requires_login !== 1) {
+      throw new Error('customer authentication access policy is invalid');
+    }
+    return {
+      phoneScope: value.phone_scope,
+      countryCallingCode: value.country_calling_code,
+      nationalNumberLength: value.national_number_length,
+      otpLength: value.otp_length,
+      otpTtlSeconds: value.otp_ttl_seconds,
+      otpResendCooldownSeconds: value.otp_resend_cooldown_seconds,
+      otpMaxVerificationAttempts: value.otp_max_verification_attempts,
+      smsProvider: value.sms_provider,
+      customerSessionTtlSeconds: value.customer_session_ttl_seconds,
+      customerSessionExpiryMode: value.customer_session_expiry_mode,
+      publicBrowsingRequiresLogin: false,
+      checkoutRequiresLogin: true,
     };
   }
 
@@ -1071,3 +1122,20 @@ export {
   MvpCatalogReadAdapter,
   MvpOperationalSettingsReadAdapter,
 } from './public-api-read-adapter';
+export {
+  CustomerAuthenticationError,
+  CustomerAuthenticationService,
+  RecordingSimulatedSmsGateway,
+  normalizeSpanishPhone,
+} from './customer-auth';
+export type {
+  CustomerAuthenticationErrorCode,
+  CustomerAuthenticationOptions,
+  CustomerSessionResult,
+  OtpChallengeResult,
+  OtpVerificationResult,
+  SimulatedSmsGateway,
+  SimulatedSmsMessage,
+  ValidatedCustomerSession,
+  VerifiedCustomer,
+} from './customer-auth';

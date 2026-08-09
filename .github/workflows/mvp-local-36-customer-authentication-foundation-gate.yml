@@ -1,0 +1,233 @@
+name: MVP Local 36 Customer Authentication Foundation Gate
+
+on:
+  push:
+    branches:
+      - hielya/mvp-local-36-customer-authentication-foundation
+
+permissions:
+  actions: read
+  contents: read
+  issues: read
+  pull-requests: read
+
+concurrency:
+  group: mvp-local-36-customer-authentication-foundation-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FROZEN_PARENT_SHA: 970b6ae295ff205d214afe6fe4f24ff073fcde27
+  FROZEN_PARENT_BRANCH: hielya/mvp-local-36-inventory-reservation-lifecycle-foundation
+  C002_DELIVERY_QUOTE_ALIGNMENT_CERTIFIED_SHA: 60d556e5ae088f2bf98101dcf37cbf854bcc2eff
+
+jobs:
+  authentication-foundation-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact child commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Verify parent PR 13, Issue 14 and exact ancestry
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const cp = require('node:child_process');
+            const run = (args) => cp.execFileSync('git', args, { encoding: 'utf8' }).trim();
+            if (run(['rev-parse', 'HEAD']) !== context.sha) core.setFailed('Checkout differs from github.sha');
+            const { data: parent } = await github.rest.pulls.get({ ...context.repo, pull_number: 13 });
+            if (parent.state !== 'open' || parent.draft !== true || parent.merged_at !== null
+              || parent.head.ref !== process.env.FROZEN_PARENT_BRANCH
+              || parent.head.sha !== process.env.FROZEN_PARENT_SHA) {
+              core.setFailed('PR #13 is not the exact open/draft certified parent.');
+            }
+            const { data: issue } = await github.rest.issues.get({ ...context.repo, issue_number: 14 });
+            const title = '[MVP Local 36] Establish customer phone authentication and session foundation';
+            if (issue.pull_request || issue.state !== 'open' || issue.title !== title) {
+              core.setFailed('Issue #14 differs from the authorized change-set.');
+            }
+            for (const value of [
+              process.env.FROZEN_PARENT_SHA,
+              'OTP_TTL_SECONDS = 300',
+              'OTP_MAX_VERIFICATION_ATTEMPTS = 5',
+              'CUSTOMER_SESSION_TTL_SECONDS = 2592000',
+              'duas ou mais conexões SQLite',
+            ]) if (!(issue.body || '').includes(value)) core.setFailed(`Issue #14 is missing ${value}`);
+      - name: Verify frozen parent and bounded linear history
+        run: |
+          git fetch --no-tags --force origin "refs/heads/$FROZEN_PARENT_BRANCH:refs/remotes/origin/$FROZEN_PARENT_BRANCH"
+          test "$(git rev-parse "refs/remotes/origin/$FROZEN_PARENT_BRANCH")" = "$FROZEN_PARENT_SHA"
+          test "$(git merge-base "$FROZEN_PARENT_SHA" HEAD)" = "$FROZEN_PARENT_SHA"
+          count="$(git rev-list --count "$FROZEN_PARENT_SHA"..HEAD)"
+          test "$count" -ge 1
+          test "$count" -le 3
+          test -z "$(git rev-list --merges "$FROZEN_PARENT_SHA"..HEAD)"
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate scope, migration and frozen public contracts
+        run: |
+          node scripts/validate-mvp-local-36-customer-authentication-foundation.mjs
+          node scripts/validate-mvp-persistence-schema.mjs
+          GITHUB_ACTIONS=false node scripts/validate-mvp-local-36-openapi.mjs
+          GITHUB_ACTIONS=false node scripts/validate-mvp-local-36-catalog-read-model.mjs
+          GITHUB_ACTIONS=false node scripts/validate-mvp-local-36-public-service-api.mjs
+      - name: Focused migration, authentication and concurrency tests
+        run: |
+          pnpm exec vitest run \
+            tests/unit/mvp-persistence.test.ts \
+            tests/unit/mvp-inventory-reservation-lifecycle.test.ts \
+            tests/unit/mvp-inventory-reservation-concurrency.test.ts \
+            tests/unit/mvp-customer-authentication-foundation.test.ts \
+            tests/unit/mvp-customer-authentication-concurrency.test.ts
+      - name: Full unit regression
+        run: GITHUB_ACTIONS=false pnpm test
+      - name: Lint and type-check
+        run: |
+          pnpm lint
+          pnpm type-check
+      - name: Next build
+        run: pnpm build
+
+  frozen-and-integration-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      BASELINE_MODE: GATE_VALIDATION
+    steps:
+      - name: Checkout exact child commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Verify frozen UI, public contracts and evidence paths
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+          git diff --exit-code "$FROZEN_PARENT_SHA" -- \
+            apps packages/application packages/location packages/ui \
+            contracts manifests \
+            tests/accessibility tests/functional tests/visual \
+            playwright.config.ts \
+            playwright.c002-delivery-quote-api-alignment.config.ts \
+            playwright.c002-prequote-continuation-contract.config.ts \
+            playwright.home-catalog-api-integration.config.ts \
+            playwright.product-detail-api-integration.config.ts
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: C-001 and frozen C-002 regressions
+        run: |
+          pnpm test:c001:a11y
+          pnpm test:c001:functional
+          pnpm test:c001:visual
+          pnpm test:c002:a11y
+          pnpm test:c002:functional
+          pnpm test:c002:visual
+      - name: C-002 Prequote Continuation regression
+        run: |
+          PLAYWRIGHT_EVIDENCE_PHASE=a11y pnpm exec playwright test tests/accessibility/c002-prequote-continuation-contract.a11y.spec.ts --config playwright.c002-prequote-continuation-contract.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=functional pnpm exec playwright test tests/functional/c002-prequote-continuation-contract.functional.spec.ts --config playwright.c002-prequote-continuation-contract.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=visual pnpm exec playwright test tests/visual/c002-prequote-continuation-contract.visual.spec.ts --config playwright.c002-prequote-continuation-contract.config.ts
+      - name: Home Catalog integration regression
+        run: |
+          PLAYWRIGHT_EVIDENCE_PHASE=a11y pnpm exec playwright test tests/accessibility/home-catalog-api-integration.a11y.spec.ts --config playwright.home-catalog-api-integration.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=functional pnpm exec playwright test tests/functional/home-catalog-api-integration.functional.spec.ts --config playwright.home-catalog-api-integration.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=visual pnpm exec playwright test tests/visual/home-catalog-api-integration.visual.spec.ts --config playwright.home-catalog-api-integration.config.ts
+      - name: Product Detail integration regression
+        run: |
+          PLAYWRIGHT_EVIDENCE_PHASE=a11y pnpm exec playwright test tests/accessibility/product-detail-api-integration.a11y.spec.ts --config playwright.product-detail-api-integration.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=functional pnpm exec playwright test tests/functional/product-detail-api-integration.functional.spec.ts --config playwright.product-detail-api-integration.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=visual pnpm exec playwright test tests/visual/product-detail-api-integration.visual.spec.ts --config playwright.product-detail-api-integration.config.ts
+
+  c002-delivery-quote-alignment-frozen-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      BASELINE_MODE: GATE_VALIDATION
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.C002_DELIVERY_QUOTE_ALIGNMENT_CERTIFIED_SHA }}
+          fetch-depth: 0
+      - run: test "$(git rev-parse HEAD)" = "$C002_DELIVERY_QUOTE_ALIGNMENT_CERTIFIED_SHA"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Frozen Alignment accessibility, functional and visual regressions
+        run: |
+          PLAYWRIGHT_EVIDENCE_PHASE=a11y pnpm exec playwright test tests/accessibility/c002-delivery-quote-api-alignment.a11y.spec.ts --config playwright.c002-delivery-quote-api-alignment.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=functional pnpm exec playwright test tests/functional/c002-delivery-quote-api-alignment.functional.spec.ts --config playwright.c002-delivery-quote-api-alignment.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=visual pnpm exec playwright test tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts --config playwright.c002-delivery-quote-api-alignment.config.ts
+
+  c005-frozen-regression:
+    uses: ./.github/workflows/reusable-screen-gate.yml
+    with:
+      sourceSha: fe62966daca8bda94610aa1a63702a1e543b0ce6
+      screenId: C-005
+      route: /
+      states: '["ready","loading","closed","high-demand","error","empty-cart","alcohol-cutoff","out-of-area"]'
+      baseSha: c2857afe538b2cf5ba44635edd56dbd422c0e2f0
+      protectedPaths: '["packages/ui/src/screens/home/","tests/unit/home","tests/accessibility/home","tests/functional/home","tests/visual/home","manifests/C-005"]'
+      testSuites: '["unit","axe","functional","console","visual","responsive"]'
+      requiredViewports: '["360x800","390x844","1170x2532"]'
+      manifestPath: manifests/C-005.json
+      baselineMode: GATE_VALIDATION
+
+  gate-summary:
+    needs:
+      - authentication-foundation-validation
+      - frozen-and-integration-regressions
+      - c002-delivery-quote-alignment-frozen-regression
+      - c005-frozen-regression
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record Customer Authentication Foundation Gate outcome
+        run: |
+          echo ISSUE_NUMBER=14
+          echo PARENT_SHA=970b6ae295ff205d214afe6fe4f24ff073fcde27
+          echo PHONE_SCOPE=ES
+          echo COUNTRY_CALLING_CODE=+34
+          echo OTP_LENGTH=6
+          echo OTP_TTL_SECONDS=300
+          echo OTP_RESEND_COOLDOWN_SECONDS=60
+          echo OTP_MAX_VERIFICATION_ATTEMPTS=5
+          echo SMS_PROVIDER=SIMULATED
+          echo CUSTOMER_SESSION_TTL_SECONDS=2592000
+          echo SESSION_EXPIRY_MODE=ABSOLUTE
+          echo MULTI_CONNECTION_CONCURRENCY_VALIDATED=true
+          echo PLAINTEXT_OTP_PERSISTED=false
+          echo PLAINTEXT_SESSION_TOKEN_PERSISTED=false
+          echo OPENAPI_MODIFIED=false
+          echo PUBLIC_ENDPOINTS_CREATED=false
+          echo UI_CHANGED=false
+          echo NEW_DEPENDENCIES=false
+          echo PRODUCTION_AUTHORIZED=false
+          echo MAIN_CHANGED=false
+          echo MERGE_PERFORMED=false
+          echo NEXT_LAYER_STARTED=false

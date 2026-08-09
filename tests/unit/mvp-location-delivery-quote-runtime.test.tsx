@@ -112,40 +112,65 @@ describe('C-002 location route boundary', () => {
 });
 
 describe('C-002 public delivery-quote runtime', () => {
-  it('renders and persists only the server distance and fee', async () => {
+  it('persists the server prequote before Continue and emits LOCATION_CONFIRMED without navigation', async () => {
     const client = successfulClient();
+    const outcomes: unknown[] = [];
+    const listener = ((event: Event) => {
+      outcomes.push((event as CustomEvent).detail);
+    }) as EventListener;
+    window.addEventListener('hielya:location-outcome', listener);
+    const initialUrl = window.location.href;
     render(<LocationRuntime client={client} />);
 
-    await completeManualAddress();
+    try {
+      await completeManualAddress();
 
-    expect(await screen.findByRole('heading', { name: 'Dirección confirmada' }))
-      .toBeInTheDocument();
-    expect(screen.getByText('2.5 km')).toBeInTheDocument();
-    expect(screen.getByText('€3.50')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Continuar' })).toBeDisabled();
-    expect(client.quoteDelivery).toHaveBeenCalledWith(
-      expect.objectContaining({
-        latitude: expect.any(Number),
-        longitude: expect.any(Number),
-      }),
-      {
-        signal: expect.any(AbortSignal),
-        timeoutMs: 8_000,
-      },
-    );
+      expect(await screen.findByRole('heading', { name: 'Dirección confirmada' }))
+        .toBeInTheDocument();
+      expect(screen.getByText('2.5 km')).toBeInTheDocument();
+      expect(screen.getByText('€3.50')).toBeInTheDocument();
+      const continueButton = screen.getByRole('button', { name: 'Continuar' });
+      expect(continueButton).toBeEnabled();
+      expect(client.quoteDelivery).toHaveBeenCalledWith(
+        expect.objectContaining({
+          latitude: expect.any(Number),
+          longitude: expect.any(Number),
+        }),
+        {
+          signal: expect.any(AbortSignal),
+          timeoutMs: 8_000,
+        },
+      );
 
-    await waitFor(() => expect(sessionStorage.getItem(SESSION_KEY)).not.toBeNull());
-    const stored = JSON.parse(String(sessionStorage.getItem(SESSION_KEY)));
-    expect(stored.value).toMatchObject({
-      deliveryQuoteId: null,
-      serviceArea: {
-        distanceMeters: 2_500,
-        radiusMeters: null,
-        deliveryFeeCents: 350,
-        quoteId: null,
-      },
-    });
-    expect(JSON.stringify(stored)).not.toContain(CORRELATION_ID);
+      await waitFor(() => expect(sessionStorage.getItem(SESSION_KEY)).not.toBeNull());
+      const stored = JSON.parse(String(sessionStorage.getItem(SESSION_KEY)));
+      expect(stored.value).toMatchObject({
+        deliveryQuoteId: null,
+        serviceArea: {
+          distanceMeters: 2_500,
+          radiusMeters: null,
+          deliveryFeeCents: 350,
+          quoteId: null,
+        },
+      });
+      expect(JSON.stringify(stored)).not.toContain(CORRELATION_ID);
+
+      fireEvent.click(continueButton);
+
+      await waitFor(() => expect(outcomes).toHaveLength(1));
+      expect(outcomes[0]).toMatchObject({
+        type: 'LOCATION_CONFIRMED',
+        location: {
+          deliveryQuoteId: null,
+          serviceArea: { quoteId: null, distanceMeters: 2_500, deliveryFeeCents: 350 },
+        },
+      });
+      expect(document.querySelector('[data-outcome-emitted="true"]')).not.toBeNull();
+      expect(window.location.href).toBe(initialUrl);
+      expect(client.quoteDelivery).toHaveBeenCalledTimes(1);
+    } finally {
+      window.removeEventListener('hielya:location-outcome', listener);
+    }
   });
 
   it('disables navigation away from an in-flight service-area check', async () => {

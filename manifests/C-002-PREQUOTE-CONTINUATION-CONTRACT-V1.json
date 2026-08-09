@@ -1,0 +1,43 @@
+{
+  "gate": "C-002-PREQUOTE-CONTINUATION-CONTRACT-V1",
+  "version": "1.0.0",
+  "status": "GATE_CANDIDATE",
+  "issueNumber": 10,
+  "relatedIssue": 8,
+  "parentPr": 9,
+  "parentBranch": "hielya/mvp-local-36-c002-delivery-quote-api-alignment",
+  "parentFrozenSha": "60d556e5ae088f2bf98101dcf37cbf854bcc2eff",
+  "childBranch": "hielya/mvp-local-36-c002-prequote-continuation-contract",
+  "classification": "PRELIMINARY_NON_BINDING_DELIVERY_PREQUOTE",
+  "route": "/location",
+  "endpoint": "POST /api/v1/delivery/quote",
+  "validPrequote": {
+    "routeDistanceKm": 2.5,
+    "feeCents": 350,
+    "quoteId": null,
+    "deliveryQuoteId": null,
+    "continueEnabled": true,
+    "outcome": "LOCATION_CONFIRMED"
+  },
+  "correlationIdUsedAsQuoteId": false,
+  "syntheticQuoteIdCreated": false,
+  "checkoutRequoteRequired": true,
+  "directNavigationAuthorized": false,
+  "nextScreenSelection": "OUT_OF_SCOPE",
+  "sessionPersistedBeforeContinue": true,
+  "visualEvidenceState": "success-enabled",
+  "viewports": [
+    { "css": "360x800", "physical": "360x800" },
+    { "css": "390x844", "physical": "390x844" },
+    { "css": "390x844", "deviceScaleFactor": 3, "physical": "1170x2532" }
+  ],
+  "baselinePath": "tests/visual/c002-prequote-continuation-contract.visual.spec.ts-snapshots",
+  "baselineCount": 3,
+  "baselineReviewManifest": "manifests/C-002-PREQUOTE-CONTINUATION-CONTRACT-V1-BASELINE-REVIEW.json",
+  "priorBaselinesPreserved": true,
+  "openApiModified": false,
+  "persistenceModified": false,
+  "newDependencies": [],
+  "productionAuthorized": false,
+  "futureLayersStarted": false
+}

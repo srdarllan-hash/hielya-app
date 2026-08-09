@@ -85,7 +85,7 @@ describe('C-002 location state machine', () => {
     expect(result.effects[0]?.type).toBe('PERSIST_CONFIRMED_LOCATION');
   });
 
-  it('does not emit completion until Continue', () => {
+  it('emits completion for a validated non-binding prequote with null identifiers', () => {
     const confirmed = {
       source: 'manual' as const,
       coordinates: fakeAddresses[0].coordinates,
@@ -94,13 +94,43 @@ describe('C-002 location state machine', () => {
       confirmedByUser: true,
       confirmedAt: new Date().toISOString(),
       serviceArea: {
-        serviceable: true, reason: 'SERVICEABLE' as const, distanceMeters: 2500, distanceMethod: 'route' as const, radiusMeters: 4000,
-        storeId: 'store', deliveryFeeCents: 449, estimatedMinutes: 35, quoteId: 'quote', expiresAt: new Date(Date.now() + 1000).toISOString(),
+        serviceable: true, reason: 'SERVICEABLE' as const, distanceMeters: 2500, distanceMethod: 'route' as const, radiusMeters: null,
+        storeId: null, deliveryFeeCents: 350, estimatedMinutes: null, quoteId: null, expiresAt: null,
       },
-      deliveryQuoteId: 'quote',
+      deliveryQuoteId: null,
     };
     const result = reduce({ ...initialLocationContext, state: 'success', confirmed }, { type: 'CONTINUE' });
     expect(result.effects).toEqual([{ type: 'COMPLETE_LOCATION', outcome: { type: 'LOCATION_CONFIRMED', location: confirmed } }]);
+    expect(confirmed.serviceArea.quoteId).toBeNull();
+    expect(confirmed.deliveryQuoteId).toBeNull();
+  });
+
+  it('does not emit completion for an invalid prequote', () => {
+    const confirmed = {
+      source: 'manual' as const,
+      coordinates: fakeAddresses[0].coordinates,
+      address: fakeAddresses[0],
+      confidence: 'exact' as const,
+      confirmedByUser: true,
+      confirmedAt: new Date().toISOString(),
+      serviceArea: {
+        serviceable: true,
+        reason: 'SERVICEABLE' as const,
+        distanceMeters: 2500,
+        distanceMethod: 'route' as const,
+        radiusMeters: null,
+        storeId: null,
+        deliveryFeeCents: 1.5,
+        estimatedMinutes: null,
+        quoteId: null,
+        expiresAt: null,
+      },
+      deliveryQuoteId: null,
+    };
+
+    const result = reduce({ ...initialLocationContext, state: 'success', confirmed }, { type: 'CONTINUE' });
+
+    expect(result.effects).toEqual([]);
   });
 
   it('maps rejected coverage to out_of_area', () => {

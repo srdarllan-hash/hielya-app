@@ -11,12 +11,25 @@ export function isAddressConfirmable(address: Address): boolean {
 }
 
 export function canContinueWithLocation(location: LocationResult | null): location is LocationResult {
+  if (!location || !location.confirmedByUser) return false;
+
+  const confirmedAt = location.confirmedAt;
+  const serviceArea = location.serviceArea;
+
   return Boolean(
-    location
-    && location.confirmedByUser
-    && location.confirmedAt
-    && location.serviceArea?.serviceable
-    && location.serviceArea.quoteId,
+    typeof confirmedAt === 'string'
+    && confirmedAt.trim().length > 0
+    && Number.isFinite(Date.parse(confirmedAt))
+    && serviceArea
+    && serviceArea.serviceable
+    && serviceArea.reason === 'SERVICEABLE'
+    && serviceArea.distanceMethod === 'route'
+    && typeof serviceArea.distanceMeters === 'number'
+    && Number.isFinite(serviceArea.distanceMeters)
+    && serviceArea.distanceMeters >= 0
+    && typeof serviceArea.deliveryFeeCents === 'number'
+    && Number.isInteger(serviceArea.deliveryFeeCents)
+    && serviceArea.deliveryFeeCents >= 0,
   );
 }
 

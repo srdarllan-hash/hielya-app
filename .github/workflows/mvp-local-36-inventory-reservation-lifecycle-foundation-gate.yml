@@ -126,6 +126,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Build child application for browser regressions
+        run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - name: C-001 regression
         run: |

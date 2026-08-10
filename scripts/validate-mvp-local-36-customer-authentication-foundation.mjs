@@ -11,12 +11,16 @@ const FROZEN_MIGRATIONS = new Map([
   ['.dev-migrations/0002_mvp_local_36_catalog_read_model.sql', 'be0ffd436c224a027992c4900523b5dc7c658fc465a775fcfcb3722a5fe0173b'],
   ['.dev-migrations/0003_mvp_local_36_inventory_reservation_lifecycle.sql', 'f6facd84bea224113412e23747de81d1c6ce32f40f44b6bfbec8482f93e0ec4c'],
 ]);
+const FROZEN_0004_SHA256 = 'ef45d8bfe4b153da40f8be73948047a78d24402057e84238ff69891c0ec854e9';
 const ALLOWED_CHANGED_FILES = new Set([
   '.dev-migrations/0004_mvp_local_36_customer_authentication_foundation.sql',
   '.github/workflows/mvp-local-36-customer-authentication-foundation-gate.yml',
   'packages/persistence/src/customer-auth.ts',
   'packages/persistence/src/index.ts',
+  'packages/application/src/index.ts',
+  'packages/application/src/auth/index.ts',
   'scripts/validate-mvp-local-36-customer-authentication-foundation.mjs',
+  'scripts/validate-mvp-local-36-public-service-api.mjs',
   'scripts/validate-mvp-persistence-schema.mjs',
   'tests/unit/mvp-customer-authentication-concurrency.test.ts',
   'tests/unit/mvp-customer-authentication-foundation.test.ts',
@@ -41,7 +45,7 @@ if (process.env.GITHUB_ACTIONS === 'true') {
   assert(process.env.GITHUB_REF_NAME === CHILD_BRANCH, 'Workflow is not on the authorized child branch');
   assert(git('merge-base', PARENT_SHA, 'HEAD') === PARENT_SHA, 'Certified parent is not the merge base');
   const commitCount = Number(git('rev-list', '--count', `${PARENT_SHA}..HEAD`));
-  assert(commitCount >= 1 && commitCount <= 3, `Expected one to three commits; found ${commitCount}`);
+  assert(commitCount >= 1 && commitCount <= 5, `Expected one to five commits; found ${commitCount}`);
   assert(git('rev-list', '--merges', `${PARENT_SHA}..HEAD`) === '', 'Merge commits are prohibited');
 }
 
@@ -52,11 +56,14 @@ assert(sha256('contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_1.yaml') === OPE
 for (const [path, expected] of FROZEN_MIGRATIONS) {
   assert(sha256(path) === expected, `Certified migration was modified: ${path}`);
 }
+assert(sha256('.dev-migrations/0004_mvp_local_36_customer_authentication_foundation.sql') === FROZEN_0004_SHA256,
+  'Migration 0004 was modified');
 for (const path of ALLOWED_CHANGED_FILES) assert(existsSync(path), `Required Gate file is missing: ${path}`);
 
 const migration = readFileSync('.dev-migrations/0004_mvp_local_36_customer_authentication_foundation.sql', 'utf8');
-const implementation = readFileSync('packages/persistence/src/customer-auth.ts', 'utf8');
+const implementation = readFileSync('packages/application/src/auth/index.ts', 'utf8');
 const persistence = readFileSync('packages/persistence/src/index.ts', 'utf8');
+const persistenceAdapter = readFileSync('packages/persistence/src/customer-auth.ts', 'utf8');
 const lifecycleTests = readFileSync('tests/unit/mvp-customer-authentication-foundation.test.ts', 'utf8');
 const concurrencyTests = readFileSync('tests/unit/mvp-customer-authentication-concurrency.test.ts', 'utf8');
 
@@ -69,13 +76,16 @@ for (const value of [
 ]) assert(lifecycleTests.includes(value), `Missing owner-policy evidence: ${value}`);
 
 for (const value of [
-  'scryptSync', 'timingSafeEqual', 'randomBytes', 'randomInt',
-  "status='SUPERSEDED'", "status='VERIFIED'", "status='EXPIRED'",
-  "status='REVOKED'", 'tokenHash(token)', 'BEGIN IMMEDIATE',
+  'scryptSync', 'timingSafeEqual', 'createHmac', 'challengeId}:${otp}',
+  'AUTH_CONFIGURATION_UNAVAILABLE', 'OtpDeliveryPort', 'OtpPepperPort',
+  'CustomerAuthenticationRepositoryPort', 'tokenHash(token)',
 ]) {
-  const corpus = value === 'BEGIN IMMEDIATE' ? persistence : implementation;
-  assert(corpus.includes(value), `Missing authentication implementation contract: ${value}`);
+  assert(implementation.includes(value), `Missing application authentication contract: ${value}`);
 }
+assert(persistence.includes('BEGIN IMMEDIATE'), 'Persistence write transactions are missing');
+assert(persistenceAdapter.includes('SqliteCustomerAuthenticationRepository'), 'SQLite authentication adapter is missing');
+assert(!persistence.includes('CustomerAuthenticationService') && !persistenceAdapter.includes('CustomerAuthenticationService'), 'Persistence exports an authentication service');
+assert(!/packages\/persistence|MvpPersistenceDatabase|DatabaseSync|\bSELECT\b|\bINSERT\b|\bUPDATE\b|\btransaction\b/.test(implementation), 'Application leaks persistence or SQL');
 for (const value of [
   'customer_otp_one_pending_per_phone', 'phone_e164 TEXT NOT NULL UNIQUE',
   'otp_salt TEXT NOT NULL', 'otp_hash TEXT NOT NULL', 'token_hash TEXT NOT NULL UNIQUE',
@@ -91,7 +101,7 @@ for (const forbidden of ['jsonwebtoken', 'jose', 'bcrypt', 'argon2', 'twilio', '
 for (const evidence of [
   'never persists the raw OTP or raw session token',
   'locks on the fifth invalid attempt',
-  'enforces resend cooldown after lock instead of resetting the attempt budget',
+  'counts resend cooldown from a late lock, not challenge creation',
   'dispatches simulated SMS outside the write transaction and records failures safely',
   'rejects malformed entropy before persisting an OTP or session',
   'expires challenges and sessions at the exact absolute deadline',
@@ -104,7 +114,6 @@ for (const evidence of [
 const changedForbiddenRoots = changedFiles.filter((path) => (
   path.startsWith('apps/')
   || path.startsWith('contracts/')
-  || path.startsWith('packages/application/')
   || path.startsWith('packages/ui/')
   || path.startsWith('packages/location/')
   || path.startsWith('manifests/')

@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
+import type { CustomerAuthenticationPolicy } from '../../application/src/auth';
 
 import {
   BUNDLE_COMPONENTS,
@@ -25,6 +26,8 @@ export {
   stableCatalogUuid,
 } from './catalog-data';
 export type { ProductCommercialSeed, SeedProduct } from './catalog-data';
+export { SqliteCustomerAuthenticationRepository } from './customer-auth';
+export type { CustomerAuthenticationPolicy } from '../../application/src/auth';
 
 type Statement = {
   run: (...args: unknown[]) => unknown;
@@ -54,20 +57,6 @@ export interface OperationalSettings {
   inventoryReservationTtlSeconds: number;
 }
 
-export interface CustomerAuthenticationPolicy {
-  phoneScope: 'ES';
-  countryCallingCode: '+34';
-  nationalNumberLength: 9;
-  otpLength: 6;
-  otpTtlSeconds: number;
-  otpResendCooldownSeconds: number;
-  otpMaxVerificationAttempts: number;
-  smsProvider: 'SIMULATED';
-  customerSessionTtlSeconds: number;
-  customerSessionExpiryMode: 'ABSOLUTE';
-  publicBrowsingRequiresLogin: false;
-  checkoutRequiresLogin: true;
-}
 
 export type OperationalSettingsInput = Omit<OperationalSettings, 'inventoryReservationTtlSeconds'> & {
   inventoryReservationTtlSeconds?: number;
@@ -1122,20 +1111,3 @@ export {
   MvpCatalogReadAdapter,
   MvpOperationalSettingsReadAdapter,
 } from './public-api-read-adapter';
-export {
-  CustomerAuthenticationError,
-  CustomerAuthenticationService,
-  RecordingSimulatedSmsGateway,
-  normalizeSpanishPhone,
-} from './customer-auth';
-export type {
-  CustomerAuthenticationErrorCode,
-  CustomerAuthenticationOptions,
-  CustomerSessionResult,
-  OtpChallengeResult,
-  OtpVerificationResult,
-  SimulatedSmsGateway,
-  SimulatedSmsMessage,
-  ValidatedCustomerSession,
-  VerifiedCustomer,
-} from './customer-auth';

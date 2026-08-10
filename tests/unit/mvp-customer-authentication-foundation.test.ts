@@ -5,13 +5,19 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
-  CustomerAuthenticationError,
-  CustomerAuthenticationService,
   DEVELOPMENT_MIGRATIONS,
   MvpPersistenceDatabase,
-  RecordingSimulatedSmsGateway,
-  normalizeSpanishPhone,
+  SqliteCustomerAuthenticationRepository,
 } from '../../packages/persistence/src/index';
+import {
+  CustomerAuthenticationError,
+  RecordingSimulatedSmsGateway,
+  RequestCustomerOtp,
+  RevokeCustomerSession,
+  ValidateCustomerSession,
+  VerifyCustomerOtp,
+  normalizeSpanishPhone,
+} from '../../packages/application/src/index';
 
 const NOW = '2030-01-01T12:00:00.000Z';
 const settings = {
@@ -28,11 +34,26 @@ const setup = (otp = '123456') => {
   persistence.migrate();
   persistence.seed(settings);
   const sms = new RecordingSimulatedSmsGateway();
-  const auth = new CustomerAuthenticationService(persistence, {
-    smsGateway: sms,
-    otpGenerator: () => otp,
-  });
+  const repository = new SqliteCustomerAuthenticationRepository(persistence);
+  const crypto = { randomBytes: (size: number) => Buffer.alloc(size, 1), randomId: cryptoRandomId, generateOtp: () => otp };
+  const pepper = { getPepper: () => Buffer.from('test-pepper') };
+  const auth = {
+    requestOtp: new RequestCustomerOtp(repository, sms, pepper, crypto).execute.bind(new RequestCustomerOtp(repository, sms, pepper, crypto)),
+    verifyOtp: new VerifyCustomerOtp(repository, pepper, crypto).execute.bind(new VerifyCustomerOtp(repository, pepper, crypto)),
+    validateSession: new ValidateCustomerSession(repository).execute.bind(new ValidateCustomerSession(repository)),
+    revokeSession: new RevokeCustomerSession(repository).execute.bind(new RevokeCustomerSession(repository)),
+  };
   return { persistence, sms, auth };
+};
+
+let sequence = 0;
+const cryptoRandomId = () => `00000000-0000-4000-8000-${String(++sequence).padStart(12, '0')}`;
+const authFor = (persistence: MvpPersistenceDatabase, gateway: { send: (message: { challengeId: string; phoneE164: string; otp: string; expiresAt: string }) => void }, crypto = { randomBytes: (size: number) => Buffer.alloc(size, 1), randomId: cryptoRandomId, generateOtp: () => '123456' }, pepperValue: Buffer | undefined | null = Buffer.from('test-pepper')) => {
+  const repository = new SqliteCustomerAuthenticationRepository(persistence);
+  const pepper = { getPepper: () => pepperValue ?? undefined };
+  const request = new RequestCustomerOtp(repository, gateway, pepper, crypto);
+  const verify = new VerifyCustomerOtp(repository, pepper, crypto);
+  return { requestOtp: request.execute.bind(request), verifyOtp: verify.execute.bind(verify) };
 };
 
 const expectCode = (action: () => unknown, code: string) => {
@@ -181,18 +202,27 @@ describe('MVP Local 36 customer authentication foundation', () => {
     persistence.close();
   });
 
+  it('requires a non-persisted pepper and binds the digest to challenge id', () => {
+    const persistence = new MvpPersistenceDatabase();
+    persistence.migrate(); persistence.seed(settings);
+    expect(() => authFor(persistence, new RecordingSimulatedSmsGateway(), undefined, null).requestOtp('+34612345678', NOW))
+      .toThrow('AUTH_CONFIGURATION_UNAVAILABLE');
+    const first = authFor(persistence, new RecordingSimulatedSmsGateway()).requestOtp('+34612345678', NOW);
+    const row = persistence.db.prepare('SELECT otp_hash,otp_salt FROM customer_otp_challenges WHERE challenge_id=?').get<{ otp_hash: string; otp_salt: string }>(first.challengeId);
+    expect(JSON.stringify(row)).not.toContain('test-pepper');
+    expect(() => authFor(persistence, new RecordingSimulatedSmsGateway(), undefined, Buffer.from('wrong-pepper')).verifyOtp({ challengeId: first.challengeId, phone: '+34612345678', otp: '123456', now: NOW })).toThrow('INVALID_OTP');
+    persistence.close();
+  });
+
   it('dispatches simulated SMS outside the write transaction and records failures safely', () => {
     const persistence = new MvpPersistenceDatabase();
     persistence.migrate();
     persistence.seed(settings);
     let gatewayObservedTransaction = true;
-    const auth = new CustomerAuthenticationService(persistence, {
-      otpGenerator: () => '123456',
-      smsGateway: { send: () => {
+    const auth = authFor(persistence, { send: () => {
         gatewayObservedTransaction = Boolean((persistence.db as unknown as { isTransaction: boolean }).isTransaction);
         throw new Error('simulated delivery unavailable');
-      } },
-    });
+      } });
     expect(() => auth.requestOtp('+34612345678', NOW)).toThrow('simulated delivery unavailable');
     expect(gatewayObservedTransaction).toBe(false);
     expect(persistence.db.prepare('SELECT status,resend_available_at FROM customer_otp_challenges')
@@ -204,16 +234,13 @@ describe('MVP Local 36 customer authentication foundation', () => {
         status: 'FAILED', delivered_at: null, failed_at: NOW,
       });
     const retrySms = new RecordingSimulatedSmsGateway();
-    const retry = new CustomerAuthenticationService(persistence, {
-      smsGateway: retrySms,
-      otpGenerator: () => '123456',
-    }).requestOtp('+34612345678', NOW);
+    const retry = authFor(persistence, retrySms).requestOtp('+34612345678', NOW);
     expect(retry.reused).toBe(false);
     expect(retrySms.messages).toHaveLength(1);
     persistence.close();
   });
 
-  it('enforces resend cooldown after lock instead of resetting the attempt budget', () => {
+  it('counts resend cooldown from a late lock, not challenge creation', () => {
     const { persistence, auth } = setup();
     const challenge = auth.requestOtp('+34612345678', NOW);
     for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -221,14 +248,14 @@ describe('MVP Local 36 customer authentication foundation', () => {
         challengeId: challenge.challengeId,
         phone: '+34612345678',
         otp: '000000',
-        now: `2030-01-01T12:00:0${attempt}.000Z`,
+        now: '2030-01-01T12:01:30.000Z',
       }), attempt === 4 ? 'OTP_LOCKED' : 'INVALID_OTP');
     }
     expectCode(
-      () => auth.requestOtp('+34612345678', '2030-01-01T12:00:59.999Z'),
+      () => auth.requestOtp('+34612345678', '2030-01-01T12:02:29.999Z'),
       'OTP_RESEND_COOLDOWN',
     );
-    const replacement = auth.requestOtp('+34612345678', '2030-01-01T12:01:00.000Z');
+    const replacement = auth.requestOtp('+34612345678', '2030-01-01T12:02:30.000Z');
     expect(replacement.challengeId).not.toBe(challenge.challengeId);
     persistence.close();
   });
@@ -237,23 +264,17 @@ describe('MVP Local 36 customer authentication foundation', () => {
     const persistence = new MvpPersistenceDatabase();
     persistence.migrate();
     persistence.seed(settings);
-    const badOtpEntropy = new CustomerAuthenticationService(persistence, {
-      otpGenerator: () => '123456',
-      randomBytes: () => Buffer.alloc(15),
-    });
+    const badOtpEntropy = authFor(persistence, new RecordingSimulatedSmsGateway(), { randomBytes: () => Buffer.alloc(15), randomId: cryptoRandomId, generateOtp: () => '123456' });
     expect(() => badOtpEntropy.requestOtp('+34612345678', NOW))
       .toThrow('OTP entropy source returned an invalid value');
     expect(persistence.db.prepare('SELECT COUNT(*) AS count FROM customer_otp_challenges')
       .get<{ count: number }>()?.count).toBe(0);
 
     let entropyCall = 0;
-    const badSessionEntropy = new CustomerAuthenticationService(persistence, {
-      otpGenerator: () => '123456',
-      randomBytes: (size) => {
+    const badSessionEntropy = authFor(persistence, new RecordingSimulatedSmsGateway(), { randomId: cryptoRandomId, generateOtp: () => '123456', randomBytes: (size) => {
         entropyCall += 1;
         return entropyCall === 1 ? Buffer.alloc(size, 1) : Buffer.alloc(31, 2);
-      },
-    });
+      } });
     const challenge = badSessionEntropy.requestOtp('+34612345678', NOW);
     expect(() => badSessionEntropy.verifyOtp({
       challengeId: challenge.challengeId,

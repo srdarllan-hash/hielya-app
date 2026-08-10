@@ -1,5 +1,7 @@
 export type PublicAvailability = 'AVAILABLE' | 'UNAVAILABLE' | 'TEMPORARILY_UNAVAILABLE';
 
+export * from './auth';
+
 export type AddressType = 'HOME' | 'HOTEL' | 'BUSINESS' | 'OTHER';
 
 export type PublicErrorCode =

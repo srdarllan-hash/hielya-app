@@ -310,11 +310,14 @@ const validateModuleBoundaries = () => {
   ]), `Next.js transpiles an unauthorized package set: ${transpilePackages.join(', ')}`);
 
   const applicationFiles = walkFiles('packages/application').filter((path) => /\.(?:ts|tsx|js|mjs)$/.test(path));
-  assert(isDeepStrictEqual(applicationFiles.sort(), ['packages/application/src/index.ts']), 'packages/application contains unauthorized source files');
+  assert(isDeepStrictEqual(applicationFiles.sort(), [
+    'packages/application/src/auth/index.ts',
+    'packages/application/src/index.ts',
+  ]), 'packages/application contains unauthorized source files');
   const applicationManifest = parseJson('packages/application/package.json').document;
   assert(applicationManifest.name === '@hielya/application', 'Application package identity differs');
   assert(Object.keys(applicationManifest.dependencies ?? {}).length === 0, 'Application package has unauthorized runtime dependencies');
-  const applicationSource = readFileSync('packages/application/src/index.ts', 'utf8');
+  const applicationSource = applicationFiles.map((path) => readFileSync(path, 'utf8')).join('\n');
   assert(!/from\s+['"](?:next(?:\/|['"])|react(?:\/|['"])|node:sqlite|apps\/ui-lab)/.test(applicationSource), 'Application layer depends on a forbidden runtime or host');
   for (const contract of [
     'CatalogQueryPort',

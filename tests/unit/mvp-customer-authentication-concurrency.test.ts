@@ -5,11 +5,10 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
-  CustomerAuthenticationError,
-  CustomerAuthenticationService,
   MvpPersistenceDatabase,
-  RecordingSimulatedSmsGateway,
+  SqliteCustomerAuthenticationRepository,
 } from '../../packages/persistence/src/index';
+import { CustomerAuthenticationError, RecordingSimulatedSmsGateway, RequestCustomerOtp, ValidateCustomerSession, VerifyCustomerOtp } from '../../packages/application/src/index';
 
 const NOW = '2030-01-01T12:00:00.000Z';
 const settings = {
@@ -36,17 +35,21 @@ const setup = () => {
   return {
     firstDb,
     secondDb,
-    first: new CustomerAuthenticationService(firstDb, {
-      smsGateway: firstSms,
-      otpGenerator: () => '123456',
-    }),
-    second: new CustomerAuthenticationService(secondDb, {
-      smsGateway: secondSms,
-      otpGenerator: () => '123456',
-    }),
+    first: auth(new SqliteCustomerAuthenticationRepository(firstDb), firstSms),
+    second: auth(new SqliteCustomerAuthenticationRepository(secondDb), secondSms),
     firstSms,
     secondSms,
   };
+};
+
+let sequence = 0;
+const auth = (repository: SqliteCustomerAuthenticationRepository, gateway: RecordingSimulatedSmsGateway) => {
+  const crypto = { randomBytes: (size: number) => Buffer.alloc(size, 1), randomId: () => `00000000-0000-4000-8000-${String(++sequence).padStart(12, '0')}`, generateOtp: () => '123456' };
+  const pepper = { getPepper: () => Buffer.from('test-pepper') };
+  const request = new RequestCustomerOtp(repository, gateway, pepper, crypto);
+  const verify = new VerifyCustomerOtp(repository, pepper, crypto);
+  const validate = new ValidateCustomerSession(repository);
+  return { requestOtp: request.execute.bind(request), verifyOtp: verify.execute.bind(verify), validateSession: validate.execute.bind(validate) };
 };
 
 afterEach(() => {
@@ -126,5 +129,14 @@ describe('MVP Local 36 customer authentication multi-connection invariants', () 
       .get<{ count: number }>()?.count).toBe(0);
     firstDb.close();
     secondDb.close();
+  });
+
+  it('validates an active session with a read only query and does not block a writer', () => {
+    const { firstDb, secondDb, first, second } = setup();
+    const challenge = first.requestOtp('+34612345678', NOW);
+    const session = first.verifyOtp({ challengeId: challenge.challengeId, phone: '+34612345678', otp: '123456', now: NOW }).session;
+    expect(second.validateSession(session.token, NOW)?.sessionId).toBe(session.sessionId);
+    expect(first.requestOtp('+34612345678', '2030-01-01T12:01:00.000Z').reused).toBe(false);
+    firstDb.close(); secondDb.close();
   });
 });

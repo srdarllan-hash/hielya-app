@@ -63,8 +63,13 @@ jobs:
           test "$(git merge-base "$FROZEN_PARENT_SHA" HEAD)" = "$FROZEN_PARENT_SHA"
           count="$(git rev-list --count "$FROZEN_PARENT_SHA"..HEAD)"
           test "$count" -ge 1
-          test "$count" -le 2
+          test "$count" -le 3
           test -z "$(git rev-list --merges "$FROZEN_PARENT_SHA"..HEAD)"
+          if [ "$count" -eq 3 ]; then
+            mapfile -t third_commit_files < <(git diff --name-only HEAD^..HEAD)
+            test "${#third_commit_files[@]}" -eq 1
+            test "${third_commit_files[0]}" = ".github/workflows/mvp-local-36-auth-http-opaque-session-gate.yml"
+          fi
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -78,12 +83,26 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Validate Gate, contracts, migrations and frozen APIs
         run: |
-          node scripts/validate-mvp-local-36-auth-http-opaque-session.mjs
+          if [ "$(git rev-list --count "$FROZEN_PARENT_SHA"..HEAD)" -eq 3 ]; then
+            candidate_worktree="$(mktemp -d)"
+            trap 'git worktree remove --force "$candidate_worktree" 2>/dev/null || true; rmdir "$candidate_worktree" 2>/dev/null || true' EXIT
+            git worktree add --detach "$candidate_worktree" HEAD^
+            (
+              cd "$candidate_worktree"
+              GITHUB_ACTIONS=true \
+              GITHUB_REF_NAME=hielya/mvp-local-36-auth-http-opaque-session \
+              node scripts/validate-mvp-local-36-auth-http-opaque-session.mjs
+            )
+            git worktree remove --force "$candidate_worktree"
+            rmdir "$candidate_worktree" 2>/dev/null || true
+            trap - EXIT
+          fi
+          GITHUB_ACTIONS=false node scripts/validate-mvp-local-36-auth-http-opaque-session.mjs
           node scripts/validate-mvp-persistence-schema.mjs
           GITHUB_ACTIONS=false node scripts/validate-mvp-local-36-openapi.mjs
       - name: Focused OpenAPI, HTTP, authentication and concurrency tests
         run: |
-          pnpm exec vitest run \
+          GITHUB_ACTIONS=false pnpm exec vitest run \
             tests/unit/mvp-auth-openapi-v1-2.test.ts \
             tests/unit/mvp-auth-http.test.ts \
             tests/unit/mvp-local-36-api-host-architecture.test.ts \

@@ -5,7 +5,10 @@ export type CustomerAuthenticationErrorCode =
   | 'OTP_LOCKED' | 'OTP_RESEND_COOLDOWN' | 'OTP_UNAVAILABLE' | 'SESSION_INVALID';
 
 export class CustomerAuthenticationError extends Error {
-  constructor(readonly code: CustomerAuthenticationErrorCode) { super(code); this.name = 'CustomerAuthenticationError'; }
+  constructor(
+    readonly code: CustomerAuthenticationErrorCode,
+    readonly retryAfterSeconds?: number,
+  ) { super(code); this.name = 'CustomerAuthenticationError'; }
 }
 
 export interface CustomerAuthenticationPolicy {
@@ -19,6 +22,7 @@ export interface OtpDeliveryPort { send(message: SimulatedSmsMessage): void; }
 export interface OtpPepperPort { getPepper(): Buffer | undefined; }
 export interface AuthenticationCryptoPort { randomBytes(size: number): Buffer; randomId(): string; generateOtp(length: number): string; }
 export interface OtpChallengeResult { challengeId: string; phoneE164: string; expiresAt: string; resendAvailableAt: string; reused: boolean; }
+export interface CustomerAuthenticationFailure { code: CustomerAuthenticationErrorCode; retryAfterSeconds?: number; }
 export interface VerifiedCustomer { customerId: string; phoneE164: string; phoneVerifiedAt: string; }
 export interface CustomerSessionResult { sessionId: string; token: string; expiresAt: string; }
 export interface OtpVerificationResult { customer: VerifiedCustomer; session: CustomerSessionResult; }
@@ -28,9 +32,9 @@ export interface AuthChallengeRecord { challengeId: string; phoneE164: string; s
 export interface SessionRecord { sessionId: string; customerId: string; tokenHash: string; status: 'ACTIVE' | 'REVOKED' | 'EXPIRED'; createdAt: string; expiresAt: string; revokedAt: string | null; customer: VerifiedCustomer; }
 export interface CustomerAuthenticationRepositoryPort {
   getPolicy(): CustomerAuthenticationPolicy;
-  requestChallenge(command: { challenge: AuthChallengeRecord; deliveryId: string; now: string }): OtpChallengeResult | CustomerAuthenticationErrorCode;
+  requestChallenge(command: { challenge: AuthChallengeRecord; deliveryId: string; now: string }): OtpChallengeResult | CustomerAuthenticationErrorCode | CustomerAuthenticationFailure;
   markDelivery(command: { deliveryId: string; status: 'DELIVERED' | 'FAILED'; now: string; challengeId: string }): void;
-  findChallenge(challengeId: string, phoneE164: string): AuthChallengeRecord | undefined;
+  findChallengeById(challengeId: string): AuthChallengeRecord | undefined;
   verifyChallenge(command: { challengeId: string; phoneE164: string; now: string; matches: boolean; maxAttempts: number; lockResendAvailableAt: string; customerId: string; sessionId: string; tokenHash: string; sessionExpiresAt: string }): OtpVerificationResult | CustomerAuthenticationErrorCode;
   findSession(tokenHash: string): SessionRecord | undefined;
   expireSession(sessionId: string, now: string): void;
@@ -53,15 +57,17 @@ export class RequestCustomerOtp {
     const saltBytes = this.crypto.randomBytes(16); if (!Buffer.isBuffer(saltBytes) || saltBytes.length !== 16) throw new Error('OTP entropy source returned an invalid value');
     const challengeId = this.crypto.randomId(); const deliveryId = this.crypto.randomId(); const context = `${challengeId}:${otp}`; const preimage = createHmac('sha256', pepper).update(context).digest(); const digest = scryptSync(preimage, saltBytes, 32, { N: 16_384, r: 8, p: 1, maxmem: 64 * 1024 * 1024 }).toString('hex');
     const result = this.repository.requestChallenge({ challenge: { challengeId, phoneE164, salt: saltBytes.toString('hex'), digest, status: 'PENDING', attemptsUsed: 0, expiresAt: addSeconds(current, policy.otpTtlSeconds), resendAvailableAt: addSeconds(current, policy.otpResendCooldownSeconds) }, deliveryId, now: current });
-    if (typeof result === 'string') throw new CustomerAuthenticationError(result); if (result.reused) return result;
+    if (typeof result === 'string') throw new CustomerAuthenticationError(result);
+    if ('code' in result) throw new CustomerAuthenticationError(result.code, result.retryAfterSeconds);
+    if (result.reused) return result;
     try { this.gateway.send({ challengeId, phoneE164, otp, expiresAt: result.expiresAt }); this.repository.markDelivery({ deliveryId, status: 'DELIVERED', now: current, challengeId }); return result; } catch (error) { this.repository.markDelivery({ deliveryId, status: 'FAILED', now: current, challengeId }); throw error; }
   }
 }
 export class VerifyCustomerOtp {
   constructor(private readonly repository: CustomerAuthenticationRepositoryPort, private readonly pepper: OtpPepperPort, private readonly crypto: AuthenticationCryptoPort = nodeAuthenticationCrypto) {}
-  execute(input: { challengeId: string; phone: string; otp: string; now?: Date | string }): OtpVerificationResult {
-    const policy = this.repository.getPolicy(); const phoneE164 = normalizeSpanishPhone(input.phone, policy); const current = timestamp(input.now); const pepper = this.pepper.getPepper(); if (!pepper || pepper.length === 0) throw new CustomerAuthenticationError('AUTH_CONFIGURATION_UNAVAILABLE'); if (!new RegExp(`^\\d{${policy.otpLength}}$`).test(input.otp)) throw new CustomerAuthenticationError('INVALID_OTP');
-    const snapshot = this.repository.findChallenge(input.challengeId, phoneE164); const salt = snapshot?.salt; const actual = salt && validSalt(salt) ? scryptSync(createHmac('sha256', pepper).update(`${input.challengeId}:${input.otp}`).digest(), Buffer.from(salt, 'hex'), 32, { N: 16_384, r: 8, p: 1, maxmem: 64 * 1024 * 1024 }).toString('hex') : '';
+  execute(input: { challengeId: string; otp: string; now?: Date | string }): OtpVerificationResult {
+    const policy = this.repository.getPolicy(); const current = timestamp(input.now); const pepper = this.pepper.getPepper(); if (!pepper || pepper.length === 0) throw new CustomerAuthenticationError('AUTH_CONFIGURATION_UNAVAILABLE'); if (!new RegExp(`^\\d{${policy.otpLength}}$`).test(input.otp)) throw new CustomerAuthenticationError('INVALID_OTP');
+    const snapshot = this.repository.findChallengeById(input.challengeId); const phoneE164 = snapshot?.phoneE164 ?? ''; const salt = snapshot?.salt; const actual = salt && validSalt(salt) ? scryptSync(createHmac('sha256', pepper).update(`${input.challengeId}:${input.otp}`).digest(), Buffer.from(salt, 'hex'), 32, { N: 16_384, r: 8, p: 1, maxmem: 64 * 1024 * 1024 }).toString('hex') : '';
     const matches = Boolean(snapshot && actual && /^[0-9a-f]{64}$/.test(snapshot.digest) && timingSafeEqual(Buffer.from(actual, 'hex'), Buffer.from(snapshot.digest, 'hex')));
     const tokenBytes = this.crypto.randomBytes(32); if (!Buffer.isBuffer(tokenBytes) || tokenBytes.length !== 32) throw new Error('session entropy source returned an invalid value'); const token = tokenBytes.toString('hex');
     const result = this.repository.verifyChallenge({ challengeId: input.challengeId, phoneE164, now: current, matches, maxAttempts: policy.otpMaxVerificationAttempts, lockResendAvailableAt: addSeconds(current, policy.otpResendCooldownSeconds), customerId: this.crypto.randomId(), sessionId: this.crypto.randomId(), tokenHash: tokenHash(token), sessionExpiresAt: addSeconds(current, policy.customerSessionTtlSeconds) });

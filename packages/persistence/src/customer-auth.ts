@@ -1,6 +1,7 @@
 import type {
   AuthChallengeRecord, CustomerAuthenticationErrorCode, CustomerAuthenticationPolicy,
-  CustomerAuthenticationRepositoryPort, OtpChallengeResult, OtpVerificationResult, SessionRecord,
+  CustomerAuthenticationFailure, CustomerAuthenticationRepositoryPort, OtpChallengeResult,
+  OtpVerificationResult, SessionRecord,
 } from '../../application/src/auth';
 
 import type { MvpPersistenceDatabase } from './index';
@@ -13,12 +14,20 @@ const challenge = (row: ChallengeRow): AuthChallengeRecord => ({ challengeId: ro
 export class SqliteCustomerAuthenticationRepository implements CustomerAuthenticationRepositoryPort {
   constructor(private readonly persistence: MvpPersistenceDatabase) {}
   getPolicy(): CustomerAuthenticationPolicy { return this.persistence.customerAuthenticationPolicy(); }
-  requestChallenge(command: { challenge: AuthChallengeRecord; deliveryId: string; now: string }): OtpChallengeResult | CustomerAuthenticationErrorCode {
+  requestChallenge(command: { challenge: AuthChallengeRecord; deliveryId: string; now: string }): OtpChallengeResult | CustomerAuthenticationErrorCode | CustomerAuthenticationFailure {
     return this.persistence.transaction(() => {
       const latest = this.persistence.db.prepare(`SELECT challenge.*,delivery.status AS delivery_status FROM customer_otp_challenges challenge LEFT JOIN simulated_sms_deliveries delivery ON delivery.challenge_id=challenge.challenge_id WHERE challenge.phone_e164=? ORDER BY challenge.created_at DESC, challenge.rowid DESC LIMIT 1`).get<ChallengeRow>(command.challenge.phoneE164);
       if (latest?.status === 'PENDING' && latest.expires_at <= command.now) this.persistence.db.prepare("UPDATE customer_otp_challenges SET status='EXPIRED',updated_at=? WHERE challenge_id=? AND status='PENDING'").run(command.now, latest.challenge_id);
       if (latest && latest.resend_available_at > command.now) {
-        if (latest.status !== 'PENDING' || latest.expires_at <= command.now) return 'OTP_RESEND_COOLDOWN';
+        if (latest.status !== 'PENDING' || latest.expires_at <= command.now) {
+          return {
+            code: 'OTP_RESEND_COOLDOWN',
+            retryAfterSeconds: Math.max(
+              0,
+              Math.ceil((new Date(latest.resend_available_at).getTime() - new Date(command.now).getTime()) / 1_000),
+            ),
+          };
+        }
         if (latest.delivery_status !== 'DELIVERED') return 'OTP_UNAVAILABLE';
         return { challengeId: latest.challenge_id, phoneE164: latest.phone_e164, expiresAt: latest.expires_at, resendAvailableAt: latest.resend_available_at, reused: true };
       }
@@ -39,7 +48,7 @@ export class SqliteCustomerAuthenticationRepository implements CustomerAuthentic
       }
     });
   }
-  findChallenge(challengeId: string, phoneE164: string): AuthChallengeRecord | undefined { const value = this.persistence.db.prepare('SELECT * FROM customer_otp_challenges WHERE challenge_id=? AND phone_e164=?').get<ChallengeRow>(challengeId, phoneE164); return value ? challenge(value) : undefined; }
+  findChallengeById(challengeId: string): AuthChallengeRecord | undefined { const value = this.persistence.db.prepare('SELECT * FROM customer_otp_challenges WHERE challenge_id=?').get<ChallengeRow>(challengeId); return value ? challenge(value) : undefined; }
   verifyChallenge(command: { challengeId: string; phoneE164: string; now: string; matches: boolean; maxAttempts: number; lockResendAvailableAt: string; customerId: string; sessionId: string; tokenHash: string; sessionExpiresAt: string }): OtpVerificationResult | CustomerAuthenticationErrorCode {
     return this.persistence.transaction(() => {
       const value = this.persistence.db.prepare('SELECT * FROM customer_otp_challenges WHERE challenge_id=? AND phone_e164=?').get<ChallengeRow>(command.challengeId, command.phoneE164);

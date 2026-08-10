@@ -4,6 +4,7 @@ import { join } from 'node:path';
 
 const HOST_ADR_PATH = 'docs/decisions/ADR-MVP-LOCAL-36-API-HOST-ARCHITECTURE.md';
 const PUBLIC_API_ADR_PATH = 'docs/decisions/ADR-MVP-LOCAL-36-PUBLIC-SERVICE-API-LAYER.md';
+const AUTH_ADR_PATH = 'docs/decisions/ADR-MVP-LOCAL-36-OPAQUE-CUSTOMER-SESSION-V1-2.md';
 const PROFILE_PATH = 'docs/architecture/MVP_LOCAL_36_API_HOST_PROFILE.json';
 
 interface AuthorizedRouteHandler {
@@ -28,7 +29,7 @@ interface ApiHostProfile {
   productionAuthorized: boolean;
 }
 
-const AUTHORIZED_ROUTE_HANDLERS: AuthorizedRouteHandler[] = [
+const FROZEN_PUBLIC_ROUTE_HANDLERS: AuthorizedRouteHandler[] = [
   {
     method: 'GET',
     path: '/catalog/categories',
@@ -50,6 +51,22 @@ const AUTHORIZED_ROUTE_HANDLERS: AuthorizedRouteHandler[] = [
     file: 'apps/ui-lab/app/api/v1/delivery/quote/route.ts',
   },
 ];
+
+const AUTH_ROUTE_HANDLERS: AuthorizedRouteHandler[] = [
+  {
+    method: 'POST',
+    path: '/auth/otp/request',
+    file: 'apps/ui-lab/app/api/v1/auth/otp/request/route.ts',
+  },
+  {
+    method: 'POST',
+    path: '/auth/otp/verify',
+    file: 'apps/ui-lab/app/api/v1/auth/otp/verify/route.ts',
+  },
+];
+
+const AUTHORIZED_ROUTE_HANDLERS = [...FROZEN_PUBLIC_ROUTE_HANDLERS, ...AUTH_ROUTE_HANDLERS];
+const normalizePath = (path: string): string => path.replaceAll('\\', '/');
 
 const sourceFiles = (root: string): string[] => {
   if (!existsSync(root)) return [];
@@ -75,7 +92,7 @@ describe('MVP Local 36 API host architecture Gate', () => {
       host: 'apps/ui-lab',
       basePath: '/api/v1',
       routeHandlersAuthorized: true,
-      authorizedRouteHandlers: AUTHORIZED_ROUTE_HANDLERS,
+      authorizedRouteHandlers: FROZEN_PUBLIC_ROUTE_HANDLERS,
       secondRuntimeAuthorized: false,
       microservicesAuthorized: false,
       realMapProviderAuthorized: false,
@@ -94,6 +111,7 @@ describe('MVP Local 36 API host architecture Gate', () => {
   it('preserves the host decision and records the exact Public Service/API authorization', () => {
     const hostAdr = readFileSync(HOST_ADR_PATH, 'utf8');
     const publicApiAdr = readFileSync(PUBLIC_API_ADR_PATH, 'utf8');
+    const authAdr = readFileSync(AUTH_ADR_PATH, 'utf8');
     const requiredDecisions = [
       'MODULAR_TYPESCRIPT_MONOLITH',
       'NEXTJS',
@@ -112,9 +130,13 @@ describe('MVP Local 36 API host architecture Gate', () => {
     ];
 
     requiredDecisions.forEach((decision) => expect(hostAdr).toContain(decision));
-    for (const route of AUTHORIZED_ROUTE_HANDLERS) {
+    for (const route of FROZEN_PUBLIC_ROUTE_HANDLERS) {
       expect(publicApiAdr).toContain(route.path);
       expect(publicApiAdr).toContain(route.file);
+    }
+    for (const route of AUTH_ROUTE_HANDLERS) {
+      expect(authAdr).toContain(`POST /api/v1${route.path}`);
+      expect(authAdr).toContain(route.file);
     }
     expect(publicApiAdr).toContain('category` resolve por `id` UUID persistido ou por `slug` persistido');
     expect(publicApiAdr).toContain('`q` pesquisa somente `sku` e `name`');
@@ -124,11 +146,12 @@ describe('MVP Local 36 API host architecture Gate', () => {
     expect(publicApiAdr).toContain('HTTP 400');
   });
 
-  it('keeps the package boundaries and creates only the four authorized Route Handlers', () => {
+  it('keeps the package boundaries and creates only the four frozen plus two authorized auth Route Handlers', () => {
     const application = combinedSource('packages/application');
     const persistence = combinedSource('packages/persistence');
     const ui = combinedSource('packages/ui');
     const routeHandlers = sourceFiles('apps/ui-lab/app/api/v1')
+      .map(normalizePath)
       .filter((path) => path.endsWith('/route.ts'));
 
     expect(application).not.toMatch(/from\s+['"](?:next(?:\/|['"])|react(?:\/|['"])|node:sqlite)/);

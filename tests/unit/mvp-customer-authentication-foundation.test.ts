@@ -161,7 +161,6 @@ describe('MVP Local 36 customer authentication foundation', () => {
 
     const verified = auth.verifyOtp({
       challengeId: challenge.challengeId,
-      phone: '+34612345678',
       otp: '123456',
       now: '2030-01-01T12:00:30.000Z',
     });
@@ -181,7 +180,6 @@ describe('MVP Local 36 customer authentication foundation', () => {
     const challenge = auth.requestOtp('+34612345678', NOW);
     const verified = auth.verifyOtp({
       challengeId: challenge.challengeId,
-      phone: '+34612345678',
       otp: '654321',
       now: NOW,
     });
@@ -210,7 +208,7 @@ describe('MVP Local 36 customer authentication foundation', () => {
     const first = authFor(persistence, new RecordingSimulatedSmsGateway()).requestOtp('+34612345678', NOW);
     const row = persistence.db.prepare('SELECT otp_hash,otp_salt FROM customer_otp_challenges WHERE challenge_id=?').get<{ otp_hash: string; otp_salt: string }>(first.challengeId);
     expect(JSON.stringify(row)).not.toContain('test-pepper');
-    expect(() => authFor(persistence, new RecordingSimulatedSmsGateway(), undefined, Buffer.from('wrong-pepper')).verifyOtp({ challengeId: first.challengeId, phone: '+34612345678', otp: '123456', now: NOW })).toThrow('INVALID_OTP');
+    expect(() => authFor(persistence, new RecordingSimulatedSmsGateway(), undefined, Buffer.from('wrong-pepper')).verifyOtp({ challengeId: first.challengeId, otp: '123456', now: NOW })).toThrow('INVALID_OTP');
     persistence.close();
   });
 
@@ -246,7 +244,6 @@ describe('MVP Local 36 customer authentication foundation', () => {
     for (let attempt = 0; attempt < 5; attempt += 1) {
       expectCode(() => auth.verifyOtp({
         challengeId: challenge.challengeId,
-        phone: '+34612345678',
         otp: '000000',
         now: '2030-01-01T12:01:30.000Z',
       }), attempt === 4 ? 'OTP_LOCKED' : 'INVALID_OTP');
@@ -278,7 +275,6 @@ describe('MVP Local 36 customer authentication foundation', () => {
     const challenge = badSessionEntropy.requestOtp('+34612345678', NOW);
     expect(() => badSessionEntropy.verifyOtp({
       challengeId: challenge.challengeId,
-      phone: '+34612345678',
       otp: '123456',
       now: NOW,
     })).toThrow('session entropy source returned an invalid value');
@@ -305,7 +301,6 @@ describe('MVP Local 36 customer authentication foundation', () => {
     ).get<{ status: string }>(first.challengeId)?.status).toBe('SUPERSEDED');
     expectCode(() => auth.verifyOtp({
       challengeId: first.challengeId,
-      phone: '+34612345678',
       otp: '123456',
       now: '2030-01-01T12:01:01.000Z',
     }), 'OTP_UNAVAILABLE');
@@ -318,20 +313,17 @@ describe('MVP Local 36 customer authentication foundation', () => {
     for (let attempt = 1; attempt <= 4; attempt += 1) {
       expectCode(() => auth.verifyOtp({
         challengeId: challenge.challengeId,
-        phone: '+34612345678',
         otp: '000000',
         now: NOW,
       }), 'INVALID_OTP');
     }
     expectCode(() => auth.verifyOtp({
       challengeId: challenge.challengeId,
-      phone: '+34612345678',
       otp: '000000',
       now: NOW,
     }), 'OTP_LOCKED');
     expectCode(() => auth.verifyOtp({
       challengeId: challenge.challengeId,
-      phone: '+34612345678',
       otp: '123456',
       now: NOW,
     }), 'OTP_LOCKED');
@@ -347,7 +339,6 @@ describe('MVP Local 36 customer authentication foundation', () => {
     const expired = auth.requestOtp('+34612345678', NOW);
     expectCode(() => auth.verifyOtp({
       challengeId: expired.challengeId,
-      phone: '+34612345678',
       otp: '123456',
       now: '2030-01-01T12:05:00.000Z',
     }), 'OTP_EXPIRED');
@@ -355,7 +346,6 @@ describe('MVP Local 36 customer authentication foundation', () => {
     const active = auth.requestOtp('+34612345678', '2030-01-01T12:06:00.000Z');
     const verified = auth.verifyOtp({
       challengeId: active.challengeId,
-      phone: '+34612345678',
       otp: '123456',
       now: '2030-01-01T12:06:01.000Z',
     });

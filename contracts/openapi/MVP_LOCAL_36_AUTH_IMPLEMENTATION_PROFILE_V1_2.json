@@ -1,0 +1,73 @@
+{
+  "profile": "MVP_LOCAL_36",
+  "contractVersion": "1.2.0",
+  "contractFile": "contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_2.yaml",
+  "lineage": [
+    {
+      "file": "contracts/openapi/HIELYA_OPENAPI_V1_0.yaml",
+      "sha256": "a2c027c6294b44c94cf4be21d18fbd251b0323102e3c9ba2cba912a96d810ae9",
+      "modified": false
+    },
+    {
+      "file": "contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_1.yaml",
+      "sha256": "92e1ebcc1d817718a7f2fe9ef1ce93df60194e049d3e0349855bd4ddd24d2ec8",
+      "modified": false
+    }
+  ],
+  "session": {
+    "strategy": "OPAQUE_SERVER_SESSION",
+    "tokenCount": 1,
+    "ttlSeconds": 2592000,
+    "expiryMode": "ABSOLUTE",
+    "revocable": true,
+    "jwt": "NOT_USED",
+    "refresh": "NOT_USED",
+    "rotation": "NOT_USED"
+  },
+  "securityScheme": {
+    "name": "customerBearer",
+    "type": "http",
+    "scheme": "bearer",
+    "bearerFormat": "OpaqueSessionToken",
+    "middlewareImplemented": false
+  },
+  "IMPLEMENT_NOW": [
+    {
+      "method": "POST",
+      "path": "/auth/otp/request",
+      "requestFields": ["phoneE164", "locale"]
+    },
+    {
+      "method": "POST",
+      "path": "/auth/otp/verify",
+      "requestFields": ["challengeId", "code"]
+    }
+  ],
+  "DEFERRED": [
+    "C-003",
+    "C-004",
+    "login UI",
+    "OTP UI",
+    "cookies",
+    "session renewal",
+    "logout",
+    "bearer middleware",
+    "/me",
+    "cart",
+    "checkout",
+    "orders",
+    "payments",
+    "Admin",
+    "real SMS",
+    "production",
+    "merge"
+  ],
+  "controls": {
+    "publicBrowsingRequiresLogin": false,
+    "checkoutRequiresLogin": true,
+    "developmentAndTestOnly": true,
+    "productionAuthorized": false,
+    "mergeAuthorized": false,
+    "prDraftRequired": true
+  }
+}

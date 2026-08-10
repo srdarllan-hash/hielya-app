@@ -84,13 +84,11 @@ describe('MVP Local 36 customer authentication multi-connection invariants', () 
     const challenge = first.requestOtp('+34612345678', NOW);
     const winner = second.verifyOtp({
       challengeId: challenge.challengeId,
-      phone: '+34612345678',
       otp: '123456',
       now: NOW,
     });
     expect(() => first.verifyOtp({
       challengeId: challenge.challengeId,
-      phone: '+34612345678',
       otp: '123456',
       now: NOW,
     })).toThrowError(CustomerAuthenticationError);
@@ -110,14 +108,12 @@ describe('MVP Local 36 customer authentication multi-connection invariants', () 
     for (let attempt = 0; attempt < 4; attempt += 1) {
       expect(() => (attempt % 2 === 0 ? first : second).verifyOtp({
         challengeId: challenge.challengeId,
-        phone: '+34612345678',
         otp: '000000',
         now: NOW,
       })).toThrowError(CustomerAuthenticationError);
     }
     expect(() => second.verifyOtp({
       challengeId: challenge.challengeId,
-      phone: '+34612345678',
       otp: '000000',
       now: NOW,
     })).toThrowError(CustomerAuthenticationError);
@@ -134,7 +130,7 @@ describe('MVP Local 36 customer authentication multi-connection invariants', () 
   it('validates an active session with a read only query and does not block a writer', () => {
     const { firstDb, secondDb, first, second } = setup();
     const challenge = first.requestOtp('+34612345678', NOW);
-    const session = first.verifyOtp({ challengeId: challenge.challengeId, phone: '+34612345678', otp: '123456', now: NOW }).session;
+    const session = first.verifyOtp({ challengeId: challenge.challengeId, otp: '123456', now: NOW }).session;
     expect(second.validateSession(session.token, NOW)?.sessionId).toBe(session.sessionId);
     expect(first.requestOtp('+34612345678', '2030-01-01T12:01:00.000Z').reused).toBe(false);
     firstDb.close(); secondDb.close();

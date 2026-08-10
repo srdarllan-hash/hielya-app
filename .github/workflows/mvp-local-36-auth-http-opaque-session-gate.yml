@@ -81,12 +81,14 @@ jobs:
           node scripts/validate-mvp-local-36-auth-http-opaque-session.mjs
           node scripts/validate-mvp-persistence-schema.mjs
           GITHUB_ACTIONS=false node scripts/validate-mvp-local-36-openapi.mjs
-          GITHUB_ACTIONS=false node scripts/validate-mvp-local-36-catalog-read-model.mjs
       - name: Focused OpenAPI, HTTP, authentication and concurrency tests
         run: |
           pnpm exec vitest run \
             tests/unit/mvp-auth-openapi-v1-2.test.ts \
             tests/unit/mvp-auth-http.test.ts \
+            tests/unit/mvp-local-36-api-host-architecture.test.ts \
+            tests/unit/mvp-catalog-read-model.test.ts \
+            tests/unit/mvp-local-36-composite-commercial-data.test.ts \
             tests/unit/mvp-customer-authentication-foundation.test.ts \
             tests/unit/mvp-customer-authentication-concurrency.test.ts \
             tests/unit/mvp-inventory-reservation-lifecycle.test.ts \

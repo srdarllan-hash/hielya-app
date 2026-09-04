@@ -22,7 +22,7 @@ Keep application use cases independent from Next.js, React and SQLite. Compose a
 
 ## Checkpoints
 
-- Official location after the migration PR is merged: `docs/checkpoints/`.
+- Official location: `docs/checkpoints/` (effective after PR #22 merged).
 - Monthly historical files: `docs/checkpoints/YYYY-MM/`.
 - Canonical index and Drive traceability: `docs/checkpoints/INDEX.md`.
 - Google Drive remains historical storage and the location for binary assets and evidence that were not migrated.
@@ -68,9 +68,9 @@ Production activation and deployment are not authorized. The simulated SMS gatew
 
 ## Current certified state
 
-- Certified `main`: `df912c101b3db5c910a8c575fb2e2e687a54f4f5`.
-- Current documentation Gate: `CHECKPOINT_REPOSITORY_MIGRATION_GATE`.
-- Previous checkpoint: `HIELYA_CHECKPOINT_2026-09-04_v4.9.md`.
+- Certified `main`: `e4fc9d5b9675d2d20d7a71cf45ff6f4fb985c0f0` (PR #22 merge commit).
+- Current documentation Gate: `CHECKPOINT_REPOSITORY_MIGRATION_MERGE_RECORD_GATE`.
+- Latest completed checkpoint: `HIELYA_CHECKPOINT_2026-09-04_v5.0.md`; v5.1 records this merge.
 - Implemented/certified chain includes C-001 Splash, C-002 location and delivery quote/prequote continuation, C-005 Home, public catalog and product detail integration, persistence foundations, inventory reservation lifecycle, customer-authentication foundation, OpenAPI V1.2 and the opaque-session OTP request/verify HTTP transport.
 - The opaque session is server-side, revocable and absolute-expiry; only its hash is persisted. Client session consumption is not implemented.
 - Design System code-first direction has been analyzed but not formally approved. Selected visual assets remain pending Design System approval.

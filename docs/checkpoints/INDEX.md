@@ -34,6 +34,8 @@ Este índice rastreia os checkpoints oficiais migrados do Google Drive. Os docum
 | v4.8 | 2026-09-04 | `DESIGN_SYSTEM_PARTIAL_APPROVAL_GATE_VALIDATED_NOT_APPROVED` | `df912c101b3db5c910a8c575fb2e2e687a54f4f5` | [HIELYA_CHECKPOINT_2026-09-04_v4.8.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v4.8.md) | [original](https://docs.google.com/document/d/1aOFSwv9VEvld4zlSYniBI_xfmquaLvPFmiz8zQw7rjc/edit?usp=drivesdk) |
 | v4.9 | 2026-09-04 | `DESIGN_SYSTEM_CODE_FIRST_DIRECTION_ANALYSIS` | `df912c101b3db5c910a8c575fb2e2e687a54f4f5` | [HIELYA_CHECKPOINT_2026-09-04_v4.9.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v4.9.md) | [original](https://docs.google.com/document/d/1iJiCYqId_dS-I-mRMZhqWKDY1YGf7liBgoOn-gre-QY/edit?usp=drivesdk) |
 
+| v5.0 | 2026-09-04 | `CHECKPOINT_REPOSITORY_MIGRATION_GATE` | `9ac639cf7c833d18094c6f9765b369ee2107efba` | [HIELYA_CHECKPOINT_2026-09-04_v5.0.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v5.0.md) | não aplicável — criado no repositório |
+
 ## Documentos complementares migrados
 
 - [Política de checkpoints](./HIELYA_CHECKPOINT_POLICY.md) — [origem no Drive](https://docs.google.com/document/d/1tnI8THDiG8Mz2qkNqFMxd3QmsqcUUE2EXMifx7wuFNY/edit)

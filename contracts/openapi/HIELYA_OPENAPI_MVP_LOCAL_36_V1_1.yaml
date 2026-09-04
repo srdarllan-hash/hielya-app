@@ -1,0 +1,397 @@
+{
+  "openapi": "3.1.1",
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "info": {
+    "title": "HIELYA MVP Local 36 Public API",
+    "version": "1.1.0",
+    "summary": "Executable public contract for the MVP_LOCAL_36 profile.",
+    "description": "Derived from HIELYA_OPENAPI_V1_0.yaml. This contract does not authorize production, payments, Admin, order creation or endpoint implementation.",
+    "license": { "name": "Proprietary", "identifier": "LicenseRef-Proprietary" }
+  },
+  "x-hielya-profile": "MVP_LOCAL_36",
+  "x-hielya-baseline": {
+    "file": "contracts/openapi/HIELYA_OPENAPI_V1_0.yaml",
+    "sha256": "a2c027c6294b44c94cf4be21d18fbd251b0323102e3c9ba2cba912a96d810ae9",
+    "modified": false
+  },
+  "servers": [
+    { "url": "/api/v1", "description": "Relative API base; the host is environment-specific." }
+  ],
+  "tags": [
+    { "name": "Catalog", "description": "Public category and product discovery." },
+    { "name": "Store", "description": "Public store and simulated delivery operations." },
+    { "name": "Checkout", "description": "Authenticated checkout contracts whose implementation may be deferred." }
+  ],
+  "paths": {
+    "/catalog/categories": {
+      "get": {
+        "tags": ["Catalog"],
+        "summary": "List publicly visible categories",
+        "operationId": "listPublicCategories",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Public categories in persisted display order.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PublicCategory" }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/catalog/products": {
+      "get": {
+        "tags": ["Catalog"],
+        "summary": "Search and list publicly visible MVP products",
+        "operationId": "listPublicProducts",
+        "security": [],
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string" } },
+          { "name": "category", "in": "query", "schema": { "type": "string" } },
+          { "name": "availableOnly", "in": "query", "schema": { "type": "boolean", "default": false } },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/PageSize" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page of public products.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PublicProductPage" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/catalog/products/{productId}": {
+      "get": {
+        "tags": ["Catalog"],
+        "summary": "Get a publicly visible product",
+        "operationId": "getPublicProduct",
+        "security": [],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public product detail.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PublicProduct" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/delivery/quote": {
+      "post": {
+        "tags": ["Store"],
+        "summary": "Quote delivery from server-calculated road distance",
+        "operationId": "quoteDelivery",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/DeliveryQuoteRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Server-calculated simulated delivery quote.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeliveryQuote" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/carts/{cartId}/validate": {
+      "post": {
+        "tags": ["Checkout"],
+        "summary": "Validate a persisted cart against MVP rules",
+        "operationId": "validateCart",
+        "x-hielya-implementation-status": "DEFERRED_AUTH_CART_LAYER",
+        "x-hielya-deferred-reason": "Requires customerBearer, a persisted cart and a persisted address.",
+        "security": [
+          { "customerBearer": [] }
+        ],
+        "parameters": [
+          {
+            "name": "cartId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CartValidationRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validation result. This operation is contract-only and deferred.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CartValidation" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "customerBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Customer access token. Authentication implementation remains deferred."
+      }
+    },
+    "parameters": {
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": { "type": "integer", "minimum": 1, "default": 1 }
+      },
+      "PageSize": {
+        "name": "pageSize",
+        "in": "query",
+        "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Invalid input or controlled business-rule failure.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/PublicError" }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Public resource not found.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/PublicError" }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Customer authentication is required or invalid.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/PublicError" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "PublicAvailability": {
+        "type": "string",
+        "enum": ["AVAILABLE", "UNAVAILABLE", "TEMPORARILY_UNAVAILABLE"]
+      },
+      "PublicCategory": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "slug", "name", "sortOrder"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "slug": { "type": "string" },
+          "name": { "type": "string" },
+          "imageUrl": { "type": ["string", "null"], "format": "uri" },
+          "sortOrder": { "type": "integer" }
+        }
+      },
+      "PublicBundleComponent": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Commercial composition only. quantity is the number of units included in the pack, never an inventory balance.",
+        "required": ["productId", "sku", "name", "quantity"],
+        "properties": {
+          "productId": { "type": "string", "format": "uuid" },
+          "sku": { "type": "string" },
+          "name": { "type": "string" },
+          "quantity": { "type": "integer", "minimum": 1, "description": "Commercial quantity included in the pack." }
+        }
+      },
+      "PublicProduct": {
+        "type": "object",
+        "additionalProperties": false,
+        "x-hielya-dto-boundary": "PUBLIC_ONLY",
+        "required": ["id", "sku", "name", "categoryId", "salePriceCents", "currency", "availability", "isPack", "iceIncluded", "maxPerOrder", "containsAlcohol"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "sku": { "type": "string" },
+          "ean": { "type": ["string", "null"] },
+          "name": { "type": "string" },
+          "description": { "type": ["string", "null"] },
+          "brand": { "type": ["string", "null"] },
+          "categoryId": { "type": "string", "format": "uuid" },
+          "subcategory": { "type": ["string", "null"] },
+          "volumeLabel": { "type": ["string", "null"] },
+          "grossWeightKg": { "type": ["number", "null"], "minimum": 0 },
+          "estimatedVolumeLiters": { "type": ["number", "null"], "minimum": 0 },
+          "salePriceCents": { "type": "integer", "minimum": 0, "description": "Persisted total sale price in euro cents." },
+          "currency": { "type": "string", "const": "EUR" },
+          "unitPriceLabel": { "type": ["string", "null"] },
+          "availability": { "$ref": "#/components/schemas/PublicAvailability" },
+          "maxPerOrder": { "type": "integer", "minimum": 1 },
+          "temperatureProfile": { "type": ["string", "null"], "enum": ["CHILLED", "FROZEN", "CELLAR", "AMBIENT", null] },
+          "readyToConsume": { "type": "boolean" },
+          "containsAlcohol": { "type": "boolean" },
+          "minimumAge": { "type": ["integer", "null"], "minimum": 18 },
+          "alcoholPercentage": { "type": ["number", "null"], "minimum": 0 },
+          "imageUrl": { "type": ["string", "null"], "format": "uri" },
+          "keywords": { "type": "array", "items": { "type": "string" } },
+          "isPack": { "type": "boolean" },
+          "iceIncluded": { "type": "boolean" },
+          "bundleComponents": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PublicBundleComponent" }
+          }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "isPack": { "const": true } }, "required": ["isPack"] },
+            "then": {
+              "properties": {
+                "iceIncluded": { "const": true },
+                "bundleComponents": { "minItems": 1 }
+              },
+              "required": ["iceIncluded", "bundleComponents"]
+            }
+          }
+        ]
+      },
+      "PublicProductPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["items", "page", "pageSize", "total"],
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/PublicProduct" } },
+          "page": { "type": "integer", "minimum": 1 },
+          "pageSize": { "type": "integer", "minimum": 1 },
+          "total": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "DeliveryQuoteRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["latitude", "longitude"],
+        "properties": {
+          "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+          "longitude": { "type": "number", "minimum": -180, "maximum": 180 },
+          "addressType": { "type": "string", "enum": ["HOME", "HOTEL", "BUSINESS", "OTHER"] }
+        }
+      },
+      "DeliveryQuote": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["withinArea", "routeDistanceKm", "feeCents"],
+        "properties": {
+          "withinArea": { "type": "boolean" },
+          "routeDistanceKm": { "type": "number", "minimum": 0, "description": "Road distance calculated by the server routing port." },
+          "feeCents": { "type": "integer", "minimum": 0, "description": "Server-calculated simulated fee in euro cents." },
+          "publicSpaceBlocked": { "type": "boolean" }
+        }
+      },
+      "CartValidationRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["addressId"],
+        "properties": {
+          "addressId": { "type": "string", "format": "uuid" },
+          "couponCode": { "type": ["string", "null"] },
+          "tipCents": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "PublicCartItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "product", "quantity", "unitPriceCents", "lineTotalCents"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "product": { "$ref": "#/components/schemas/PublicProduct" },
+          "quantity": { "type": "integer", "minimum": 1 },
+          "unitPriceCents": { "type": "integer", "minimum": 0 },
+          "lineTotalCents": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "PublicCart": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status", "items", "productSubtotalCents", "deliveryFeeCents", "discountCents", "tipCents", "totalCents", "minimumReached"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "status": { "type": "string", "enum": ["ACTIVE", "RESERVED", "CONVERTED", "EXPIRED", "ABANDONED"] },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/PublicCartItem" } },
+          "productSubtotalCents": { "type": "integer", "minimum": 0 },
+          "deliveryFeeCents": { "type": "integer", "minimum": 0 },
+          "discountCents": { "type": "integer", "minimum": 0 },
+          "tipCents": { "type": "integer", "minimum": 0 },
+          "totalCents": { "type": "integer", "minimum": 0 },
+          "minimumReached": { "type": "boolean" },
+          "amountMissingForMinimumCents": { "type": "integer", "minimum": 0 },
+          "totalWeightKg": { "type": ["number", "null"], "minimum": 0 },
+          "totalVolumeLiters": { "type": ["number", "null"], "minimum": 0 },
+          "containsAlcohol": { "type": "boolean" }
+        }
+      },
+      "CartValidation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["valid", "violations", "cart"],
+        "properties": {
+          "valid": { "type": "boolean" },
+          "violations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["STORE_CLOSED", "OUTSIDE_AREA", "MINIMUM_NOT_REACHED", "PRODUCT_UNAVAILABLE", "COMPOSITE_COMPONENT_UNAVAILABLE", "MAX_WEIGHT_EXCEEDED", "MAX_VOLUME_EXCEEDED", "SKU_LIMIT_EXCEEDED", "CAPACITY_REACHED", "ALCOHOL_CUTOFF", "PUBLIC_SPACE_BLOCKED"]
+            }
+          },
+          "cart": { "$ref": "#/components/schemas/PublicCart" }
+        }
+      },
+      "PublicError": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "message", "correlationId"],
+        "properties": {
+          "code": { "type": "string", "enum": ["INVALID_INPUT", "PRODUCT_NOT_FOUND", "PRODUCT_UNAVAILABLE", "COMPOSITE_COMPONENT_UNAVAILABLE", "MINIMUM_NOT_REACHED", "INVALID_DISTANCE", "OUT_OF_AREA", "CONFIGURATION_UNAVAILABLE"] },
+          "message": { "type": "string" },
+          "field": { "type": ["string", "null"] },
+          "correlationId": { "type": "string", "format": "uuid" },
+          "details": { "type": ["object", "null"], "additionalProperties": true }
+        }
+      }
+    }
+  }
+}

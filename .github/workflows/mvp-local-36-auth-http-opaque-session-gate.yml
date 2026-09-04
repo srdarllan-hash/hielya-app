@@ -1,0 +1,280 @@
+name: MVP Local 36 Opaque Session OTP HTTP Transport Gate
+
+on:
+  push:
+    branches:
+      - hielya/mvp-local-36-auth-http-opaque-session
+
+permissions:
+  actions: read
+  contents: read
+  issues: read
+  pull-requests: read
+
+concurrency:
+  group: mvp-local-36-auth-http-opaque-session-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FROZEN_PARENT_SHA: 68d5f5422a9dff560b301c17fe1bce466ac7281a
+  FROZEN_PARENT_BRANCH: hielya/mvp-local-36-customer-authentication-foundation
+  C002_DELIVERY_QUOTE_ALIGNMENT_CERTIFIED_SHA: 60d556e5ae088f2bf98101dcf37cbf854bcc2eff
+
+jobs:
+  auth-http-contract-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact child commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Verify parent PR 15, Issue 16 and exact authorization
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const cp = require('node:child_process');
+            const run = (args) => cp.execFileSync('git', args, { encoding: 'utf8' }).trim();
+            if (run(['rev-parse', 'HEAD']) !== context.sha) core.setFailed('Checkout differs from github.sha');
+            const { data: parent } = await github.rest.pulls.get({ ...context.repo, pull_number: 15 });
+            if (parent.state !== 'open' || parent.draft !== true || parent.merged_at !== null
+              || parent.head.ref !== process.env.FROZEN_PARENT_BRANCH
+              || parent.head.sha !== process.env.FROZEN_PARENT_SHA) {
+              core.setFailed('PR #15 is not the exact open/draft certified parent.');
+            }
+            const { data: issue } = await github.rest.issues.get({ ...context.repo, issue_number: 16 });
+            const title = '[MVP Local 36] Resolve opaque customer-session contract and implement OTP HTTP transport';
+            if (issue.pull_request || issue.state !== 'open' || issue.title !== title) {
+              core.setFailed('Issue #16 differs from the authorized change-set.');
+            }
+            for (const value of [
+              process.env.FROZEN_PARENT_SHA,
+              'SESSION_STRATEGY = OPAQUE_SERVER_SESSION',
+              'POST /api/v1/auth/otp/request',
+              'POST /api/v1/auth/otp/verify',
+              '## 21. Testes obrigatórios',
+              '## 25. Critérios de aceitação integrais',
+            ]) if (!(issue.body || '').includes(value)) core.setFailed(`Issue #16 is missing ${value}`);
+      - name: Verify frozen parent and bounded linear history
+        run: |
+          git fetch --no-tags --force origin "refs/heads/$FROZEN_PARENT_BRANCH:refs/remotes/origin/$FROZEN_PARENT_BRANCH"
+          test "$(git rev-parse "refs/remotes/origin/$FROZEN_PARENT_BRANCH")" = "$FROZEN_PARENT_SHA"
+          test "$(git merge-base "$FROZEN_PARENT_SHA" HEAD)" = "$FROZEN_PARENT_SHA"
+          count="$(git rev-list --count "$FROZEN_PARENT_SHA"..HEAD)"
+          test "$count" -ge 1
+          test "$count" -le 5
+          test -z "$(git rev-list --merges "$FROZEN_PARENT_SHA"..HEAD)"
+          if [ "$count" -ge 3 ]; then
+            third_commit="$(git rev-list --reverse "$FROZEN_PARENT_SHA"..HEAD | sed -n '3p')"
+            mapfile -t third_commit_files < <(git diff-tree --no-commit-id --name-only -r "$third_commit")
+            test "${#third_commit_files[@]}" -eq 1
+            test "${third_commit_files[0]}" = ".github/workflows/mvp-local-36-auth-http-opaque-session-gate.yml"
+          fi
+          if [ "$count" -ge 4 ]; then
+            fourth_commit="$(git rev-list --reverse "$FROZEN_PARENT_SHA"..HEAD | sed -n '4p')"
+            mapfile -t fourth_commit_files < <(git diff-tree --no-commit-id --name-only -r "$fourth_commit" | sort)
+            expected_fourth_commit_files=(
+              ".github/workflows/mvp-local-36-auth-http-opaque-session-gate.yml"
+              "apps/ui-lab/package.json"
+              "package.json"
+              "packages/ui/package.json"
+              "pnpm-lock.yaml"
+            )
+            test "${fourth_commit_files[*]}" = "${expected_fourth_commit_files[*]}"
+          fi
+          if [ "$count" -eq 5 ]; then
+            mapfile -t fifth_commit_files < <(git diff-tree --no-commit-id --name-only -r HEAD | sort)
+            expected_fifth_commit_files=(
+              ".github/workflows/mvp-local-36-auth-http-opaque-session-gate.yml"
+              "packages/location/src/factory.ts"
+              "packages/ui/src/screens/location/useLocationController.ts"
+              "tests/unit/location.components.test.tsx"
+            )
+            test "${fifth_commit_files[*]}" = "${expected_fifth_commit_files[*]}"
+          fi
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate Gate, contracts, migrations and frozen APIs
+        run: |
+          count="$(git rev-list --count "$FROZEN_PARENT_SHA"..HEAD)"
+          if [ "$count" -ge 3 ]; then
+            candidate_worktree="$(mktemp -d)"
+            trap 'git worktree remove --force "$candidate_worktree" 2>/dev/null || true; rmdir "$candidate_worktree" 2>/dev/null || true' EXIT
+            candidate_ref="HEAD~$((count - 2))"
+            git worktree add --detach "$candidate_worktree" "$candidate_ref"
+            (
+              cd "$candidate_worktree"
+              GITHUB_ACTIONS=true \
+              GITHUB_REF_NAME=hielya/mvp-local-36-auth-http-opaque-session \
+              node scripts/validate-mvp-local-36-auth-http-opaque-session.mjs
+            )
+            git worktree remove --force "$candidate_worktree"
+            rmdir "$candidate_worktree" 2>/dev/null || true
+            trap - EXIT
+          fi
+          GITHUB_ACTIONS=false node scripts/validate-mvp-local-36-auth-http-opaque-session.mjs
+          node scripts/validate-mvp-persistence-schema.mjs
+          GITHUB_ACTIONS=false node scripts/validate-mvp-local-36-openapi.mjs
+      - name: Focused OpenAPI, HTTP, authentication and concurrency tests
+        run: |
+          GITHUB_ACTIONS=false pnpm exec vitest run \
+            tests/unit/mvp-auth-openapi-v1-2.test.ts \
+            tests/unit/mvp-auth-http.test.ts \
+            tests/unit/mvp-local-36-api-host-architecture.test.ts \
+            tests/unit/mvp-catalog-read-model.test.ts \
+            tests/unit/mvp-local-36-composite-commercial-data.test.ts \
+            tests/unit/mvp-customer-authentication-foundation.test.ts \
+            tests/unit/mvp-customer-authentication-concurrency.test.ts \
+            tests/unit/mvp-inventory-reservation-lifecycle.test.ts \
+            tests/unit/mvp-inventory-reservation-concurrency.test.ts
+      - name: Full unit regression
+        run: GITHUB_ACTIONS=false pnpm test
+      - name: Lint and type-check
+        run: |
+          pnpm lint
+          pnpm type-check
+      - name: Next build
+        run: pnpm build
+
+  frozen-and-integration-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      BASELINE_MODE: GATE_VALIDATION
+    steps:
+      - name: Checkout exact child commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Verify frozen UI and evidence paths
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+          git diff --exit-code "$FROZEN_PARENT_SHA" -- \
+            packages/ui/src packages/location manifests \
+            apps/ui-lab/src/client apps/ui-lab/app/page.tsx \
+            apps/ui-lab/app/splash apps/ui-lab/app/location apps/ui-lab/app/products \
+            tests/accessibility tests/functional tests/visual \
+            playwright.config.ts \
+            playwright.c002-delivery-quote-api-alignment.config.ts \
+            playwright.c002-prequote-continuation-contract.config.ts \
+            playwright.home-catalog-api-integration.config.ts \
+            playwright.product-detail-api-integration.config.ts \
+            ':(exclude)packages/location/src/factory.ts' \
+            ':(exclude)packages/ui/src/screens/location/useLocationController.ts'
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: C-001 and frozen C-002 regressions
+        run: |
+          pnpm test:c001:a11y
+          pnpm test:c001:functional
+          pnpm test:c001:visual
+          pnpm test:c002:a11y
+          pnpm test:c002:functional
+          pnpm test:c002:visual
+      - name: C-002 Prequote Continuation regression
+        run: |
+          PLAYWRIGHT_EVIDENCE_PHASE=a11y pnpm exec playwright test tests/accessibility/c002-prequote-continuation-contract.a11y.spec.ts --config playwright.c002-prequote-continuation-contract.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=functional pnpm exec playwright test tests/functional/c002-prequote-continuation-contract.functional.spec.ts --config playwright.c002-prequote-continuation-contract.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=visual pnpm exec playwright test tests/visual/c002-prequote-continuation-contract.visual.spec.ts --config playwright.c002-prequote-continuation-contract.config.ts
+      - name: Home Catalog integration regression
+        run: |
+          PLAYWRIGHT_EVIDENCE_PHASE=a11y pnpm exec playwright test tests/accessibility/home-catalog-api-integration.a11y.spec.ts --config playwright.home-catalog-api-integration.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=functional pnpm exec playwright test tests/functional/home-catalog-api-integration.functional.spec.ts --config playwright.home-catalog-api-integration.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=visual pnpm exec playwright test tests/visual/home-catalog-api-integration.visual.spec.ts --config playwright.home-catalog-api-integration.config.ts
+      - name: Product Detail integration regression
+        run: |
+          PLAYWRIGHT_EVIDENCE_PHASE=a11y pnpm exec playwright test tests/accessibility/product-detail-api-integration.a11y.spec.ts --config playwright.product-detail-api-integration.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=functional pnpm exec playwright test tests/functional/product-detail-api-integration.functional.spec.ts --config playwright.product-detail-api-integration.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=visual pnpm exec playwright test tests/visual/product-detail-api-integration.visual.spec.ts --config playwright.product-detail-api-integration.config.ts
+
+  c002-delivery-quote-alignment-frozen-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      BASELINE_MODE: GATE_VALIDATION
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.C002_DELIVERY_QUOTE_ALIGNMENT_CERTIFIED_SHA }}
+          fetch-depth: 0
+      - run: test "$(git rev-parse HEAD)" = "$C002_DELIVERY_QUOTE_ALIGNMENT_CERTIFIED_SHA"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Frozen Alignment accessibility, functional and visual regressions
+        run: |
+          PLAYWRIGHT_EVIDENCE_PHASE=a11y pnpm exec playwright test tests/accessibility/c002-delivery-quote-api-alignment.a11y.spec.ts --config playwright.c002-delivery-quote-api-alignment.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=functional pnpm exec playwright test tests/functional/c002-delivery-quote-api-alignment.functional.spec.ts --config playwright.c002-delivery-quote-api-alignment.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=visual pnpm exec playwright test tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts --config playwright.c002-delivery-quote-api-alignment.config.ts
+
+  c005-frozen-regression:
+    uses: ./.github/workflows/reusable-screen-gate.yml
+    with:
+      sourceSha: fe62966daca8bda94610aa1a63702a1e543b0ce6
+      screenId: C-005
+      route: /
+      states: '["ready","loading","closed","high-demand","error","empty-cart","alcohol-cutoff","out-of-area"]'
+      baseSha: c2857afe538b2cf5ba44635edd56dbd422c0e2f0
+      protectedPaths: '["packages/ui/src/screens/home/","tests/unit/home","tests/accessibility/home","tests/functional/home","tests/visual/home","manifests/C-005"]'
+      testSuites: '["unit","axe","functional","console","visual","responsive"]'
+      requiredViewports: '["360x800","390x844","1170x2532"]'
+      manifestPath: manifests/C-005.json
+      baselineMode: GATE_VALIDATION
+
+  gate-summary:
+    needs:
+      - auth-http-contract-validation
+      - frozen-and-integration-regressions
+      - c002-delivery-quote-alignment-frozen-regression
+      - c005-frozen-regression
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record opaque-session OTP HTTP transport Gate outcome
+        run: |
+          echo ISSUE_NUMBER=16
+          echo PARENT_PR=15
+          echo PARENT_SHA=68d5f5422a9dff560b301c17fe1bce466ac7281a
+          echo OPENAPI_VERSION=1.2.0
+          echo SESSION_STRATEGY=OPAQUE_SERVER_SESSION
+          echo CUSTOMER_BEARER_FORMAT=OpaqueSessionToken
+          echo AUTH_ENDPOINTS_ADDED=2
+          echo VERIFY_REQUIRES_PHONE=false
+          echo SESSION_TTL_SECONDS=2592000
+          echo JWT_USED=false
+          echo REFRESH_USED=false
+          echo MIGRATION_CREATED=false
+          echo UI_CHANGED=false
+          echo C003_STARTED=false
+          echo C004_STARTED=false
+          echo PRODUCTION_AUTHORIZED=false
+          echo MAIN_CHANGED=false
+          echo MERGE_PERFORMED=false
+          echo NEXT_LAYER_STARTED=false

@@ -1,0 +1,51 @@
+name: Explicit Visual Baseline Authoring
+
+on:
+  workflow_dispatch:
+    inputs:
+      screenId:
+        description: Screen whose baseline may be authored
+        required: true
+        type: choice
+        options: [C-005, C-001]
+      authorization:
+        description: Type AUTHORIZE_BASELINE_UPDATE
+        required: true
+        type: string
+
+jobs:
+  authorize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require explicit authorization
+        run: test "${{ inputs.authorization }}" = "AUTHORIZE_BASELINE_UPDATE"
+  c005:
+    needs: authorize
+    if: inputs.screenId == 'C-005'
+    uses: ./.github/workflows/reusable-screen-gate.yml
+    with:
+      sourceSha: ${{ github.sha }}
+      screenId: C-005
+      route: /
+      states: '["ready","loading","closed","high-demand","error","empty-cart","alcohol-cutoff","out-of-area"]'
+      baseSha: be61e1168b93d973101496cc66cb54d006aba9cc
+      protectedPaths: '["apps/ui-lab/app/location","packages/ui/src/screens/location","C-002","C-003","C-004"]'
+      testSuites: '["unit","axe","functional","console","visual","responsive"]'
+      requiredViewports: '["360x800","390x844","1170x2532"]'
+      manifestPath: manifests/C-005.json
+      baselineMode: BASELINE_AUTHORING
+  c001:
+    needs: authorize
+    if: inputs.screenId == 'C-001'
+    uses: ./.github/workflows/reusable-screen-gate.yml
+    with:
+      sourceSha: ${{ github.sha }}
+      screenId: C-001
+      route: /splash
+      states: '["initial","loading","transition","offline","error","timeout","maintenance","ready-location","ready-home","reduced-motion"]'
+      baseSha: c838cfc26176b2e748bdbd037147a7f362d5a3c2
+      protectedPaths: '["apps/ui-lab/app/location","packages/ui/src/screens/location","C-002","C-003","C-004"]'
+      testSuites: '["unit","axe","functional","console","visual","responsive"]'
+      requiredViewports: '["360x800","390x844","1170x2532"]'
+      manifestPath: manifests/C-001.json
+      baselineMode: BASELINE_AUTHORING

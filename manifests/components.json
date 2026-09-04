@@ -1,0 +1,185 @@
+{
+  "version": "1.3.0",
+  "designTokens": "1.2.0",
+  "status": "GATE_2_APPROVED_FROZEN",
+  "canonical": [
+    {
+      "name": "AppShell",
+      "category": "layout",
+      "consumers": [
+        "C-005",
+        "C-001",
+        "C-002"
+      ],
+      "version": "1.3.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "BrandLockup",
+      "category": "brand",
+      "consumers": [
+        "C-005",
+        "C-001",
+        "C-002"
+      ],
+      "version": "1.3.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "AppHeader",
+      "category": "navigation",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "DeliveryQuoteCard",
+      "category": "delivery",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "SearchField",
+      "category": "input",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "CategoryChip",
+      "category": "catalog",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "HeroBanner",
+      "category": "commerce",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "SectionHeader",
+      "category": "content",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "ProductCard",
+      "category": "commerce",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "PackCard",
+      "category": "commerce",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "StatusBadge",
+      "category": "feedback",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "IconButton",
+      "category": "action",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "BottomNavigation",
+      "category": "navigation",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "HomeLoadingState",
+      "category": "feedback",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "FeedbackState",
+      "category": "feedback",
+      "consumers": [
+        "C-005",
+        "C-001",
+        "C-002"
+      ],
+      "version": "1.3.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "Snackbar",
+      "category": "feedback",
+      "consumers": [
+        "C-005"
+      ],
+      "version": "1.2.0",
+      "state": "ACTIVE"
+    },
+    {
+      "name": "Button",
+      "category": "action",
+      "consumers": [
+        "C-002"
+      ],
+      "version": "1.3.0",
+      "state": "ACTIVE"
+    }
+  ],
+  "adapters": [
+    {
+      "name": "ErrorState",
+      "target": "FeedbackState",
+      "state": "THIN_ADAPTER"
+    },
+    {
+      "name": "EmptyState",
+      "target": "FeedbackState",
+      "state": "THIN_ADAPTER"
+    },
+    {
+      "name": "LoadingState",
+      "target": "HomeLoadingState",
+      "state": "DEPRECATED_COMPATIBILITY_ADAPTER"
+    }
+  ],
+  "duplicates": [],
+  "policy": "Canonical components expose typed data, action, disabled, loading and accessibility contracts as applicable."
+}

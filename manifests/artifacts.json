@@ -1,0 +1,29 @@
+{
+  "version": "1.0.0",
+  "historical": [
+    {
+      "screenId": "C-005",
+      "name": "c005-baseline-candidate-be61e1168b93d973101496cc66cb54d006aba9cc",
+      "digest": "sha256:2ab8f6bbfb60a76b41843a4e4d956421f97d751056dc22ff6e6297fadc2d4d11",
+      "runId": 30570688090
+    },
+    {
+      "screenId": "C-001",
+      "name": "c001-gate-c838cfc26176b2e748bdbd037147a7f362d5a3c2",
+      "digest": "sha256:f1088e22c5823fe166ffe4be301f09f1256d3176b4c6c89dcda9eb1d9adbb0aa",
+      "runId": 30576553445
+    }
+  ],
+  "consolidationArtifact": "PENDING_CI",
+  "c002BaselineAuthoringArtifact": {
+    "name": "screen-gate-C-002-4136b8c959d2a8648054de406797c22f1e07ec61",
+    "runId": 30632260281,
+    "artifactId": 8793878089,
+    "digest": "sha256:6e3f84d58e5bf6a21acd9661beb4fe1f9481b6b76c96b93b256bd9a7ef210959",
+    "baselineMode": "BASELINE_AUTHORING"
+  },
+  "c002FinalValidationArtifact": {
+    "status": "RECORDED_ON_PR_4_AFTER_EXACT_HEAD_VALIDATION",
+    "baselineMode": "GATE_VALIDATION"
+  }
+}

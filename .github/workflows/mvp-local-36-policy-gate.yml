@@ -1,0 +1,187 @@
+name: MVP Local 36 Policy Gate
+
+on:
+  push:
+    branches:
+      - hielya/mvp-local-36-implementation
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mvp-local-36-policy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  policy-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact pushed commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Verify pushed source and frozen ancestry
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+          git cat-file -e 6d4773403fad4788b11ef6a7277f77171caf0c0a^{commit}
+          git merge-base --is-ancestor 6d4773403fad4788b11ef6a7277f77171caf0c0a HEAD
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate MVP Local 36 OpenAPI contract
+        run: |
+          pnpm --package=@redocly/cli@2.44.1 dlx redocly lint contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_1.yaml
+          node scripts/validate-mvp-local-36-openapi.mjs
+      - name: Validate frozen composite commercial data
+        run: |
+          node scripts/validate-mvp-local-36-composite-commercial-data.mjs
+          pnpm exec vitest run tests/unit/mvp-local-36-composite-commercial-data.test.ts
+      - name: Validate persistent catalog read model and API host architecture
+        run: |
+          node scripts/validate-mvp-local-36-catalog-read-model.mjs
+          pnpm exec vitest run tests/unit/mvp-catalog-read-model.test.ts tests/unit/mvp-local-36-api-host-architecture.test.ts
+      - name: Validate Public Service API hardening, final freeze and OpenAPI response conformance
+        run: |
+          node scripts/validate-mvp-local-36-public-service-api.mjs
+          pnpm exec vitest run \
+            tests/unit/mvp-public-application.test.ts \
+            tests/unit/mvp-public-api-adapters.test.ts \
+            tests/unit/mvp-public-api-handlers.test.ts \
+            tests/unit/mvp-public-api-integration.test.ts \
+            tests/unit/mvp-public-api-openapi-conformance.test.ts
+      - name: Validate persistence schema
+        run: node scripts/validate-mvp-persistence-schema.mjs
+      - name: Validate development migrations
+        run: pnpm exec vitest run tests/unit/mvp-persistence.test.ts --testNamePattern "applies the migration"
+      - name: Persistence integration and transaction tests
+        run: pnpm exec vitest run tests/unit/mvp-persistence.test.ts
+      - name: Lint
+        run: pnpm lint
+      - name: Type-check
+        run: pnpm type-check
+      - name: Unit tests
+        run: pnpm test
+      - name: Build
+        run: pnpm build
+
+  c001-regression:
+    uses: ./.github/workflows/reusable-screen-gate.yml
+    with:
+      sourceSha: ${{ github.sha }}
+      screenId: C-001
+      route: /splash
+      states: '["initial","loading","transition","offline","error","timeout","maintenance","ready-location","ready-home","reduced-motion"]'
+      baseSha: c2857afe538b2cf5ba44635edd56dbd422c0e2f0
+      protectedPaths: '["packages/ui/src/screens/splash/","tests/unit/splash","tests/accessibility/splash","tests/functional/splash","tests/visual/splash","manifests/C-001"]'
+      testSuites: '["unit","axe","functional","console","visual","responsive"]'
+      requiredViewports: '["360x800","390x844","1170x2532"]'
+      manifestPath: manifests/C-001.json
+      baselineMode: GATE_VALIDATION
+
+  c002-regression:
+    uses: ./.github/workflows/reusable-screen-gate.yml
+    with:
+      sourceSha: ${{ github.sha }}
+      screenId: C-002
+      route: /location
+      states: '["idle","requesting_permission","locating","reverse_geocoding","manual_entry","validating_manual_address","resolved","checking_service_area","permission_denied","location_unavailable","timeout","offline","network_error","invalid_address","out_of_area","retrying","success","reduced_motion","long_address","hotel","condominium"]'
+      baseSha: c2857afe538b2cf5ba44635edd56dbd422c0e2f0
+      protectedPaths: '["packages/ui/src/screens/home/","packages/ui/src/screens/splash/","tests/unit/home","tests/unit/splash","tests/accessibility/home","tests/accessibility/splash","tests/functional/home","tests/functional/splash","tests/visual/home","tests/visual/splash","manifests/C-005","manifests/C-001"]'
+      testSuites: '["unit","coverage","axe","functional","console","visual","responsive","scope","manifest"]'
+      requiredViewports: '["360x800","390x844","1170x2532"]'
+      manifestPath: manifests/C-002.json
+      baselineMode: GATE_VALIDATION
+
+  c005-regression:
+    uses: ./.github/workflows/reusable-screen-gate.yml
+    with:
+      sourceSha: ${{ github.sha }}
+      screenId: C-005
+      route: /
+      states: '["ready","loading","closed","high-demand","error","empty-cart","alcohol-cutoff","out-of-area"]'
+      baseSha: c2857afe538b2cf5ba44635edd56dbd422c0e2f0
+      protectedPaths: '["packages/ui/src/screens/home/","tests/unit/home","tests/accessibility/home","tests/functional/home","tests/visual/home","manifests/C-005"]'
+      testSuites: '["unit","axe","functional","console","visual","responsive"]'
+      requiredViewports: '["360x800","390x844","1170x2532"]'
+      manifestPath: manifests/C-005.json
+      baselineMode: GATE_VALIDATION
+
+  policy-gate-summary:
+    needs: [policy-validation, c001-regression, c002-regression, c005-regression]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record policy-gate outcome
+        run: |
+          echo "MVP_LOCAL_36_POLICY_VALIDATED=true"
+          echo "C001_REGRESSION=true"
+          echo "C002_REGRESSION=true"
+          echo "C005_REGRESSION=true"
+          echo "PR_DRAFT_REQUIRED=true"
+          echo "MERGE_AUTHORIZED=false"
+          echo "MAIN_CHANGE_AUTHORIZED=false"
+          echo "MVP_LOCAL_36_OPENAPI_V1_1_VALIDATED=true"
+          echo "MVP_LOCAL_36_PUBLIC_SERVICE_API_VALIDATED=true"
+          echo "API_IMPLEMENTATION_STARTED=true"
+          echo "SERVICE_LAYER_STARTED=true"
+          echo "AUTH_STARTED=false"
+          echo "C003_STARTED=false"
+          echo "C004_STARTED=false"
+          echo "CART_LAYER_STARTED=false"
+          echo "ORDER_STARTED=false"
+          echo "PAYMENT_STARTED=false"
+          echo "CLIENT_UI_STARTED=false"
+          echo "MVP_LOCAL_36_COMPOSITE_COMMERCIAL_DATA_FROZEN=true"
+          echo "OWNER_APPROVAL_RECORDED=true"
+          echo "COMPOSITE_COUNT=6"
+          echo "BASELINE_UNIT_PRODUCTS=60"
+          echo "MVP_PRODUCTS_PAUSED=36"
+          echo "BASELINE_PRODUCTS_DEFERRED=30"
+          echo "COMMERCIAL_SKUS_ACTIVATED=0"
+          echo "MVP_LOCAL_36_PERSISTENT_CATALOG_READ_MODEL_VALIDATED=true"
+          echo "API_HOST_ARCHITECTURE_VALIDATED=true"
+          echo "API_ARCHITECTURE=MODULAR_TYPESCRIPT_MONOLITH"
+          echo "API_RUNTIME=NEXTJS"
+          echo "API_HOST=apps/ui-lab"
+          echo "API_BASE_PATH=/api/v1"
+          echo "SECOND_RUNTIME_CREATED=false"
+          echo "MICROSERVICE_CREATED=false"
+          echo "ROUTE_HANDLERS_CREATED=true"
+          echo "ROUTE_HANDLER_COUNT=4"
+          echo "PUBLIC_ENDPOINTS_IMPLEMENTED=true"
+          echo "PUBLIC_ENDPOINT_COUNT=4"
+          echo "PUBLIC_ENDPOINTS_CHANGED=false"
+          echo "PUBLIC_API_READ_ONLY=true"
+          echo "PUBLIC_SERVICE_API_FINAL_HARDENING_VALIDATED=true"
+          echo "PUBLIC_SERVICE_API_FINAL_FREEZE=true"
+          echo "PUBLIC_ADAPTER_EXPLICIT_MAPPING=true"
+          echo "PUBLIC_PRODUCT_WHITELIST=true"
+          echo "PUBLIC_COMPONENT_WHITELIST=true"
+          echo "OBJECT_SPREAD_IN_PUBLIC_MAPPING=false"
+          echo "OPENAPI_RESPONSE_CONFORMANCE=true"
+          echo "ADDITIONAL_PROPERTIES_BLOCKED=true"
+          echo "OPENAPI_V1_0_MODIFIED=false"
+          echo "OPENAPI_V1_1_MODIFIED=false"
+          echo "PERSISTENCE_SCHEMA_CHANGED=false"
+          echo "MIGRATION_CREATED=false"
+          echo "CANONICAL_DATA_CHANGED=false"
+          echo "PUBLIC_NUMERIC_STOCK_FIELDS=0"
+          echo "INTERNAL_FIELDS_EXPOSED=0"
+          echo "FOUNDATION_FUNCTIONAL_SCOPE_CLOSED=true"
+          echo "NEXT_IMPLEMENTATION_REQUIRES_CHILD_BRANCH=true"
+          echo "FREEZE_ADR=docs/decisions/ADR-MVP-LOCAL-36-PUBLIC-SERVICE-API-FINAL-FREEZE.md"
+          echo "HOME_CHANGED=false"
+          echo "C002_CHANGED=false"
+          echo "REAL_MAP_PROVIDER=false"
+          echo "INVENTORY_MUTATIONS=0"
+          echo "CART_VALIDATION_STATUS=DEFERRED_AUTH_CART_LAYER"
+          echo "PRODUCTION_AUTHORIZED=false"
+          echo "NEXT_LAYER_STARTED=false"

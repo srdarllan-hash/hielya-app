@@ -1,0 +1,67 @@
+name: C-002 Location Gate 2
+
+on:
+  pull_request:
+    branches:
+      - hielya/pre-gate2-architecture-consolidation
+
+permissions:
+  contents: read
+
+concurrency:
+  group: c002-gate-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  c002-candidate:
+    uses: ./.github/workflows/reusable-screen-gate.yml
+    with:
+      sourceSha: ${{ github.event.pull_request.head.sha }}
+      screenId: C-002
+      route: /location
+      states: '["idle","requesting_permission","locating","reverse_geocoding","manual_entry","validating_manual_address","resolved","checking_service_area","permission_denied","location_unavailable","timeout","offline","network_error","invalid_address","out_of_area","retrying","success","reduced_motion","long_address","hotel","condominium"]'
+      baseSha: c2857afe538b2cf5ba44635edd56dbd422c0e2f0
+      protectedPaths: '["packages/ui/src/screens/home/","packages/ui/src/screens/splash/","tests/unit/home","tests/unit/splash","tests/accessibility/home","tests/accessibility/splash","tests/functional/home","tests/functional/splash","tests/visual/home","tests/visual/splash","manifests/C-005","manifests/C-001"]'
+      testSuites: '["unit","coverage","axe","functional","console","visual","responsive","scope","manifest"]'
+      requiredViewports: '["360x800","390x844","1170x2532"]'
+      manifestPath: manifests/C-002.json
+      baselineMode: GATE_VALIDATION
+
+  c001-regression:
+    uses: ./.github/workflows/reusable-screen-gate.yml
+    with:
+      sourceSha: ${{ github.event.pull_request.head.sha }}
+      screenId: C-001
+      route: /splash
+      states: '["initial","loading","transition","offline","error","timeout","maintenance","ready-location","ready-home","reduced-motion"]'
+      baseSha: c2857afe538b2cf5ba44635edd56dbd422c0e2f0
+      protectedPaths: '["packages/ui/src/screens/splash/","tests/unit/splash","tests/accessibility/splash","tests/functional/splash","tests/visual/splash","manifests/C-001"]'
+      testSuites: '["unit","axe","functional","console","visual","responsive"]'
+      requiredViewports: '["360x800","390x844","1170x2532"]'
+      manifestPath: manifests/C-001.json
+      baselineMode: GATE_VALIDATION
+
+  c005-regression:
+    uses: ./.github/workflows/reusable-screen-gate.yml
+    with:
+      sourceSha: ${{ github.event.pull_request.head.sha }}
+      screenId: C-005
+      route: /
+      states: '["ready","loading","closed","high-demand","error","empty-cart","alcohol-cutoff","out-of-area"]'
+      baseSha: c2857afe538b2cf5ba44635edd56dbd422c0e2f0
+      protectedPaths: '["packages/ui/src/screens/home/","tests/unit/home","tests/accessibility/home","tests/functional/home","tests/visual/home","manifests/C-005"]'
+      testSuites: '["unit","axe","functional","console","visual","responsive"]'
+      requiredViewports: '["360x800","390x844","1170x2532"]'
+      manifestPath: manifests/C-005.json
+      baselineMode: GATE_VALIDATION
+
+  gate-summary:
+    needs: [c002-candidate, c001-regression, c005-regression]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm frozen integration status
+        run: |
+          echo "C002_IMPLEMENTATION_STATUS=APPROVED_FROZEN"
+          echo "APPROVED_FROZEN=true"
+          echo "WORK_INTEGRATED=true"
+          echo "READY_FOR_C003_PLANNING=true"

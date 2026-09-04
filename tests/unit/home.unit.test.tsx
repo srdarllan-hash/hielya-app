@@ -1,0 +1,1 @@
+import {describe,expect,it} from 'vitest';import {HOME_STATES,coerceHomeState} from '@hielya/ui';describe('C-005 state contract',()=>{it('contains every official state',()=>expect(HOME_STATES).toEqual(['ready','loading','closed','high-demand','error','empty-cart','alcohol-cutoff','out-of-area']));it('falls back safely',()=>expect(coerceHomeState('unknown')).toBe('ready'))});

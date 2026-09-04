@@ -1,0 +1,21 @@
+{
+  "candidateCommitSha": "cdad195a2a15781e4afcaa0eedf32cc8249b61f2",
+  "candidateWorkflowRunId": 31323737828,
+  "candidateArtifactName": "c002-prequote-continuation-contract-v1-cdad195a2a15781e4afcaa0eedf32cc8249b61f2",
+  "candidateArtifactDigest": "sha256:b94faf1e976145c08432213254cdc6790d361988dd2a21dc1a1f4a6534c76dea",
+  "reviewMethod": "WORK_VISUAL_INSPECTION",
+  "entries": [
+    {
+      "path": "tests/visual/c002-prequote-continuation-contract.visual.spec.ts-snapshots/C-002-PREQUOTE-CONTINUATION-CONTRACT-V1-success-enabled-hires-1170-linux.png",
+      "sha256": "cf0481f0a18f229fd8712967b43b0f645b27583973a701f62c4b9b1025ae530c"
+    },
+    {
+      "path": "tests/visual/c002-prequote-continuation-contract.visual.spec.ts-snapshots/C-002-PREQUOTE-CONTINUATION-CONTRACT-V1-success-enabled-mobile-360-linux.png",
+      "sha256": "36da034f496fc13e0e2e5818503f87815463e22b1e69d40349681c2a9b46006f"
+    },
+    {
+      "path": "tests/visual/c002-prequote-continuation-contract.visual.spec.ts-snapshots/C-002-PREQUOTE-CONTINUATION-CONTRACT-V1-success-enabled-mobile-390-linux.png",
+      "sha256": "c8d19011233c87beb572a3f2c3c95fb6a2a5911f715b755079ad84da7c710cc3"
+    }
+  ]
+}

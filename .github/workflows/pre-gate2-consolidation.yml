@@ -1,0 +1,197 @@
+name: Pre-Gate2 Architecture Consolidation
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: pre-gate2-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  prepare-lockfile:
+    if: github.head_ref == 'hielya/pre-gate2-architecture-consolidation'
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.lockfile.outputs.changed }}
+    steps:
+      - name: Checkout exact source commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Materialize candidate lockfile
+        run: pnpm install --no-frozen-lockfile
+      - name: Commit materialized lockfile once
+        id: lockfile
+        run: |
+          if git diff --quiet -- pnpm-lock.yaml; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add pnpm-lock.yaml
+            git commit -m "chore(consolidation): materialize frozen lockfile"
+            git push origin "HEAD:${GITHUB_HEAD_REF}"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  architecture:
+    needs: prepare-lockfile
+    if: needs.prepare-lockfile.outputs.changed != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GATE_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+      GATE_SOURCE_BRANCH: ${{ github.head_ref }}
+      BASELINE_MODE: GATE_VALIDATION
+    steps:
+      - name: Checkout exact source commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.GATE_SOURCE_SHA }}
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Record source identity and versions
+        run: |
+          mkdir -p logs
+          {
+            echo "repository=$GITHUB_REPOSITORY"
+            echo "branch=$GATE_SOURCE_BRANCH"
+            echo "head SHA=$GATE_SOURCE_SHA"
+            echo "node=$(node --version)"
+            echo "pnpm=$(pnpm --version)"
+            echo "lockfile=$(sha256sum pnpm-lock.yaml | cut -d' ' -f1)"
+            node -p "'tokenVersion=' + require('./packages/design-tokens/package.json').version"
+            node -p "'componentLibraryVersion=' + require('./packages/ui/package.json').version"
+            echo "baselineMode=$BASELINE_MODE"
+          } | tee logs/source-identity.log
+          test "$(git rev-parse HEAD)" = "$GATE_SOURCE_SHA"
+          git merge-base --is-ancestor c838cfc26176b2e748bdbd037147a7f362d5a3c2 HEAD
+      - name: Clean frozen install
+        run: set -o pipefail; pnpm install --frozen-lockfile 2>&1 | tee logs/install.log
+      - name: Materialize deterministic assets
+        run: set -o pipefail; pnpm assets:prepare 2>&1 | tee logs/assets.log
+      - name: Token compiler validation
+        run: set -o pipefail; pnpm tokens:check 2>&1 | tee logs/tokens.log
+      - name: Lint
+        run: set -o pipefail; pnpm lint 2>&1 | tee logs/lint.log
+      - name: Type-check
+        run: set -o pipefail; pnpm type-check 2>&1 | tee logs/typecheck.log
+      - name: Unit tests
+        run: set -o pipefail; pnpm test 2>&1 | tee logs/unit-tests.log
+      - name: Coverage baseline
+        run: set -o pipefail; pnpm test:coverage 2>&1 | tee logs/coverage.log
+      - name: Production build
+        run: set -o pipefail; pnpm build 2>&1 | tee logs/build-next.log
+      - name: Storybook build
+        run: set -o pipefail; pnpm build-storybook 2>&1 | tee logs/build-storybook.log
+      - name: Architecture audits
+        run: |
+          set -o pipefail
+          pnpm audit:architecture 2>&1 | tee logs/audit-architecture.log
+          pnpm audit:styles 2>&1 | tee logs/audit-styles.log
+          pnpm audit:components 2>&1 | tee logs/audit-components.log
+          pnpm audit:assets 2>&1 | tee logs/audit-assets.log
+          pnpm audit:manifests 2>&1 | tee logs/audit-manifests.log
+      - name: Upload architecture evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-evidence-${{ env.GATE_SOURCE_SHA }}
+          if-no-files-found: error
+          include-hidden-files: true
+          path: |
+            logs/
+            coverage/
+            qa/consolidation/
+            manifests/
+            packages/design-tokens/src/tokens.*
+            packages/ui/src/styles/
+            packages/ui/src/styles.css
+            docs/consolidation/
+
+  c005-regression:
+    needs: prepare-lockfile
+    if: needs.prepare-lockfile.outputs.changed != 'true'
+    uses: ./.github/workflows/reusable-screen-gate.yml
+    with:
+      sourceSha: ${{ github.event.pull_request.head.sha }}
+      screenId: C-005
+      route: /
+      states: '["ready","loading","closed","high-demand","error","empty-cart","alcohol-cutoff","out-of-area"]'
+      baseSha: be61e1168b93d973101496cc66cb54d006aba9cc
+      protectedPaths: '["apps/ui-lab/app/location","packages/ui/src/screens/location","C-002","C-003","C-004"]'
+      testSuites: '["unit","axe","functional","console","visual","responsive"]'
+      requiredViewports: '["360x800","390x844","1170x2532"]'
+      manifestPath: manifests/C-005.json
+      baselineMode: GATE_VALIDATION
+
+  c001-regression:
+    needs: prepare-lockfile
+    if: needs.prepare-lockfile.outputs.changed != 'true'
+    uses: ./.github/workflows/reusable-screen-gate.yml
+    with:
+      sourceSha: ${{ github.event.pull_request.head.sha }}
+      screenId: C-001
+      route: /splash
+      states: '["initial","loading","transition","offline","error","timeout","maintenance","ready-location","ready-home","reduced-motion"]'
+      baseSha: c838cfc26176b2e748bdbd037147a7f362d5a3c2
+      protectedPaths: '["apps/ui-lab/app/location","packages/ui/src/screens/location","C-002","C-003","C-004"]'
+      testSuites: '["unit","axe","functional","console","visual","responsive"]'
+      requiredViewports: '["360x800","390x844","1170x2532"]'
+      manifestPath: manifests/C-001.json
+      baselineMode: GATE_VALIDATION
+
+  finalize:
+    needs: [prepare-lockfile, architecture, c005-regression, c001-regression]
+    if: needs.prepare-lockfile.outputs.changed != 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      GATE_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+      GATE_SOURCE_BRANCH: ${{ github.head_ref }}
+      EVIDENCE_ROOT: evidence
+    steps:
+      - name: Checkout exact source commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.GATE_SOURCE_SHA }}
+          fetch-depth: 0
+      - name: Download all same-SHA evidence
+        uses: actions/download-artifact@v4
+        with:
+          pattern: '*-${{ env.GATE_SOURCE_SHA }}'
+          path: evidence
+          merge-multiple: false
+      - name: Generate final Gate manifest and hashes
+        run: node scripts/generate-consolidation-gate-manifest.mjs
+      - name: Upload complete Pre-Gate2 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-gate2-consolidation-${{ env.GATE_SOURCE_SHA }}
+          if-no-files-found: error
+          include-hidden-files: true
+          path: |
+            evidence/
+            qa/pre-gate2-final/
+            docs/consolidation/
+            manifests/
+            CHANGELOG.md
+            README.md

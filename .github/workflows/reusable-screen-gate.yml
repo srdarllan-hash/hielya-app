@@ -1,0 +1,167 @@
+name: Reusable Screen Gate
+
+on:
+  workflow_call:
+    inputs:
+      sourceSha:
+        required: true
+        type: string
+      screenId:
+        required: true
+        type: string
+      route:
+        required: true
+        type: string
+      states:
+        required: true
+        type: string
+      baseSha:
+        required: true
+        type: string
+      protectedPaths:
+        required: true
+        type: string
+      testSuites:
+        required: true
+        type: string
+      requiredViewports:
+        required: true
+        type: string
+      manifestPath:
+        required: true
+        type: string
+      baselineMode:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  validate-screen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GATE_SOURCE_SHA: ${{ inputs.sourceSha }}
+      GATE_SOURCE_BRANCH: ${{ github.head_ref || github.ref_name }}
+      SCREEN_ID: ${{ inputs.screenId }}
+      SCREEN_ROUTE: ${{ inputs.route }}
+      SCREEN_STATES: ${{ inputs.states }}
+      BASE_SHA: ${{ inputs.baseSha }}
+      PROTECTED_PATHS: ${{ inputs.protectedPaths }}
+      TEST_SUITES: ${{ inputs.testSuites }}
+      REQUIRED_VIEWPORTS: ${{ inputs.requiredViewports }}
+      MANIFEST_PATH: ${{ inputs.manifestPath }}
+      BASELINE_MODE: ${{ inputs.baselineMode }}
+      FROZEN_ARCHITECTURE_SHA: c838cfc26176b2e748bdbd037147a7f362d5a3c2
+    steps:
+      - name: Checkout exact source commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sourceSha }}
+          fetch-depth: 0
+      - name: Materialize frozen ancestry
+        run: |
+          if [ "$(git rev-parse --is-shallow-repository)" = "true" ]; then
+            git fetch --no-tags --force --unshallow origin
+          fi
+          git fetch --no-tags --force origin "$GATE_SOURCE_SHA" "$FROZEN_ARCHITECTURE_SHA"
+          git cat-file -e "$FROZEN_ARCHITECTURE_SHA^{commit}"
+          git merge-base --is-ancestor "$FROZEN_ARCHITECTURE_SHA" HEAD
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Runtime, versions and contract identity
+        run: |
+          node --version
+          pnpm --version
+          echo "repository=$GITHUB_REPOSITORY"
+          echo "branch=$GATE_SOURCE_BRANCH"
+          echo "head SHA=$GATE_SOURCE_SHA"
+          echo "screenId=$SCREEN_ID"
+          echo "route=$SCREEN_ROUTE"
+          echo "states=$SCREEN_STATES"
+          echo "baseSha=$BASE_SHA"
+          echo "protectedPaths=$PROTECTED_PATHS"
+          echo "testSuites=$TEST_SUITES"
+          echo "requiredViewports=$REQUIRED_VIEWPORTS"
+          echo "manifestPath=$MANIFEST_PATH"
+          echo "baselineMode=$BASELINE_MODE"
+          node -p "'tokenVersion=' + require('./packages/design-tokens/package.json').version"
+          node -p "'componentLibraryVersion=' + require('./packages/ui/package.json').version"
+          test "$(git rev-parse HEAD)" = "$GATE_SOURCE_SHA"
+          git merge-base --is-ancestor "$BASE_SHA" HEAD
+      - name: Clean frozen install
+        run: pnpm install --frozen-lockfile
+      - name: Validate declared screen contract
+        run: node scripts/validate-screen-contract.mjs
+      - name: Validate generated Design Tokens
+        run: pnpm tokens:check
+      - name: Lint
+        run: pnpm lint
+      - name: Type-check
+        run: pnpm type-check
+      - name: Unit tests
+        run: pnpm test
+      - name: Coverage baseline
+        if: inputs.screenId == 'C-002'
+        run: pnpm test:coverage
+      - name: Build Next.js
+        run: pnpm build
+      - name: Build Storybook
+        run: pnpm build-storybook
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Screen Axe, functional, console and visual regression
+        run: |
+          case "$SCREEN_ID" in
+            C-005)
+              pnpm test:c005:a11y
+              pnpm test:c005:functional
+              pnpm test:c005:visual
+              ;;
+            C-001)
+              pnpm test:c001:a11y
+              pnpm test:c001:functional
+              pnpm test:c001:visual
+              ;;
+            C-002)
+              pnpm test:c002:a11y
+              pnpm test:c002:functional
+              pnpm test:c002:visual
+              git diff --exit-code -- tests/visual/location.visual.spec.ts-snapshots
+              pnpm audit:all
+              pnpm audit:c002:scope
+              pnpm audit:c002:manifest
+              pnpm gate:c002:manifest
+              pnpm audit:c002:evidence
+              ;;
+            *)
+              echo "Unsupported certified screen: $SCREEN_ID" >&2
+              exit 1
+              ;;
+          esac
+      - name: Upload screen Gate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screen-gate-${{ inputs.screenId }}-${{ inputs.sourceSha }}
+          if-no-files-found: error
+          include-hidden-files: true
+          path: |
+            playwright-report/
+            test-results/
+            screenshots/
+            qa/screen-gates/${{ inputs.screenId }}/
+            qa/c001/
+            qa/c002/
+            coverage/
+            manifests/
+            tests/visual/home.visual.spec.ts-snapshots/
+            tests/visual/location.visual.spec.ts-snapshots/

@@ -1,0 +1,28 @@
+/* Canonical WCAG AA overrides layered after component styles. */
+.hly-category-chip:disabled {
+  opacity: var(--hly-opacity-disabled-surface);
+}
+
+.hly-product-card.is-disabled,
+.hly-pack-card.is-disabled {
+  opacity: var(--hly-opacity-full);
+  border-color: var(--hly-color-border-subtle);
+}
+
+.hly-product-card.is-disabled img,
+.hly-pack-card.is-disabled > img {
+  filter: grayscale(0.45);
+  opacity: var(--hly-opacity-muted-media);
+}
+
+.hly-product-card.is-disabled button,
+.hly-pack-card.is-disabled > button {
+  opacity: var(--hly-opacity-disabled);
+}
+
+/* Keep discount text at the frozen high-contrast gold/black pairing even when the card is disabled. */
+.hly-pack-card.is-disabled .hly-pack-card__copy span {
+  background: var(--hly-color-brand-gold-bright);
+  color: var(--hly-color-brand-on-gold);
+  opacity: var(--hly-opacity-full);
+}

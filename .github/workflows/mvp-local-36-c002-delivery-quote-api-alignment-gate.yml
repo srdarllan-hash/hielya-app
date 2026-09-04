@@ -1,0 +1,717 @@
+name: MVP Local 36 C-002 Delivery Quote API Alignment Gate
+
+on:
+  push:
+    branches:
+      - hielya/mvp-local-36-c002-delivery-quote-api-alignment
+
+permissions:
+  actions: read
+  contents: read
+  issues: read
+  pull-requests: read
+
+concurrency:
+  group: mvp-local-36-c002-delivery-quote-api-alignment-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  alignment-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      FROZEN_PARENT_SHA: 1470e294404084119308812b049d94601926ce55
+      FROZEN_PARENT_BRANCH: hielya/mvp-local-36-product-detail-api-integration
+    steps:
+      - name: Checkout exact child commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Verify child source, frozen ancestry and parent drift
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+          git cat-file -e "$FROZEN_PARENT_SHA^{commit}"
+          git merge-base --is-ancestor "$FROZEN_PARENT_SHA" HEAD
+          git fetch --no-tags --force origin \
+            "refs/heads/$FROZEN_PARENT_BRANCH:refs/remotes/origin/$FROZEN_PARENT_BRANCH"
+          test "$(git rev-parse "refs/remotes/origin/$FROZEN_PARENT_BRANCH")" = "$FROZEN_PARENT_SHA"
+      - name: Verify open Issue 8 matches the authorized change-set
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: parent } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: 7,
+            });
+            if (parent.state !== 'open' || parent.draft !== true || parent.merged_at !== null
+              || parent.head.ref !== 'hielya/mvp-local-36-product-detail-api-integration'
+              || parent.head.sha !== '1470e294404084119308812b049d94601926ce55') {
+              core.setFailed('Parent PR #7 is not the exact open/draft certified parent.');
+              return;
+            }
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: 8,
+            });
+            if (issue.pull_request || issue.state !== 'open') {
+              core.setFailed('Issue #8 must be an open Issue.');
+              return;
+            }
+            const expectedTitle = '[MVP Local 36] Integrate the certified delivery quote API into the C-002 runtime';
+            if (issue.title !== expectedTitle) {
+              core.setFailed('Issue #8 title differs from the authorized change-set.');
+              return;
+            }
+            const body = issue.body || '';
+            for (const required of [
+              '1470e294404084119308812b049d94601926ce55',
+              'POST /api/v1/delivery/quote',
+              'C002_DELIVERY_QUOTE_API_ALIGNMENT_GATE',
+            ]) {
+              if (!body.includes(required)) core.setFailed(`Issue #8 is missing: ${required}`);
+            }
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate Gate scope, frozen evidence and runtime boundary
+        run: node scripts/validate-mvp-local-36-c002-delivery-quote-api-alignment.mjs
+      - name: Revalidate frozen OpenAPI and public API
+        run: |
+          GITHUB_ACTIONS=false node scripts/validate-mvp-local-36-openapi.mjs
+          GITHUB_ACTIONS=false node scripts/validate-mvp-local-36-composite-commercial-data.mjs
+          GITHUB_ACTIONS=false node scripts/validate-mvp-local-36-catalog-read-model.mjs
+          GITHUB_ACTIONS=false node scripts/validate-mvp-local-36-public-service-api.mjs
+      - name: Unit, HTTP and server-value tests
+        run: |
+          GITHUB_ACTIONS=false pnpm test
+          GITHUB_ACTIONS=false pnpm exec vitest run \
+            tests/unit/mvp-public-application.test.ts \
+            tests/unit/mvp-public-api-handlers.test.ts \
+            tests/unit/mvp-location-delivery-quote-client.test.ts
+      - name: Lint
+        run: pnpm lint
+      - name: Type-check
+        run: pnpm type-check
+      - name: Next.js build
+        run: pnpm build
+      - name: Storybook build
+        run: pnpm build-storybook
+      - name: Upload alignment validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c002-delivery-quote-alignment-validation-${{ github.sha }}
+          if-no-files-found: error
+          include-hidden-files: true
+          path: |
+            qa/screen-gates/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1/
+            manifests/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1.json
+
+  c001-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GATE_SOURCE_SHA: ${{ github.sha }}
+      GATE_SOURCE_BRANCH: ${{ github.ref_name }}
+      SCREEN_ID: C-001
+      SCREEN_ROUTE: /splash
+      SCREEN_STATES: '["initial","loading","transition","offline","error","timeout","maintenance","ready-location","ready-home","reduced-motion"]'
+      BASE_SHA: fe62966daca8bda94610aa1a63702a1e543b0ce6
+      PROTECTED_PATHS: '["apps/ui-lab/app/splash/","packages/ui/src/screens/splash/","tests/unit/splash","tests/accessibility/splash","tests/functional/splash","tests/visual/splash","manifests/C-001"]'
+      TEST_SUITES: '["unit","axe","functional","console","visual","responsive","frozen-baseline"]'
+      REQUIRED_VIEWPORTS: '["360x800","390x844","1170x2532"]'
+      MANIFEST_PATH: manifests/C-001.json
+      BASELINE_MODE: GATE_VALIDATION
+    steps:
+      - name: Checkout exact child commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Verify child source and C-001 frozen ancestry
+        run: |
+          test "$(git rev-parse HEAD)" = "$GATE_SOURCE_SHA"
+          git cat-file -e "$BASE_SHA^{commit}"
+          git merge-base --is-ancestor "$BASE_SHA" HEAD
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate C-001 contract and generated Design Tokens
+        run: |
+          node scripts/validate-screen-contract.mjs
+          pnpm tokens:check
+      - name: C-001 static, unit and build validation
+        run: |
+          pnpm lint
+          pnpm type-check
+          GITHUB_ACTIONS=false pnpm test
+          pnpm build
+          pnpm build-storybook
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: C-001 frozen browser regression and identity
+        run: |
+          pnpm test:c001:a11y
+          pnpm test:c001:functional
+          pnpm test:c001:visual
+          git diff --exit-code "$BASE_SHA" -- \
+            apps/ui-lab/app/splash/ \
+            packages/ui/src/screens/splash/ \
+            tests/unit/splash \
+            tests/accessibility/splash \
+            tests/functional/splash \
+            tests/visual/splash \
+            manifests/C-001.json \
+            manifests/C-001-assets.json \
+            manifests/C-001-visual-baseline.json
+          test "$(git rev-parse HEAD:manifests/C-001.json)" = "cf13550b0561514bef0fd09844928de5343a1bb4"
+          test "$(git rev-parse HEAD:manifests/C-001-assets.json)" = "cd17c6a0777ddac97f7d1f5e811547bbba134aa0"
+          test "$(git rev-parse HEAD:manifests/C-001-visual-baseline.json)" = "951055d7d39e1cb7abf05ac4b3a8e214421aa1a1"
+          test "$(git rev-parse HEAD:tests/visual/splash.visual.spec.ts)" = "822e33e97a4f426fd80a10b6e8a5e1134c0bb8f6"
+      - name: Upload C-001 regression evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c001-regression-${{ github.sha }}
+          if-no-files-found: error
+          include-hidden-files: true
+          path: |
+            playwright-report/
+            test-results/
+            screenshots/c001/
+            qa/screen-gates/C-001/
+            qa/c001/
+            manifests/C-001.json
+            manifests/C-001-assets.json
+            manifests/C-001-visual-baseline.json
+
+  c002-frozen-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GATE_SOURCE_SHA: ${{ github.sha }}
+      FROZEN_PARENT_SHA: 1470e294404084119308812b049d94601926ce55
+      BASELINE_MODE: GATE_VALIDATION
+    steps:
+      - name: Checkout exact child commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Verify child ancestry and frozen C-002 evidence identities
+        run: |
+          test "$(git rev-parse HEAD)" = "$GATE_SOURCE_SHA"
+          git merge-base --is-ancestor "$FROZEN_PARENT_SHA" HEAD
+          git diff --exit-code "$FROZEN_PARENT_SHA" -- \
+            manifests/C-002.json \
+            manifests/C-002-assets.json \
+            manifests/C-002-visual-baseline.json \
+            tests/accessibility/location.a11y.spec.ts \
+            tests/functional/location.functional.spec.ts \
+            tests/visual/location.visual.spec.ts \
+            tests/visual/location.visual.spec.ts-snapshots
+          test "$(git rev-parse HEAD:manifests/C-002.json)" = "20a8980659774590c2a42a27fcc74f5c0d3015c3"
+          test "$(git rev-parse HEAD:manifests/C-002-assets.json)" = "cadb916200edda1dba1515ce1d75abd3e19647e6"
+          test "$(git rev-parse HEAD:manifests/C-002-visual-baseline.json)" = "5b655732d5df284b2336565ee1e2e2eee4774848"
+          test "$(git rev-parse HEAD:tests/accessibility/location.a11y.spec.ts)" = "7daf2bd94dc36e44cb4262315ac1eab49a92e03f"
+          test "$(git rev-parse HEAD:tests/functional/location.functional.spec.ts)" = "4fce2e2bfaa1f3b7755bd7f4464bba4de6f49946"
+          test "$(git rev-parse HEAD:tests/visual/location.visual.spec.ts)" = "6c5a7557185bf55718dbf297fdccccc15c63529f"
+          test "$(git rev-parse HEAD:tests/visual/location.visual.spec.ts-snapshots)" = "ab35f0e0495c19a6cb765be7610cfbb99859d589"
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Current C-002 domain and adapter unit regression
+        run: |
+          GITHUB_ACTIONS=false pnpm exec vitest run tests/unit/location.machine.test.ts tests/unit/location.rules.test.ts tests/unit/location.adapters.test.ts tests/unit/location.components.test.tsx
+          GITHUB_ACTIONS=false pnpm test:coverage
+      - name: Build current child runtime for frozen browser regression
+        run: pnpm build
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Frozen C-002 accessibility regression on child runtime
+        run: pnpm test:c002:a11y
+      - name: Frozen C-002 functional and console regression on child runtime
+        run: pnpm test:c002:functional
+      - name: Frozen C-002 strict visual regression on child runtime
+        run: |
+          pnpm test:c002:visual
+          git diff --exit-code -- tests/visual/location.visual.spec.ts-snapshots
+          pnpm audit:all
+      - name: Upload frozen C-002 regression evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c002-frozen-regression-${{ github.sha }}
+          if-no-files-found: error
+          include-hidden-files: true
+          path: |
+            playwright-report/
+            test-results/
+            screenshots/c002/
+            tests/visual/location.visual.spec.ts-snapshots/
+
+  c005-frozen-regression:
+    uses: ./.github/workflows/reusable-screen-gate.yml
+    with:
+      sourceSha: fe62966daca8bda94610aa1a63702a1e543b0ce6
+      screenId: C-005
+      route: /
+      states: '["ready","loading","closed","high-demand","error","empty-cart","alcohol-cutoff","out-of-area"]'
+      baseSha: c2857afe538b2cf5ba44635edd56dbd422c0e2f0
+      protectedPaths: '["packages/ui/src/screens/home/","tests/unit/home","tests/accessibility/home","tests/functional/home","tests/visual/home","manifests/C-005"]'
+      testSuites: '["unit","axe","functional","console","visual","responsive"]'
+      requiredViewports: '["360x800","390x844","1170x2532"]'
+      manifestPath: manifests/C-005.json
+      baselineMode: GATE_VALIDATION
+
+  home-catalog-integration-regression:
+    needs: alignment-validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      FROZEN_PARENT_SHA: 1470e294404084119308812b049d94601926ce55
+      BASELINE_MODE: GATE_VALIDATION
+    steps:
+      - name: Checkout exact child commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Verify frozen Home integration evidence
+        run: |
+          git diff --exit-code "$FROZEN_PARENT_SHA" -- \
+            manifests/C-005-HOME-CATALOG-API-INTEGRATION-V1.json \
+            manifests/C-005-HOME-CATALOG-API-INTEGRATION-V1-BASELINE-REVIEW.json \
+            playwright.home-catalog-api-integration.config.ts \
+            tests/accessibility/home-catalog-api-integration.a11y.spec.ts \
+            tests/functional/home-catalog-api-integration.functional.spec.ts \
+            tests/visual/home-catalog-api-integration.visual.spec.ts \
+            tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots
+          test "$(find tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots -maxdepth 1 -type f -name '*.png' | wc -l | tr -d ' ')" = "12"
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Home integration accessibility regression
+        env:
+          PLAYWRIGHT_EVIDENCE_PHASE: a11y
+        run: pnpm exec playwright test tests/accessibility/home-catalog-api-integration.a11y.spec.ts --config playwright.home-catalog-api-integration.config.ts
+      - name: Home integration functional regression
+        env:
+          PLAYWRIGHT_EVIDENCE_PHASE: functional
+        run: pnpm exec playwright test tests/functional/home-catalog-api-integration.functional.spec.ts --config playwright.home-catalog-api-integration.config.ts
+      - name: Home integration strict visual regression
+        env:
+          PLAYWRIGHT_EVIDENCE_PHASE: visual
+        run: pnpm exec playwright test tests/visual/home-catalog-api-integration.visual.spec.ts --config playwright.home-catalog-api-integration.config.ts
+      - name: Upload Home regression evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-catalog-integration-regression-${{ github.sha }}
+          if-no-files-found: error
+          include-hidden-files: true
+          path: |
+            playwright-report/C-005-HOME-CATALOG-API-INTEGRATION-V1/
+            test-results/C-005-HOME-CATALOG-API-INTEGRATION-V1/
+            screenshots/C-005-HOME-CATALOG-API-INTEGRATION-V1/
+            qa/screen-gates/C-005-HOME-CATALOG-API-INTEGRATION-V1/canonical-database-audit.json
+
+  product-detail-integration-regression:
+    needs: alignment-validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      FROZEN_PARENT_SHA: 1470e294404084119308812b049d94601926ce55
+      BASELINE_MODE: GATE_VALIDATION
+    steps:
+      - name: Checkout exact child commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Verify frozen Product Detail evidence and object identities
+        run: |
+          git diff --exit-code "$FROZEN_PARENT_SHA" -- \
+            manifests/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1.json \
+            manifests/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-BASELINE-REVIEW.json \
+            playwright.product-detail-api-integration.config.ts \
+            tests/accessibility/product-detail-api-integration.a11y.spec.ts \
+            tests/functional/product-detail-api-integration.functional.spec.ts \
+            tests/visual/product-detail-api-integration.visual.spec.ts \
+            tests/visual/product-detail-api-integration.visual.spec.ts-snapshots
+          test "$(git rev-parse HEAD:manifests/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1.json)" = "b3940d5edb5b18400d0e1bd1b6c907aae71345df"
+          test "$(git rev-parse HEAD:manifests/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-BASELINE-REVIEW.json)" = "7e5e7c9ec1c4309489e3e77442c031ccf8348320"
+          test "$(git rev-parse HEAD:tests/visual/product-detail-api-integration.visual.spec.ts-snapshots)" = "1236e8eb4047c60bac22efd8d5716acf2e26f964"
+          test "$(find tests/visual/product-detail-api-integration.visual.spec.ts-snapshots -maxdepth 1 -type f -name '*.png' | wc -l | tr -d ' ')" = "12"
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Product Detail accessibility regression
+        env:
+          PLAYWRIGHT_EVIDENCE_PHASE: a11y
+        run: pnpm exec playwright test tests/accessibility/product-detail-api-integration.a11y.spec.ts --config playwright.product-detail-api-integration.config.ts
+      - name: Product Detail functional regression
+        env:
+          PLAYWRIGHT_EVIDENCE_PHASE: functional
+        run: pnpm exec playwright test tests/functional/product-detail-api-integration.functional.spec.ts --config playwright.product-detail-api-integration.config.ts
+      - name: Product Detail strict visual regression
+        env:
+          PLAYWRIGHT_EVIDENCE_PHASE: visual
+        run: pnpm exec playwright test tests/visual/product-detail-api-integration.visual.spec.ts --config playwright.product-detail-api-integration.config.ts
+      - name: Upload Product Detail regression evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: product-detail-integration-regression-${{ github.sha }}
+          if-no-files-found: error
+          include-hidden-files: true
+          path: |
+            playwright-report/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1/
+            test-results/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1/
+            screenshots/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1/
+            qa/screen-gates/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1/canonical-database-audit.json
+
+  c002-delivery-quote-alignment-gate:
+    needs: alignment-validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GATE_SOURCE_SHA: ${{ github.sha }}
+      GATE_SOURCE_BRANCH: ${{ github.ref_name }}
+      SNAPSHOT_PATH: tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots
+      BASELINE_REVIEW_PATH: manifests/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-BASELINE-REVIEW.json
+      FROZEN_PARENT_SHA: 1470e294404084119308812b049d94601926ce55
+    steps:
+      - name: Checkout exact child commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate C-002 alignment scope for candidate evidence
+        id: candidate_scope
+        run: node scripts/validate-mvp-local-36-c002-delivery-quote-api-alignment.mjs
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Select isolated C-002 alignment baseline mode
+        id: baseline
+        run: |
+          tracked_count="$(git ls-files "$SNAPSHOT_PATH/*.png" | wc -l | tr -d ' ')"
+          if [ "$tracked_count" = "0" ]; then
+            test ! -e "$BASELINE_REVIEW_PATH"
+            test "$(git rev-parse HEAD^)" = "$FROZEN_PARENT_SHA"
+            test "$(git rev-list --count "$FROZEN_PARENT_SHA"..HEAD)" = "1"
+            test "$(git rev-list --parents -n 1 HEAD | wc -w | tr -d ' ')" = "2"
+            echo "mode=BASELINE_AUTHORING" >> "$GITHUB_OUTPUT"
+            echo "tracked_count=0" >> "$GITHUB_OUTPUT"
+          elif [ "$tracked_count" = "15" ]; then
+            test -f "$BASELINE_REVIEW_PATH"
+            candidate_sha="$(node -p "require('./$BASELINE_REVIEW_PATH').candidateCommitSha")"
+            test "$candidate_sha" = "$(git rev-parse HEAD^)"
+            test "$(git rev-parse "$candidate_sha^")" = "$FROZEN_PARENT_SHA"
+            test "$(git rev-list --count "$FROZEN_PARENT_SHA"..HEAD)" = "2"
+            test "$(git rev-list --parents -n 1 HEAD | wc -w | tr -d ' ')" = "2"
+            test "$(git rev-list --parents -n 1 "$candidate_sha" | wc -w | tr -d ' ')" = "2"
+            echo "mode=GATE_VALIDATION" >> "$GITHUB_OUTPUT"
+            echo "tracked_count=15" >> "$GITHUB_OUTPUT"
+          else
+            echo "Expected zero bootstrap snapshots or exactly 15 reviewed snapshots; found $tracked_count" >&2
+            exit 1
+          fi
+      - name: Verify reviewed C-002 alignment baseline provenance
+        id: provenance
+        if: steps.baseline.outputs.mode == 'GATE_VALIDATION'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const review = JSON.parse(fs.readFileSync(process.env.BASELINE_REVIEW_PATH, 'utf8'));
+            const runId = Number(review.candidateWorkflowRunId);
+            const { data: run } = await github.rest.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId,
+            });
+            if (run.head_sha !== review.candidateCommitSha
+              || run.head_branch !== 'hielya/mvp-local-36-c002-delivery-quote-api-alignment'
+              || run.name !== 'MVP Local 36 C-002 Delivery Quote API Alignment Gate'
+              || run.event !== 'push'
+              || run.status !== 'completed'
+              || run.conclusion !== 'failure') {
+              core.setFailed('C-002 alignment authoring run provenance differs.');
+              return;
+            }
+            const { data } = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId,
+              per_page: 100,
+            });
+            const matches = data.artifacts.filter(({ name }) => name === review.candidateArtifactName);
+            if (matches.length !== 1 || matches[0].expired
+              || matches[0].digest !== review.candidateArtifactDigest) {
+              core.setFailed('C-002 alignment candidate artifact identity differs.');
+              return;
+            }
+            const [candidateArtifact] = matches;
+            const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: runId,
+              per_page: 100,
+            });
+            for (const requiredJob of [
+              'alignment-validation',
+              'c001-regression',
+              'c002-frozen-regression',
+              'c005-frozen-regression',
+              'home-catalog-integration-regression',
+              'product-detail-integration-regression',
+            ]) {
+              const matches = jobs.filter(({ name }) => (
+                name === requiredJob || name.startsWith(`${requiredJob} / `)
+              ));
+              if (matches.length !== 1 || matches[0].conclusion !== 'success') {
+                core.setFailed(`Candidate regression job must be uniquely successful: ${requiredJob}`);
+                return;
+              }
+            }
+            const gateJobs = jobs.filter(({ name }) => name === 'c002-delivery-quote-alignment-gate');
+            if (gateJobs.length !== 1 || gateJobs[0].conclusion !== 'failure') {
+              core.setFailed('Exactly one deliberately failed C-002 alignment Gate job is required.');
+              return;
+            }
+            const expectedSteps = new Map([
+              ['Validate C-002 alignment scope for candidate evidence', 'success'],
+              ['Select isolated C-002 alignment baseline mode', 'success'],
+              ['C-002 alignment accessibility', 'success'],
+              ['C-002 alignment functional and console validation', 'success'],
+              ['Author isolated C-002 alignment baseline candidate', 'success'],
+              ['Verify frozen prior visual evidence', 'success'],
+              ['Derive fail-closed C-002 alignment evidence status', 'success'],
+              ['Generate status-aware C-002 alignment evidence', 'success'],
+              ['Upload versioned C-002 alignment evidence', 'success'],
+              ['Require C-002 alignment baseline materialization and review', 'failure'],
+            ]);
+            for (const [name, conclusion] of expectedSteps) {
+              const matches = gateJobs[0].steps.filter((step) => step.name === name);
+              if (matches.length !== 1 || matches[0].conclusion !== conclusion) {
+                core.setFailed(`C-002 candidate step differs: ${name} must be ${conclusion}.`);
+                return;
+              }
+            }
+            core.setOutput('artifact-id', String(candidateArtifact.id));
+      - name: Download and validate reviewed C-002 alignment artifact
+        id: candidate_artifact
+        if: steps.baseline.outputs.mode == 'GATE_VALIDATION'
+        env:
+          ARTIFACT_ID: ${{ steps.provenance.outputs.artifact-id }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          artifact_zip="$RUNNER_TEMP/c002-alignment-${GITHUB_RUN_ID}.zip"
+          artifact_directory="$(mktemp -d "$RUNNER_TEMP/c002-alignment.XXXXXX")"
+          curl --fail --silent --show-error --location --retry 3 \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header "Accept: application/vnd.github+json" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" \
+            --output "$artifact_zip"
+          unzip -q "$artifact_zip" -d "$artifact_directory"
+          node scripts/validate-c002-delivery-quote-api-alignment-baseline-artifact.mjs "$artifact_directory"
+      - name: C-002 alignment accessibility
+        id: a11y
+        env:
+          PLAYWRIGHT_EVIDENCE_PHASE: a11y
+        run: pnpm exec playwright test tests/accessibility/c002-delivery-quote-api-alignment.a11y.spec.ts --config playwright.c002-delivery-quote-api-alignment.config.ts
+      - name: C-002 alignment functional and console validation
+        id: functional
+        env:
+          PLAYWRIGHT_EVIDENCE_PHASE: functional
+        run: pnpm exec playwright test tests/functional/c002-delivery-quote-api-alignment.functional.spec.ts --config playwright.c002-delivery-quote-api-alignment.config.ts
+      - name: Author isolated C-002 alignment baseline candidate
+        id: authoring
+        if: steps.baseline.outputs.mode == 'BASELINE_AUTHORING'
+        env:
+          BASELINE_MODE: BASELINE_AUTHORING
+          PLAYWRIGHT_EVIDENCE_PHASE: visual
+        run: |
+          pnpm exec playwright test tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts --config playwright.c002-delivery-quote-api-alignment.config.ts
+          test "$(find "$SNAPSHOT_PATH" -maxdepth 1 -type f -name '*.png' | wc -l | tr -d ' ')" = "15"
+      - name: C-002 alignment strict visual regression
+        id: strict_visual
+        if: steps.baseline.outputs.mode == 'GATE_VALIDATION'
+        env:
+          BASELINE_MODE: GATE_VALIDATION
+          PLAYWRIGHT_EVIDENCE_PHASE: visual
+        run: pnpm exec playwright test tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts --config playwright.c002-delivery-quote-api-alignment.config.ts
+      - name: Verify frozen prior visual evidence
+        id: frozen
+        if: always()
+        run: |
+          git diff --exit-code "$FROZEN_PARENT_SHA" -- \
+            manifests/C-001.json \
+            manifests/C-002.json \
+            manifests/C-002-assets.json \
+            manifests/C-002-visual-baseline.json \
+            manifests/C-005.json \
+            manifests/C-005-HOME-CATALOG-API-INTEGRATION-V1.json \
+            manifests/C-005-HOME-CATALOG-API-INTEGRATION-V1-BASELINE-REVIEW.json \
+            manifests/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1.json \
+            manifests/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-BASELINE-REVIEW.json \
+            tests/visual/home.visual.spec.ts-snapshots \
+            tests/visual/location.visual.spec.ts-snapshots \
+            tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots \
+            tests/visual/product-detail-api-integration.visual.spec.ts-snapshots
+      - name: Derive fail-closed C-002 alignment evidence status
+        id: evidence_status
+        if: always()
+        env:
+          BASELINE_MODE: ${{ steps.baseline.outputs.mode }}
+          CANDIDATE_SCOPE_OUTCOME: ${{ steps.candidate_scope.outcome }}
+          PROVENANCE_OUTCOME: ${{ steps.provenance.outcome }}
+          CANDIDATE_ARTIFACT_OUTCOME: ${{ steps.candidate_artifact.outcome }}
+          A11Y_OUTCOME: ${{ steps.a11y.outcome }}
+          FUNCTIONAL_OUTCOME: ${{ steps.functional.outcome }}
+          AUTHORING_OUTCOME: ${{ steps.authoring.outcome }}
+          STRICT_VISUAL_OUTCOME: ${{ steps.strict_visual.outcome }}
+          FROZEN_OUTCOME: ${{ steps.frozen.outcome }}
+        run: |
+          status="QA_FAILED_OR_INCOMPLETE"
+          if [ "$BASELINE_MODE" = "BASELINE_AUTHORING" ] \
+            && [ "$CANDIDATE_SCOPE_OUTCOME" = "success" ] \
+            && [ "$A11Y_OUTCOME" = "success" ] \
+            && [ "$FUNCTIONAL_OUTCOME" = "success" ] \
+            && [ "$AUTHORING_OUTCOME" = "success" ] \
+            && [ "$FROZEN_OUTCOME" = "success" ]; then
+            status="BASELINE_CANDIDATE"
+          elif [ "$BASELINE_MODE" = "GATE_VALIDATION" ] \
+            && [ "$CANDIDATE_SCOPE_OUTCOME" = "success" ] \
+            && [ "$PROVENANCE_OUTCOME" = "success" ] \
+            && [ "$CANDIDATE_ARTIFACT_OUTCOME" = "success" ] \
+            && [ "$A11Y_OUTCOME" = "success" ] \
+            && [ "$FUNCTIONAL_OUTCOME" = "success" ] \
+            && [ "$STRICT_VISUAL_OUTCOME" = "success" ] \
+            && [ "$FROZEN_OUTCOME" = "success" ]; then
+            status="QA_PASSED_CANDIDATE"
+          fi
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+      - name: Generate status-aware C-002 alignment evidence
+        if: always()
+        env:
+          EVIDENCE_STATUS: ${{ steps.evidence_status.outputs.status }}
+        run: node scripts/generate-c002-delivery-quote-api-alignment-evidence.mjs
+      - name: Upload versioned C-002 alignment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c002-delivery-quote-api-alignment-v1-${{ github.sha }}
+          if-no-files-found: error
+          include-hidden-files: true
+          path: |
+            playwright-report/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1/
+            test-results/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1/
+            screenshots/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1/
+            qa/screen-gates/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1/
+            manifests/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-BASELINE-REVIEW.json
+            manifests/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1.json
+            tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots/
+      - name: Require C-002 alignment baseline materialization and review
+        if: steps.baseline.outputs.mode == 'BASELINE_AUTHORING'
+        run: |
+          echo "BASELINE_AUTHORING_PENDING=true"
+          echo "Inspect all 15 C-002 alignment PNGs, then materialize only the PNGs and hash-bound review manifest in a second commit." >&2
+          exit 1
+
+  gate-summary:
+    needs:
+      - alignment-validation
+      - c001-regression
+      - c002-frozen-regression
+      - c005-frozen-regression
+      - home-catalog-integration-regression
+      - product-detail-integration-regression
+      - c002-delivery-quote-alignment-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record C-002 Delivery Quote API Alignment Gate outcome
+        run: |
+          echo "C002_DELIVERY_QUOTE_API_ALIGNMENT_VALIDATED=true"
+          echo "ISSUE_NUMBER=8"
+          echo "FROZEN_PARENT_SHA=1470e294404084119308812b049d94601926ce55"
+          echo "RUNTIME_SERVICE_AREA_SOURCE=HTTP_PUBLIC_DELIVERY_QUOTE"
+          echo "REQUEST_FIELDS=latitude,longitude"
+          echo "SUCCESS_2_5KM_FEE_CENTS=350"
+          echo "QUOTE_ID=null"
+          echo "CONTINUE_IN_SCOPE=false"
+          echo "FAKE_RUNTIME_FALLBACK=false"
+          echo "ORIGINAL_C002_BASELINE_PRESERVED=true"
+          echo "C001_REGRESSION=true"
+          echo "C002_FROZEN_REGRESSION=true"
+          echo "C005_FROZEN_REGRESSION=true"
+          echo "HOME_CATALOG_INTEGRATION_REGRESSION=true"
+          echo "PRODUCT_DETAIL_INTEGRATION_REGRESSION=true"
+          echo "OPENAPI_MODIFIED=false"
+          echo "PERSISTENCE_MODIFIED=false"
+          echo "APPLICATION_MODIFIED=false"
+          echo "NEW_DEPENDENCIES=false"
+          echo "PRODUCTION_AUTHORIZED=false"
+          echo "MAIN_CHANGED=false"
+          echo "MERGE_PERFORMED=false"
+          echo "NEXT_LAYER_STARTED=false"

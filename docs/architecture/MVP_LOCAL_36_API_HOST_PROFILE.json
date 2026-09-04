@@ -1,0 +1,36 @@
+{
+  "architecture": "MODULAR_TYPESCRIPT_MONOLITH",
+  "runtime": "NEXTJS",
+  "host": "apps/ui-lab",
+  "basePath": "/api/v1",
+  "routeHandlersAuthorized": true,
+  "authorizedRouteHandlers": [
+    {
+      "method": "GET",
+      "path": "/catalog/categories",
+      "file": "apps/ui-lab/app/api/v1/catalog/categories/route.ts"
+    },
+    {
+      "method": "GET",
+      "path": "/catalog/products",
+      "file": "apps/ui-lab/app/api/v1/catalog/products/route.ts"
+    },
+    {
+      "method": "GET",
+      "path": "/catalog/products/{productId}",
+      "file": "apps/ui-lab/app/api/v1/catalog/products/[productId]/route.ts"
+    },
+    {
+      "method": "POST",
+      "path": "/delivery/quote",
+      "file": "apps/ui-lab/app/api/v1/delivery/quote/route.ts"
+    }
+  ],
+  "secondRuntimeAuthorized": false,
+  "microservicesAuthorized": false,
+  "realMapProviderAuthorized": false,
+  "authenticationAuthorized": false,
+  "cartLayerAuthorized": false,
+  "inventoryMutationAuthorized": false,
+  "productionAuthorized": false
+}

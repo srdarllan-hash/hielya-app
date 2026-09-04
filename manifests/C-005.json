@@ -1,0 +1,82 @@
+{
+  "screenId": "C-005",
+  "name": "Home",
+  "role": "MASTER_SCREEN_OFFICIAL",
+  "version": "1.0.0",
+  "foundationPack": "1.1",
+  "designTokens": "1.1.0",
+  "componentLibrary": "1.1.1",
+  "status": "APPROVED_FROZEN",
+  "states": [
+    "ready",
+    "loading",
+    "closed",
+    "high-demand",
+    "error",
+    "empty-cart",
+    "alcohol-cutoff",
+    "out-of-area"
+  ],
+  "components": [
+    "AppShell",
+    "BrandLockup",
+    "AppHeader",
+    "DeliveryQuoteCard",
+    "SearchField",
+    "CategoryChip",
+    "HeroBanner",
+    "SectionHeader",
+    "ProductCard",
+    "PackCard",
+    "StatusBadge",
+    "IconButton",
+    "BottomNavigation",
+    "HomeLoadingState",
+    "FeedbackState",
+    "Snackbar"
+  ],
+  "viewports": [
+    {
+      "css": "360x800",
+      "physical": "360x800"
+    },
+    {
+      "css": "390x844",
+      "physical": "390x844"
+    },
+    {
+      "css": "390x844",
+      "deviceScaleFactor": 3,
+      "physical": "1170x2532"
+    }
+  ],
+  "rules": {
+    "minimumOrderEur": 25,
+    "deliveryRadiusKm": 4,
+    "deliveryFee0To2KmEur": 2.99,
+    "deliveryFee2To4KmEur": 4.49,
+    "freeDeliveryPermanent": false,
+    "storeHours": "10:00–22:00",
+    "alcoholDeliveryDeadline": "22:00",
+    "eta": "dynamic",
+    "authenticationContract": "PHONE_OTP"
+  },
+  "sourceReference": "approved-reference://C-005/Home/V1",
+  "gatePolicy": "APPROVED_FROZEN only from commit-bound GitHub Actions evidence",
+  "certifiedCommit": "be61e1168b93d973101496cc66cb54d006aba9cc",
+  "architectureCandidate": {
+    "designTokens": "1.2.0",
+    "componentLibrary": "1.2.0",
+    "status": "PENDING_GATE",
+    "branch": "hielya/pre-gate2-architecture-consolidation"
+  },
+  "gate": {
+    "workflow": "C-005 Home Gate 1A",
+    "workflowRunId": 30570688090,
+    "artifactDigest": "sha256:2ab8f6bbfb60a76b41843a4e4d956421f97d751056dc22ff6e6297fadc2d4d11",
+    "branchIntegrated": true,
+    "qaPassed": true,
+    "approvedFrozen": true,
+    "workIntegrated": false
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "candidateCommitSha": "65a65da3d411596570670ddbd5de8f19c2c444e8",
+  "candidateWorkflowRunId": 31055988839,
+  "candidateArtifactName": "product-detail-public-api-integration-v1-65a65da3d411596570670ddbd5de8f19c2c444e8",
+  "candidateArtifactDigest": "sha256:97d4c9bd41f64c3189ca980862189f3cb00520f4bbcd75e6965ee5c44ab59872",
+  "reviewMethod": "WORK_VISUAL_INSPECTION",
+  "entries": [
+    {
+      "path": "tests/visual/product-detail-api-integration.visual.spec.ts-snapshots/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-error-hires-1170-linux.png",
+      "sha256": "85b39817f3a2225856f7bbd2a43f6442722d875bebe9c093a53c603983957662"
+    },
+    {
+      "path": "tests/visual/product-detail-api-integration.visual.spec.ts-snapshots/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-error-mobile-360-linux.png",
+      "sha256": "fde0f63259f423cef80fe16ea48ca303cfcf78f3d1ba2c264245b75371cf2c16"
+    },
+    {
+      "path": "tests/visual/product-detail-api-integration.visual.spec.ts-snapshots/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-error-mobile-390-linux.png",
+      "sha256": "557ccdddaddf574c1a4f3d46c77bc39ace5dd345c72561a24907ad7eb61708f3"
+    },
+    {
+      "path": "tests/visual/product-detail-api-integration.visual.spec.ts-snapshots/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-loading-hires-1170-linux.png",
+      "sha256": "2c3f37ae2e6b34ec6f2d6f23d36b5fe988a1ec83c3d882a06818944ef6e01fba"
+    },
+    {
+      "path": "tests/visual/product-detail-api-integration.visual.spec.ts-snapshots/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-loading-mobile-360-linux.png",
+      "sha256": "101f19f089489e34dc0706763c68c3027e4f28dcd7d76e1a7fc46dc64f569265"
+    },
+    {
+      "path": "tests/visual/product-detail-api-integration.visual.spec.ts-snapshots/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-loading-mobile-390-linux.png",
+      "sha256": "7afb9a7cdbff007e4c5a19883f0b17e24ee136943549aa6862c98e57eb638b59"
+    },
+    {
+      "path": "tests/visual/product-detail-api-integration.visual.spec.ts-snapshots/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-not-found-hires-1170-linux.png",
+      "sha256": "598eb856177abf39ff6d1d4715235c3b57ae15a50b2f7297533b52ab71d1531d"
+    },
+    {
+      "path": "tests/visual/product-detail-api-integration.visual.spec.ts-snapshots/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-not-found-mobile-360-linux.png",
+      "sha256": "f3f96fc941285e9727d1ff531ebf91b248064c50910a6a96776752bfa3193ccd"
+    },
+    {
+      "path": "tests/visual/product-detail-api-integration.visual.spec.ts-snapshots/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-not-found-mobile-390-linux.png",
+      "sha256": "0a751d33d49c7fe04155f3fab2419db90cebf51609b5ba2cf92faa41637681b0"
+    },
+    {
+      "path": "tests/visual/product-detail-api-integration.visual.spec.ts-snapshots/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-ready-hires-1170-linux.png",
+      "sha256": "a1bfb91d0d7303d632528b8b0027af7b75c84cb12e63ca5509be1e78a9156699"
+    },
+    {
+      "path": "tests/visual/product-detail-api-integration.visual.spec.ts-snapshots/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-ready-mobile-360-linux.png",
+      "sha256": "34acf961a51c48b994648ee8a15c79c5d06ec4b6956ba2cfdcba681cab523bec"
+    },
+    {
+      "path": "tests/visual/product-detail-api-integration.visual.spec.ts-snapshots/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-ready-mobile-390-linux.png",
+      "sha256": "1a72f8559d1d1274971c6fadc9c9a97f617ba66b4e1638afcfaf294b369f59d2"
+    }
+  ]
+}

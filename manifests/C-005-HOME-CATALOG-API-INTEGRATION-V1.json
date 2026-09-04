@@ -1,0 +1,54 @@
+{
+  "screenId": "C-005-HOME-CATALOG-API-INTEGRATION",
+  "name": "C-005 Home Catalog API Integration",
+  "version": "1.0.0",
+  "status": "GATE_CANDIDATE",
+  "parentScreenId": "C-005",
+  "parentFrozenSha": "fe62966daca8bda94610aa1a63702a1e543b0ce6",
+  "parentManifest": "manifests/C-005.json",
+  "route": "/",
+  "runtimeDataSource": "HTTP_PUBLIC_API",
+  "endpoints": [
+    "GET /api/v1/catalog/categories",
+    "GET /api/v1/catalog/products"
+  ],
+  "states": [
+    "HOME_CATALOG_LOADING",
+    "HOME_CATALOG_READY",
+    "HOME_CATALOG_EMPTY",
+    "HOME_CATALOG_ERROR"
+  ],
+  "viewports": [
+    {
+      "css": "360x800",
+      "physical": "360x800"
+    },
+    {
+      "css": "390x844",
+      "physical": "390x844"
+    },
+    {
+      "css": "390x844",
+      "deviceScaleFactor": 3,
+      "physical": "1170x2532"
+    }
+  ],
+  "baselineNamespace": "C-005-HOME-CATALOG-API-INTEGRATION-V1",
+  "baselinePath": "tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots",
+  "baselineReviewManifest": "manifests/C-005-HOME-CATALOG-API-INTEGRATION-V1-BASELINE-REVIEW.json",
+  "artifactValidationScript": "scripts/validate-c005-home-catalog-api-integration-baseline-artifact.mjs",
+  "evidencePath": "qa/screen-gates/C-005-HOME-CATALOG-API-INTEGRATION-V1",
+  "baselineMode": "GATE_VALIDATION",
+  "canonicalCatalogEmpty": true,
+  "commercialSkusActivated": 0,
+  "syntheticRuntimeFallback": false,
+  "syntheticFixturePolicy": "PLAYWRIGHT_NETWORK_INTERCEPTION_ONLY_NON_HYA_SKUS",
+  "frozenContracts": [
+    "contracts/openapi/HIELYA_OPENAPI_V1_0.yaml",
+    "contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_1.yaml",
+    "packages/application",
+    "packages/persistence",
+    "manifests/C-005.json",
+    "tests/visual/home.visual.spec.ts-snapshots"
+  ]
+}

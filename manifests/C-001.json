@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "1.0.0",
+  "screenId": "C-001",
+  "name": "Splash / PWA bootstrap",
+  "actor": "Customer",
+  "status": "APPROVED_FROZEN",
+  "baseFrozenCommit": "be61e1168b93d973101496cc66cb54d006aba9cc",
+  "branch": "hielya/c001-splash-gate1b",
+  "designTokens": "1.1.0",
+  "componentLibrary": "1.1.1",
+  "localeDefault": "es",
+  "supportedLocales": [
+    "es",
+    "en",
+    "pt"
+  ],
+  "objective": "Load brand shell, configuration, locale and session before navigation.",
+  "stories": [
+    "US-011",
+    "US-012",
+    "US-091",
+    "US-094",
+    "US-095"
+  ],
+  "acceptanceCriteria": [
+    "AC-US-011-01",
+    "AC-US-012-01",
+    "AC-US-091-01",
+    "AC-US-091-02",
+    "AC-US-094-01",
+    "AC-US-094-02"
+  ],
+  "endpoints": [],
+  "operationIds": [],
+  "models": [
+    "CustomerSession",
+    "DeviceToken"
+  ],
+  "events": [],
+  "components": [
+    "AppShell",
+    "BrandLockup",
+    "FeedbackState"
+  ],
+  "newCanonicalComponents": [],
+  "states": [
+    "initial",
+    "loading",
+    "transition",
+    "offline",
+    "error",
+    "timeout",
+    "maintenance",
+    "ready-location",
+    "ready-home",
+    "reduced-motion"
+  ],
+  "navigationContract": {
+    "withoutValidLocationContext": "C-002",
+    "withValidLocationContext": "C-005",
+    "authenticationDestinations": [],
+    "automaticTimerRedirect": false
+  },
+  "requiredViewports": [
+    "360x800",
+    "390x844",
+    "1170x2532"
+  ],
+  "reference": {
+    "source": "HIELYA_APPROVED_MASTER_BOARD_SOURCE_V1",
+    "panel": "01 SPLASH",
+    "usage": "APPROVED_VISUAL_REFERENCE_ONLY"
+  },
+  "documentedGaps": [
+    {
+      "id": "C001-GAP-01",
+      "classification": "NOT_DOCUMENTED",
+      "topic": "Fixed duration"
+    },
+    {
+      "id": "C001-GAP-02",
+      "classification": "NOT_DOCUMENTED",
+      "topic": "Configuration/maintenance endpoint"
+    },
+    {
+      "id": "C001-GAP-03",
+      "classification": "CONFLICT",
+      "topic": "Language choice exists in PRD journey but no dedicated contracted screen"
+    },
+    {
+      "id": "C001-GAP-04",
+      "classification": "REQUIRES_VALIDATION",
+      "topic": "Offline bootstrap cache policy"
+    },
+    {
+      "id": "C001-GAP-05",
+      "classification": "NOT_DOCUMENTED",
+      "topic": "Timeout threshold"
+    }
+  ],
+  "protectedScope": {
+    "c005Modified": false,
+    "blockedScreensImplemented": []
+  },
+  "gate": {
+    "workflow": "C-001 Splash Gate 1B",
+    "workflowRunId": 30576553445,
+    "artifactDigest": "sha256:f1088e22c5823fe166ffe4be301f09f1256d3176b4c6c89dcda9eb1d9adbb0aa",
+    "branchIntegrated": true,
+    "qaPassed": true,
+    "approvedFrozen": true,
+    "workIntegrated": false
+  },
+  "certifiedCommit": "c838cfc26176b2e748bdbd037147a7f362d5a3c2",
+  "architectureCandidate": {
+    "designTokens": "1.2.0",
+    "componentLibrary": "1.2.0",
+    "status": "PENDING_GATE",
+    "branch": "hielya/pre-gate2-architecture-consolidation"
+  }
+}

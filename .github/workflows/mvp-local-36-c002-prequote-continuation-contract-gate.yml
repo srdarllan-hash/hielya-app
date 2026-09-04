@@ -1,0 +1,399 @@
+name: MVP Local 36 C-002 Prequote Continuation Contract Gate
+
+on:
+  push:
+    branches:
+      - hielya/mvp-local-36-c002-prequote-continuation-contract
+
+permissions:
+  actions: read
+  contents: read
+  issues: read
+  pull-requests: read
+
+concurrency:
+  group: mvp-local-36-c002-prequote-continuation-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FROZEN_PARENT_SHA: 60d556e5ae088f2bf98101dcf37cbf854bcc2eff
+  FROZEN_PARENT_BRANCH: hielya/mvp-local-36-c002-delivery-quote-api-alignment
+
+jobs:
+  contract-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact child commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Verify source, parent drift, PR 9 and Issue 10
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const cp = require('node:child_process');
+            const run = (args) => cp.execFileSync('git', args, { encoding: 'utf8' }).trim();
+            if (run(['rev-parse', 'HEAD']) !== context.sha) core.setFailed('Checkout differs from github.sha');
+            const { data: parent } = await github.rest.pulls.get({ ...context.repo, pull_number: 9 });
+            if (parent.state !== 'open' || parent.draft !== true || parent.merged_at !== null
+              || parent.head.ref !== process.env.FROZEN_PARENT_BRANCH
+              || parent.head.sha !== process.env.FROZEN_PARENT_SHA) {
+              core.setFailed('PR #9 is not the exact open/draft certified parent.');
+            }
+            const { data: issue } = await github.rest.issues.get({ ...context.repo, issue_number: 10 });
+            const title = '[MVP Local 36] Allow C-002 continuation after a validated non-binding delivery prequote';
+            if (issue.pull_request || issue.state !== 'open' || issue.title !== title) {
+              core.setFailed('Issue #10 differs from the authorized change-set.');
+            }
+            for (const value of [process.env.FROZEN_PARENT_SHA, 'quoteId continua null', 'LOCATION_CONFIRMED']) {
+              if (!(issue.body || '').includes(value)) core.setFailed(`Issue #10 is missing ${value}`);
+            }
+      - name: Verify frozen parent branch
+        run: |
+          git fetch --no-tags --force origin "refs/heads/$FROZEN_PARENT_BRANCH:refs/remotes/origin/$FROZEN_PARENT_BRANCH"
+          test "$(git rev-parse "refs/remotes/origin/$FROZEN_PARENT_BRANCH")" = "$FROZEN_PARENT_SHA"
+          git merge-base --is-ancestor "$FROZEN_PARENT_SHA" HEAD
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate continuation scope and frozen contracts
+        run: |
+          node scripts/validate-mvp-local-36-c002-prequote-continuation-contract.mjs
+          GITHUB_ACTIONS=false node scripts/validate-mvp-local-36-openapi.mjs
+          GITHUB_ACTIONS=false node scripts/validate-mvp-local-36-public-service-api.mjs
+          GITHUB_ACTIONS=false node scripts/validate-mvp-local-36-c002-delivery-quote-api-alignment.mjs
+      - name: Unit and HTTP contract tests
+        run: GITHUB_ACTIONS=false pnpm test
+      - name: Lint and type-check
+        run: |
+          pnpm lint
+          pnpm type-check
+      - name: Next and Storybook builds
+        run: |
+          pnpm build
+          pnpm build-storybook
+      - name: Upload contract validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c002-prequote-continuation-validation-${{ github.sha }}
+          if-no-files-found: error
+          include-hidden-files: true
+          path: |
+            qa/screen-gates/C-002-PREQUOTE-CONTINUATION-CONTRACT-V1/
+            manifests/C-002-PREQUOTE-CONTINUATION-CONTRACT-V1.json
+
+  c001-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      BASE_SHA: fe62966daca8bda94610aa1a63702a1e543b0ce6
+      SCREEN_ID: C-001
+      SCREEN_ROUTE: /splash
+      MANIFEST_PATH: manifests/C-001.json
+      SCREEN_STATES: '["initial","loading","transition","offline","error","timeout","maintenance","ready-location","ready-home","reduced-motion"]'
+      PROTECTED_PATHS: '["apps/ui-lab/app/splash/","packages/ui/src/screens/splash/","tests/unit/splash","tests/accessibility/splash","tests/functional/splash","tests/visual/splash","manifests/C-001"]'
+      TEST_SUITES: '["unit","axe","functional","console","visual","responsive","frozen-baseline"]'
+      REQUIRED_VIEWPORTS: '["360x800","390x844","1170x2532"]'
+      BASELINE_MODE: GATE_VALIDATION
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: '${{ github.sha }}', fetch-depth: 0 }
+      - name: Verify child source and frozen C-001 evidence
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+          git merge-base --is-ancestor "$BASE_SHA" HEAD
+          git diff --exit-code "$BASE_SHA" -- apps/ui-lab/app/splash/ packages/ui/src/screens/splash/ tests/unit/splash tests/accessibility/splash tests/functional/splash tests/visual/splash manifests/C-001.json manifests/C-001-assets.json manifests/C-001-visual-baseline.json
+          test "$(git rev-parse HEAD:manifests/C-001.json)" = "cf13550b0561514bef0fd09844928de5343a1bb4"
+          test "$(git rev-parse HEAD:manifests/C-001-assets.json)" = "cd17c6a0777ddac97f7d1f5e811547bbba134aa0"
+          test "$(git rev-parse HEAD:manifests/C-001-visual-baseline.json)" = "951055d7d39e1cb7abf05ac4b3a8e214421aa1a1"
+          test "$(git rev-parse HEAD:tests/visual/splash.visual.spec.ts)" = "822e33e97a4f426fd80a10b6e8a5e1134c0bb8f6"
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.15.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: C-001 static, unit and build regression
+        run: |
+          node scripts/validate-screen-contract.mjs
+          pnpm tokens:check
+          pnpm lint
+          pnpm type-check
+          GITHUB_ACTIONS=false pnpm test
+          pnpm build
+          pnpm build-storybook
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: C-001 frozen browser regression
+        run: |
+          pnpm test:c001:a11y
+          pnpm test:c001:functional
+          pnpm test:c001:visual
+
+  c002-frozen-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      BASELINE_MODE: GATE_VALIDATION
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: '${{ github.sha }}', fetch-depth: 0 }
+      - name: Verify frozen C-002 evidence
+        run: |
+          git diff --exit-code "$FROZEN_PARENT_SHA" -- manifests/C-002.json manifests/C-002-assets.json manifests/C-002-visual-baseline.json tests/accessibility/location.a11y.spec.ts tests/functional/location.functional.spec.ts tests/visual/location.visual.spec.ts tests/visual/location.visual.spec.ts-snapshots
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.15.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: C-002 unit and coverage regression
+        run: |
+          GITHUB_ACTIONS=false pnpm exec vitest run tests/unit/location.machine.test.ts tests/unit/location.rules.test.ts tests/unit/location.adapters.test.ts tests/unit/location.components.test.tsx
+          GITHUB_ACTIONS=false pnpm test:coverage
+          pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: C-002 frozen browser regression
+        run: |
+          pnpm test:c002:a11y
+          pnpm test:c002:functional
+          pnpm test:c002:visual
+          git diff --exit-code -- tests/visual/location.visual.spec.ts-snapshots
+
+  c002-alignment-frozen-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      BASELINE_MODE: GATE_VALIDATION
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: '60d556e5ae088f2bf98101dcf37cbf854bcc2eff', fetch-depth: 0 }
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.15.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Frozen alignment accessibility, functional and visual
+        run: |
+          PLAYWRIGHT_EVIDENCE_PHASE=a11y pnpm exec playwright test tests/accessibility/c002-delivery-quote-api-alignment.a11y.spec.ts --config playwright.c002-delivery-quote-api-alignment.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=functional pnpm exec playwright test tests/functional/c002-delivery-quote-api-alignment.functional.spec.ts --config playwright.c002-delivery-quote-api-alignment.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=visual pnpm exec playwright test tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts --config playwright.c002-delivery-quote-api-alignment.config.ts
+
+  c005-frozen-regression:
+    uses: ./.github/workflows/reusable-screen-gate.yml
+    with:
+      sourceSha: fe62966daca8bda94610aa1a63702a1e543b0ce6
+      screenId: C-005
+      route: /
+      states: '["ready","loading","closed","high-demand","error","empty-cart","alcohol-cutoff","out-of-area"]'
+      baseSha: c2857afe538b2cf5ba44635edd56dbd422c0e2f0
+      protectedPaths: '["packages/ui/src/screens/home/","tests/unit/home","tests/accessibility/home","tests/functional/home","tests/visual/home","manifests/C-005"]'
+      testSuites: '["unit","axe","functional","console","visual","responsive"]'
+      requiredViewports: '["360x800","390x844","1170x2532"]'
+      manifestPath: manifests/C-005.json
+      baselineMode: GATE_VALIDATION
+
+  integration-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      BASELINE_MODE: GATE_VALIDATION
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: '${{ github.sha }}', fetch-depth: 0 }
+      - name: Verify frozen Home and Product Detail evidence
+        run: |
+          git diff --exit-code "$FROZEN_PARENT_SHA" -- manifests/C-005-HOME-CATALOG-API-INTEGRATION-V1.json manifests/C-005-HOME-CATALOG-API-INTEGRATION-V1-BASELINE-REVIEW.json tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots manifests/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1.json manifests/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-BASELINE-REVIEW.json tests/visual/product-detail-api-integration.visual.spec.ts-snapshots
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.15.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Home Catalog integration regression
+        run: |
+          PLAYWRIGHT_EVIDENCE_PHASE=a11y pnpm exec playwright test tests/accessibility/home-catalog-api-integration.a11y.spec.ts --config playwright.home-catalog-api-integration.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=functional pnpm exec playwright test tests/functional/home-catalog-api-integration.functional.spec.ts --config playwright.home-catalog-api-integration.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=visual pnpm exec playwright test tests/visual/home-catalog-api-integration.visual.spec.ts --config playwright.home-catalog-api-integration.config.ts
+      - name: Product Detail integration regression
+        run: |
+          PLAYWRIGHT_EVIDENCE_PHASE=a11y pnpm exec playwright test tests/accessibility/product-detail-api-integration.a11y.spec.ts --config playwright.product-detail-api-integration.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=functional pnpm exec playwright test tests/functional/product-detail-api-integration.functional.spec.ts --config playwright.product-detail-api-integration.config.ts
+          PLAYWRIGHT_EVIDENCE_PHASE=visual pnpm exec playwright test tests/visual/product-detail-api-integration.visual.spec.ts --config playwright.product-detail-api-integration.config.ts
+
+  c002-prequote-continuation-gate:
+    needs: [contract-validation, c001-regression, c002-frozen-regression, c002-alignment-frozen-regression, c005-frozen-regression, integration-regressions]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SNAPSHOT_PATH: tests/visual/c002-prequote-continuation-contract.visual.spec.ts-snapshots
+      REVIEW_PATH: manifests/C-002-PREQUOTE-CONTINUATION-CONTRACT-V1-BASELINE-REVIEW.json
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: '${{ github.sha }}', fetch-depth: 0 }
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.15.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Validate continuation candidate scope
+        id: scope
+        run: node scripts/validate-mvp-local-36-c002-prequote-continuation-contract.mjs
+      - name: Select isolated baseline mode
+        id: baseline
+        run: |
+          count="$(git ls-files "$SNAPSHOT_PATH/*.png" | wc -l | tr -d ' ')"
+          if [ "$count" = 0 ]; then
+            test ! -e "$REVIEW_PATH"
+            test "$(git rev-parse HEAD^)" = "$FROZEN_PARENT_SHA"
+            test "$(git rev-list --count "$FROZEN_PARENT_SHA"..HEAD)" = 1
+            test "$(git rev-list --parents -n 1 HEAD | wc -w | tr -d ' ')" = 2
+            echo mode=BASELINE_AUTHORING >> "$GITHUB_OUTPUT"
+          elif [ "$count" = 3 ]; then
+            test -f "$REVIEW_PATH"
+            candidate="$(node -p "require('./$REVIEW_PATH').candidateCommitSha")"
+            test "$candidate" = "$(git rev-parse HEAD^)"
+            test "$(git rev-parse "$candidate^")" = "$FROZEN_PARENT_SHA"
+            test "$(git rev-list --count "$FROZEN_PARENT_SHA"..HEAD)" = 2
+            test "$(git rev-list --parents -n 1 HEAD | wc -w | tr -d ' ')" = 2
+            test "$(git rev-list --parents -n 1 "$candidate" | wc -w | tr -d ' ')" = 2
+            echo mode=GATE_VALIDATION >> "$GITHUB_OUTPUT"
+          else
+            echo "Expected zero or three tracked snapshots; found $count" >&2
+            exit 1
+          fi
+      - name: Verify reviewed candidate provenance
+        id: provenance
+        if: steps.baseline.outputs.mode == 'GATE_VALIDATION'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const review = JSON.parse(fs.readFileSync(process.env.REVIEW_PATH, 'utf8'));
+            const { data: run } = await github.rest.actions.getWorkflowRun({ ...context.repo, run_id: Number(review.candidateWorkflowRunId) });
+            if (run.head_sha !== review.candidateCommitSha
+              || run.head_branch !== 'hielya/mvp-local-36-c002-prequote-continuation-contract'
+              || run.name !== 'MVP Local 36 C-002 Prequote Continuation Contract Gate'
+              || run.event !== 'push' || run.status !== 'completed' || run.conclusion !== 'failure') {
+              core.setFailed('Candidate run provenance differs.'); return;
+            }
+            const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, { ...context.repo, run_id: run.id, per_page: 100 });
+            for (const name of ['contract-validation','c001-regression','c002-frozen-regression','c002-alignment-frozen-regression','c005-frozen-regression','integration-regressions']) {
+              const found = jobs.filter((job) => job.name === name || job.name.startsWith(`${name} / `));
+              if (found.length !== 1 || found[0].conclusion !== 'success') { core.setFailed(`Candidate job differs: ${name}`); return; }
+            }
+            const gate = jobs.filter((job) => job.name === 'c002-prequote-continuation-gate');
+            if (gate.length !== 1 || gate[0].conclusion !== 'failure') { core.setFailed('Candidate Gate failure missing.'); return; }
+            const expected = new Map([
+              ['Validate continuation candidate scope','success'], ['Select isolated baseline mode','success'],
+              ['Continuation accessibility','success'], ['Continuation functional and console validation','success'],
+              ['Author isolated continuation baseline candidate','success'], ['Verify frozen evidence','success'],
+              ['Generate status-aware continuation evidence','success'], ['Upload versioned continuation evidence','success'],
+              ['Require continuation baseline materialization and review','failure'],
+            ]);
+            for (const [name, conclusion] of expected) {
+              const found = gate[0].steps.filter((step) => step.name === name);
+              if (found.length !== 1 || found[0].conclusion !== conclusion) { core.setFailed(`Candidate step differs: ${name}`); return; }
+            }
+            const { data } = await github.rest.actions.listWorkflowRunArtifacts({ ...context.repo, run_id: run.id, per_page: 100 });
+            const found = data.artifacts.filter((artifact) => artifact.name === review.candidateArtifactName);
+            if (found.length !== 1 || found[0].expired || found[0].digest !== review.candidateArtifactDigest) {
+              core.setFailed('Candidate artifact differs.'); return;
+            }
+            core.setOutput('artifact-id', String(found[0].id));
+      - name: Download and validate reviewed candidate artifact
+        if: steps.baseline.outputs.mode == 'GATE_VALIDATION'
+        env:
+          ARTIFACT_ID: ${{ steps.provenance.outputs.artifact-id }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          zip="$RUNNER_TEMP/prequote-${GITHUB_RUN_ID}.zip"
+          directory="$(mktemp -d "$RUNNER_TEMP/prequote.XXXXXX")"
+          curl --fail --silent --show-error --location --retry 3 --header "Authorization: Bearer $GH_TOKEN" --header "Accept: application/vnd.github+json" "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" --output "$zip"
+          unzip -q "$zip" -d "$directory"
+          node scripts/validate-c002-prequote-continuation-contract-baseline-artifact.mjs "$directory"
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Continuation accessibility
+        id: a11y
+        env: { PLAYWRIGHT_EVIDENCE_PHASE: a11y }
+        run: pnpm exec playwright test tests/accessibility/c002-prequote-continuation-contract.a11y.spec.ts --config playwright.c002-prequote-continuation-contract.config.ts
+      - name: Continuation functional and console validation
+        id: functional
+        env: { PLAYWRIGHT_EVIDENCE_PHASE: functional }
+        run: pnpm exec playwright test tests/functional/c002-prequote-continuation-contract.functional.spec.ts --config playwright.c002-prequote-continuation-contract.config.ts
+      - name: Author isolated continuation baseline candidate
+        id: authoring
+        if: steps.baseline.outputs.mode == 'BASELINE_AUTHORING'
+        env: { BASELINE_MODE: BASELINE_AUTHORING, PLAYWRIGHT_EVIDENCE_PHASE: visual }
+        run: |
+          pnpm exec playwright test tests/visual/c002-prequote-continuation-contract.visual.spec.ts --config playwright.c002-prequote-continuation-contract.config.ts
+          test "$(find "$SNAPSHOT_PATH" -type f -name '*.png' | wc -l | tr -d ' ')" = 3
+      - name: Strict reviewed continuation visual regression
+        id: strict
+        if: steps.baseline.outputs.mode == 'GATE_VALIDATION'
+        env: { BASELINE_MODE: GATE_VALIDATION, PLAYWRIGHT_EVIDENCE_PHASE: visual }
+        run: pnpm exec playwright test tests/visual/c002-prequote-continuation-contract.visual.spec.ts --config playwright.c002-prequote-continuation-contract.config.ts
+      - name: Verify frozen evidence
+        id: frozen
+        if: always()
+        run: |
+          git diff --exit-code "$FROZEN_PARENT_SHA" -- contracts/openapi contracts/catalog packages/application packages/persistence .dev-migrations manifests/C-001.json manifests/C-002.json manifests/C-005.json manifests/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1.json manifests/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-BASELINE-REVIEW.json tests/visual/location.visual.spec.ts-snapshots tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots tests/visual/home-catalog-api-integration.visual.spec.ts-snapshots tests/visual/product-detail-api-integration.visual.spec.ts-snapshots
+      - name: Generate status-aware continuation evidence
+        if: always()
+        env:
+          EVIDENCE_STATUS: ${{ steps.baseline.outputs.mode == 'BASELINE_AUTHORING' && steps.scope.outcome == 'success' && steps.a11y.outcome == 'success' && steps.functional.outcome == 'success' && steps.authoring.outcome == 'success' && steps.frozen.outcome == 'success' && 'BASELINE_CANDIDATE' || steps.baseline.outputs.mode == 'GATE_VALIDATION' && steps.scope.outcome == 'success' && steps.provenance.outcome == 'success' && steps.a11y.outcome == 'success' && steps.functional.outcome == 'success' && steps.strict.outcome == 'success' && steps.frozen.outcome == 'success' && 'QA_PASSED_CANDIDATE' || 'QA_FAILED_OR_INCOMPLETE' }}
+        run: node scripts/generate-c002-prequote-continuation-contract-evidence.mjs
+      - name: Upload versioned continuation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c002-prequote-continuation-contract-v1-${{ github.sha }}
+          if-no-files-found: error
+          include-hidden-files: true
+          path: |
+            playwright-report/C-002-PREQUOTE-CONTINUATION-CONTRACT-V1/
+            test-results/C-002-PREQUOTE-CONTINUATION-CONTRACT-V1/
+            screenshots/C-002-PREQUOTE-CONTINUATION-CONTRACT-V1/
+            qa/screen-gates/C-002-PREQUOTE-CONTINUATION-CONTRACT-V1/
+            manifests/C-002-PREQUOTE-CONTINUATION-CONTRACT-V1.json
+            manifests/C-002-PREQUOTE-CONTINUATION-CONTRACT-V1-BASELINE-REVIEW.json
+            tests/visual/c002-prequote-continuation-contract.visual.spec.ts-snapshots/
+      - name: Require continuation baseline materialization and review
+        if: steps.baseline.outputs.mode == 'BASELINE_AUTHORING'
+        run: |
+          echo BASELINE_AUTHORING_PENDING=true
+          echo 'Inspect all three PNGs, then materialize only the reviewed PNGs and hash-bound review manifest.' >&2
+          exit 1
+
+  gate-summary:
+    needs: [contract-validation, c001-regression, c002-frozen-regression, c002-alignment-frozen-regression, c005-frozen-regression, integration-regressions, c002-prequote-continuation-gate]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record C-002 Prequote Continuation Contract Gate outcome
+        run: |
+          echo C002_PREQUOTE_CONTINUATION_CONTRACT_VALIDATED=true
+          echo ISSUE_NUMBER=10
+          echo PARENT_SHA=60d556e5ae088f2bf98101dcf37cbf854bcc2eff
+          echo PREQUOTE_CLASSIFICATION=PRELIMINARY_NON_BINDING_DELIVERY_PREQUOTE
+          echo QUOTE_ID=null
+          echo DELIVERY_QUOTE_ID=null
+          echo CONTINUE_ENABLED=true
+          echo COMPLETION_EVENT=LOCATION_CONFIRMED
+          echo DIRECT_NAVIGATION=false
+          echo CHECKOUT_REQUOTE_REQUIRED=true
+          echo OPENAPI_MODIFIED=false
+          echo PERSISTENCE_MODIFIED=false
+          echo NEW_DEPENDENCIES=false
+          echo PRODUCTION_AUTHORIZED=false
+          echo MAIN_CHANGED=false
+          echo MERGE_PERFORMED=false
+          echo NEXT_LAYER_STARTED=false

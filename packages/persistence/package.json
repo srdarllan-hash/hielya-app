@@ -1,0 +1,10 @@
+{
+  "name": "@hielya/persistence",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@hielya/application": "workspace:*"
+  }
+}

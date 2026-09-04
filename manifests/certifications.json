@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "certifications": [
+    {
+      "screenId": "C-005",
+      "status": "APPROVED_FROZEN",
+      "commitSha": "be61e1168b93d973101496cc66cb54d006aba9cc",
+      "branch": "hielya/codefirst-batch01",
+      "workflowName": "C-005 Home Gate 1A",
+      "workflowRunId": 30570688090,
+      "artifactName": "c005-baseline-candidate-be61e1168b93d973101496cc66cb54d006aba9cc",
+      "artifactDigest": "sha256:2ab8f6bbfb60a76b41843a4e4d956421f97d751056dc22ff6e6297fadc2d4d11",
+      "tokenVersion": "1.1.0",
+      "componentLibraryVersion": "1.1.1",
+      "certifiedAt": "2026-07-30T18:33:35Z"
+    },
+    {
+      "screenId": "C-001",
+      "status": "APPROVED_FROZEN",
+      "commitSha": "c838cfc26176b2e748bdbd037147a7f362d5a3c2",
+      "branch": "hielya/c001-splash-gate1b",
+      "workflowName": "C-001 Splash Gate 1B",
+      "workflowRunId": 30576553445,
+      "artifactName": "c001-gate-c838cfc26176b2e748bdbd037147a7f362d5a3c2",
+      "artifactDigest": "sha256:f1088e22c5823fe166ffe4be301f09f1256d3176b4c6c89dcda9eb1d9adbb0aa",
+      "tokenVersion": "1.1.0",
+      "componentLibraryVersion": "1.1.1",
+      "certifiedAt": "2026-07-30T19:53:22Z"
+    }
+  ],
+  "architectureConsolidation": {
+    "status": "REQUIRES_EXACT_SHA_GATE",
+    "branch": "hielya/pre-gate2-architecture-consolidation",
+    "sourceBase": "c838cfc26176b2e748bdbd037147a7f362d5a3c2",
+    "gateManifest": "qa/pre-gate2-final/PRE_GATE2_GATE_MANIFEST.json"
+  },
+  "note": "Frozen source commits remain immutable. Consolidation regression creates a new architectural certification without rewriting original records."
+}

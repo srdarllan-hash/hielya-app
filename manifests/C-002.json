@@ -1,0 +1,114 @@
+{
+  "schemaVersion": "1.0.0",
+  "screenId": "C-002",
+  "name": "Localización",
+  "actor": "Customer",
+  "status": "APPROVED_FROZEN",
+  "authorization": "AUTHORIZED_FOR_IMPLEMENTATION",
+  "baseSha": "c2857afe538b2cf5ba44635edd56dbd422c0e2f0",
+  "branch": "hielya/c002-location-gate2",
+  "designTokens": "1.2.0",
+  "componentLibrary": "1.3.0",
+  "locationDomain": "1.0.0",
+  "route": "/location",
+  "localeDefault": "es",
+  "supportedLocales": ["es", "en", "pt"],
+  "states": [
+    "idle",
+    "requesting_permission",
+    "locating",
+    "reverse_geocoding",
+    "manual_entry",
+    "validating_manual_address",
+    "resolved",
+    "checking_service_area",
+    "permission_denied",
+    "location_unavailable",
+    "timeout",
+    "offline",
+    "network_error",
+    "invalid_address",
+    "out_of_area",
+    "retrying",
+    "success",
+    "reduced_motion",
+    "long_address",
+    "hotel",
+    "condominium"
+  ],
+  "requiredViewports": ["360x800", "390x844", "1170x2532"],
+  "components": [
+    "AppShell",
+    "BrandLockup",
+    "Button",
+    "FeedbackState",
+    "ManualAddressForm",
+    "AddressSuggestionList",
+    "AddressConfirmationCard"
+  ],
+  "ports": [
+    "GeolocationAdapter",
+    "ReverseGeocodingService",
+    "AddressSearchService",
+    "AddressValidationService",
+    "ServiceAreaService",
+    "LocationRepository",
+    "LocationStore",
+    "LocationCompletionPort",
+    "RetryPolicy",
+    "LocationOperationPolicy",
+    "LocationRetentionPolicy",
+    "LocationAccuracyPolicy"
+  ],
+  "adapters": [
+    "BrowserGeolocationAdapter",
+    "FakeGeolocationAdapter",
+    "FakeReverseGeocodingService",
+    "FakeAddressSearchService",
+    "FakeAddressValidationService",
+    "FakeServiceAreaService",
+    "MemoryLocationRepository",
+    "SessionLocationRepository",
+    "EventLocationCompletionPort"
+  ],
+  "navigationContract": {
+    "outcome": "LOCATION_CONFIRMED",
+    "directDestinations": [],
+    "applicationLayerDecision": true,
+    "blockedScreensImplemented": []
+  },
+  "serviceAreaContract": {
+    "clientCalculatesCoverage": false,
+    "radiusMeters": 4000,
+    "distanceMethod": "CONFIGURABLE_BY_SERVICE_RESULT"
+  },
+  "privacy": {
+    "backgroundTracking": false,
+    "explicitUserActionRequired": true,
+    "unconfirmedCoordinatesPersisted": false,
+    "exactCoordinatesLogged": false,
+    "privacyCopyConfigurable": true
+  },
+  "providerPolicy": {
+    "realProviderRequired": false,
+    "externalSecrets": [],
+    "fakeAdapters": true,
+    "vendorTypesExposedToDomain": false
+  },
+  "baselineMode": "GATE_VALIDATION",
+  "visualBaseline": {
+    "manifest": "manifests/C-002-visual-baseline.json",
+    "approvedFromCandidateSha": "4136b8c959d2a8648054de406797c22f1e07ec61",
+    "baselineCount": 63,
+    "aggregateSha256": "d645c8d1239dc2cc77339871289eef20bea86ea7b30dab68bb11671500575694",
+    "authoringRunId": 30632260281,
+    "authoringArtifactId": 8793878089,
+    "authoringArtifactDigest": "sha256:6e3f84d58e5bf6a21acd9661beb4fe1f9481b6b76c96b93b256bd9a7ef210959"
+  },
+  "approval": {
+    "approvedFrozen": true,
+    "workIntegrated": true,
+    "readyForC003Planning": true,
+    "releaseCondition": "SATISFIED_BY_EXACT_PR_HEAD_GATE_VALIDATION"
+  }
+}

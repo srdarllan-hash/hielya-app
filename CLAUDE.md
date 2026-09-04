@@ -78,3 +78,47 @@ Production activation and deployment are not authorized. The simulated SMS gatew
 - No screen may be created as part of the checkpoint migration.
 
 The normal governance flow remains: Issue → branch → implementation/documentation → tests and validations → Pull Request → review → separately authorized merge.
+
+
+## Product context
+
+HIELYA is a local convenience-delivery MVP for cold beverages and related catalog items in Fuengirola, Spain. The product is designed for quick, mobile-first ordering: customers may browse the catalogue before authenticating, then authenticate only when entering the purchase flow. The intended operating area is up to 4 km from the store, using the `Europe/Madrid` timezone.
+
+The operational source of truth takes precedence over mockups. The current certified store schedule is 10:00–22:00. A visual, fixture or candidate asset must never override an approved operational value.
+
+## Canonical business rules
+
+- Public: catalogue, categories, product detail and preliminary delivery quote.
+- Authentication required: saved address, cart validation, stock reservation, checkout, payment, order creation and order tracking.
+- Minimum order: €25. A cart below this minimum must be blocked from purchase.
+- Delivery eligibility is bounded to the current 4 km operating area.
+- Delivery quote shown before checkout is preliminary. The server must recalculate it from the exact address and persisted configuration at checkout.
+- Stock reservations are atomic, last 10 minutes, must prevent negative stock and must be released on expiry or failed flow.
+- A technical record may exist in `AWAITING_PAYMENT`, but an order is not confirmed before simulated payment authorization. The canonical progression is `AWAITING_PAYMENT → PAYMENT_AUTHORIZED → AWAITING_PICKING → PREPARING → DELIVERY`.
+- No canonical SKU, price, coupon or commercial fact may be invented to satisfy a screen, fixture or test. In particular, `WELCOME10` is not a certified coupon contract, and substitute-product prices remain pending commercial traceability.
+
+## Product decisions already made
+
+- Catalogue navigation is public; `PHONE_LOGIN_EMPTY` preserves “Ahora no”. Login is required at purchase, not for browsing.
+- The current authentication contract is server-side opaque session only: revocable, 30-day absolute expiry, with only a token hash persisted. No JWT, refresh token, bearer middleware or client session storage is implemented.
+- Live delivery tracking and a live courier map are outside the MVP. The selected transit direction is timeline/status plus support, without promising a live map.
+- Visual asset selection does not equal formal approval. Selected assets remain pending the formal Design System approval path and any operational-data remediation.
+
+## Alcohol compliance and safety boundary
+
+Alcohol handling is a controlled future checkout/delivery concern, not an implemented production capability.
+
+- The alcohol cutoff must be enforced by the server using `Europe/Madrid` and must occur before the 22:00 store close. Do not infer or hard-code a new cutoff time from a mockup.
+- Age confirmation belongs in the authenticated purchase flow; physical age verification belongs at handoff/delivery. If age cannot be verified, the alcohol portion must not be handed over.
+- Any future payment, delivery, real SMS, alcohol-sale activation or production rollout requires a separately authorized Gate and applicable local legal/operational review. This repository does not certify legal compliance or authorize production sale of alcohol.
+- Displayed hours, fees, delivery radius, minimum order, prices and alcohol notices must be checked against the certified operational configuration before visual approval.
+
+## Current blockers and pending work
+
+- C-003 Login UI and C-004 OTP UI remain blocked. No screen may be created until the required visual and component approvals are complete.
+- `Input`, `PhoneInput` and `OtpInput` still need approved behavior, accessibility, validation, state and sizing specifications before implementation.
+- Design Tokens 1.2.0 and the current component layer are candidates, not `APPROVED_FROZEN`. The code-first Design System direction is not yet a formal approval.
+- Selected assets are `SELECTED / PENDING_DESIGN_SYSTEM`, not `APPROVED`; CART and OUT_OF_STOCK also require operational-data remediation.
+- Client session storage, session restoration, logout, expiry handling and bearer middleware are intentionally not implemented.
+- Real SMS, payment, checkout, ordering, admin, deployment and production activation remain blocked.
+- A future, separately authorized CI guardrail must fail when an existing file inside `docs/checkpoints/` is modified instead of a new checkpoint file being added. Do not implement that guardrail as part of this migration.

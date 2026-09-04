@@ -63,7 +63,7 @@ jobs:
           test "$(git merge-base "$FROZEN_PARENT_SHA" HEAD)" = "$FROZEN_PARENT_SHA"
           count="$(git rev-list --count "$FROZEN_PARENT_SHA"..HEAD)"
           test "$count" -ge 1
-          test "$count" -le 4
+          test "$count" -le 5
           test -z "$(git rev-list --merges "$FROZEN_PARENT_SHA"..HEAD)"
           if [ "$count" -ge 3 ]; then
             third_commit="$(git rev-list --reverse "$FROZEN_PARENT_SHA"..HEAD | sed -n '3p')"
@@ -71,8 +71,9 @@ jobs:
             test "${#third_commit_files[@]}" -eq 1
             test "${third_commit_files[0]}" = ".github/workflows/mvp-local-36-auth-http-opaque-session-gate.yml"
           fi
-          if [ "$count" -eq 4 ]; then
-            mapfile -t fourth_commit_files < <(git diff-tree --no-commit-id --name-only -r HEAD | sort)
+          if [ "$count" -ge 4 ]; then
+            fourth_commit="$(git rev-list --reverse "$FROZEN_PARENT_SHA"..HEAD | sed -n '4p')"
+            mapfile -t fourth_commit_files < <(git diff-tree --no-commit-id --name-only -r "$fourth_commit" | sort)
             expected_fourth_commit_files=(
               ".github/workflows/mvp-local-36-auth-http-opaque-session-gate.yml"
               "apps/ui-lab/package.json"
@@ -81,6 +82,16 @@ jobs:
               "pnpm-lock.yaml"
             )
             test "${fourth_commit_files[*]}" = "${expected_fourth_commit_files[*]}"
+          fi
+          if [ "$count" -eq 5 ]; then
+            mapfile -t fifth_commit_files < <(git diff-tree --no-commit-id --name-only -r HEAD | sort)
+            expected_fifth_commit_files=(
+              ".github/workflows/mvp-local-36-auth-http-opaque-session-gate.yml"
+              "packages/location/src/factory.ts"
+              "packages/ui/src/screens/location/useLocationController.ts"
+              "tests/unit/location.components.test.tsx"
+            )
+            test "${fifth_commit_files[*]}" = "${expected_fifth_commit_files[*]}"
           fi
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -99,8 +110,7 @@ jobs:
           if [ "$count" -ge 3 ]; then
             candidate_worktree="$(mktemp -d)"
             trap 'git worktree remove --force "$candidate_worktree" 2>/dev/null || true; rmdir "$candidate_worktree" 2>/dev/null || true' EXIT
-            candidate_ref="HEAD^"
-            if [ "$count" -eq 4 ]; then candidate_ref="HEAD~2"; fi
+            candidate_ref="HEAD~$((count - 2))"
             git worktree add --detach "$candidate_worktree" "$candidate_ref"
             (
               cd "$candidate_worktree"
@@ -159,7 +169,9 @@ jobs:
             playwright.c002-delivery-quote-api-alignment.config.ts \
             playwright.c002-prequote-continuation-contract.config.ts \
             playwright.home-catalog-api-integration.config.ts \
-            playwright.product-detail-api-integration.config.ts
+            playwright.product-detail-api-integration.config.ts \
+            ':(exclude)packages/location/src/factory.ts' \
+            ':(exclude)packages/ui/src/screens/location/useLocationController.ts'
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:

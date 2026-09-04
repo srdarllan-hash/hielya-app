@@ -82,6 +82,7 @@ export function useLocationController(options: UseLocationControllerOptions) {
   const dispatch = useCallback((event: LocationEvent) => runtime.controller.dispatch(event), [runtime]);
 
   useEffect(() => {
+    runtime.controller.resume();
     const online = () => { void dispatch({ type: 'NETWORK_ONLINE' }); };
     const offline = () => { void dispatch({ type: 'NETWORK_OFFLINE' }); };
     window.addEventListener('online', online);

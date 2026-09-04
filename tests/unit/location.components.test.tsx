@@ -87,4 +87,14 @@ describe('C-002 UI contracts', () => {
     expect(event.detail.type).toBe('LOCATION_CONFIRMED');
     window.removeEventListener('hielya:location-outcome', listener);
   });
+
+  it('keeps the controller active across Strict Mode effect remounts', () => {
+    render(
+      <React.StrictMode>
+        <LocationScreen initialState="idle" driver="fake" scenario="serviceable" />
+      </React.StrictMode>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Introducir dirección' }));
+    expect(screen.getByRole('combobox', { name: 'Dirección de entrega' })).toBeInTheDocument();
+  });
 });

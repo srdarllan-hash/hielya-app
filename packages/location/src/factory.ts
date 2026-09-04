@@ -72,6 +72,7 @@ export function createLocationDependencies(options: LocationFactoryOptions = {})
 export interface LocationController {
   store: LocationStore;
   dispatch(event: LocationEvent): Promise<void>;
+  resume(): void;
   cancel(): void;
 }
 
@@ -194,6 +195,7 @@ export function createLocationController(
   return {
     store,
     dispatch: run,
+    resume: () => { disposed = false; },
     cancel: () => {
       disposed = true;
       active.forEach((controller) => controller.abort());

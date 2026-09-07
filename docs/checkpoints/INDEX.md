@@ -36,6 +36,10 @@ Este índice rastreia os checkpoints oficiais migrados do Google Drive. Os docum
 | v5.0 | 2026-09-04 | `CHECKPOINT_REPOSITORY_MIGRATION_GATE` | `9ac639cf7c833d18094c6f9765b369ee2107efba` | [HIELYA_CHECKPOINT_2026-09-04_v5.0.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v5.0.md) | não aplicável — criado no repositório |
 | v5.3 | 2026-09-07 | `ISSUE_28_PREEXISTING_REGRESSION_REPAIR — CI SUCCESS / PR #30 DRAFT` | `57559e3ecfbd431e0218ba474b52774935ead36c` | [HIELYA_CHECKPOINT_2026-09-07_v5.3.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.3.md) | criado no repositório; precedentes v5.1/v5.2 em PRs pendentes |
 
+| v5.4 | 2026-09-07 | `ISSUE_28_RESOLUTION_MERGED_TO_MAIN — documento pendente no PR #32` | `4d32cebcc7f68832940f6825177d5348d63f245a` | [v5.4 no PR #32](https://github.com/srdarllan-hash/hielya-app/blob/27bb14c47e3513143c1b103655334da1bedab119/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.4.md) | criado no repositório |
+| v5.5 | 2026-09-07 | `DESIGN_TOKENS_1.2.0_PROMOTION — OPEN/DRAFT PR #32` | `27bb14c47e3513143c1b103655334da1bedab119` | [v5.5 no PR #32](https://github.com/srdarllan-hash/hielya-app/blob/27bb14c47e3513143c1b103655334da1bedab119/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.5.md) | criado no repositório |
+| v5.6 | 2026-09-07 | `ALCOHOL_COMPLIANCE_DOMAIN_REQUIREMENTS — SPECIFICATION_PROPOSED / PR #34 DRAFT` | `b390a66472519d319a0adc4b5722dbd2084312df` | [HIELYA_CHECKPOINT_2026-09-07_v5.6.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.6.md) | criado no repositório |
+
 ## Precedentes ainda em PRs documentais
 
 - [v5.1 — commit c155ff23](https://github.com/srdarllan-hash/hielya-app/blob/c155ff234255a02b9847b0c5f1c6e011ee01a9b7/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-04_v5.1.md): PR #24 OPEN / DRAFT.

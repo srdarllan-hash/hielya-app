@@ -1,400 +1,165 @@
-# FORM_COMPONENTS_SPECIFICATION — revisão 3
+# FORM_COMPONENTS_SPECIFICATION — revisão 4 consolidada
 
-Issue48 / PR49 · 2026-09-07.
-**DECISÕES RATIFICADAS / PR PARA REVISÃO DE MERGE.**
-Esta seção consolida a decisão vigente; o anexo preserva fontes/opções anteriores. Nenhuma opção não selecionada vira default. READY_FOR_IMPLEMENTATION permanece false apenas pelos detalhes residuais explicitados em §R. Nenhuma implementação autorizada.
+Issue48 / PR49 · 2026-09-07 · **DESIGN_DECISIONS_RATIFIED / BACKEND_DEPENDENCY_BLOCKED**.
+Esta revisão substitui as alternativas anteriores no documento corrente. Revisões anteriores permanecem na história Git; checkpoints não são alterados. Revisão documental para aprovação de merge, sem autorização de implementação. OtpInput/C004 bloqueados pela [Issue50](https://github.com/srdarllan-hash/hielya-app/issues/50).
 
-## A. Autoridade
-Tokens1.2.0 APPROVED_FROZEN confirmados na main37dc523013ac13088fffdd70d8d8c6be7292a612 após PR32; D0 resolvida. Valores não alterados. PNGs REFERENCE_ONLY. Medidas Input/PhoneInput: min48px,padding12x16,radius12,border1,focus2/offset2,Poppins14/20; tokens/fontes no anexo. SearchField existente radius16 não será alterado.
+## 1. Autoridade e fontes
 
-## B. Input — ratificação normativa
-| Item | Decisão |
-|---|---|
-| Hover A | Borda normal border.strong#454545, background.primary#000000,text.primary#FFFFFF; sem mudança no hover |
-| Válido A | Borda neutra; successText#4ADE80 somente na mensagem fornecida; não significa telefone autenticado |
-| Inválido | dangerFill#EF4444 na borda, dangerText#F87171 na mensagem; aria-invalid=true; foco não desaparece |
-| Disabled B | background.surface#121212,text.disabled#737373,border.subtle#2A2A2A; sem edição/tab, informação essencial continua legível |
-| Read-only A | Visual normal e helper “Solo lectura.”; focável, selecionável/copiável, não editável |
-| Loading B | Visual de leitura, suffix “Procesando…”; bloquear edição, preservar valor; sem spinner inventado |
-| Adornos A | Texto/decorativo apenas;text.secondary#B8B8B8,14/20,gapspace.8; sem botão limpar/revelar |
-| Erro B | role=alert para novo erro após submit; sem aria-live adicional nem novo anúncio por re-render |
+Main verificada:37dc523013ac13088fffdd70d8d8c6be7292a612. [Tokens1.2.0](../../packages/design-tokens/src/tokens.json) APPROVED_FROZEN apósPR32; não alterar valores. [CSSgerado](../../packages/design-tokens/src/tokens.css). PNGs REFERENCE_ONLY/VISUAL_INTENT, nunca medida.
 
-Label/id estáveis; error/helper/success com IDs e aria-describedby somente para elementos existentes. Placeholder não substitui label. Foco border.focus#F6B800,2px/offset2px. Base não normaliza telefone/OTP ou chama rede; controlled/uncontrolled seguem value externo ou defaultValue inicial, sem troca de modo.
-A escolha alert após submit não aprova automaticamente alert em blur/change; a descrição associada permanece disponível, e a política de anúncio adicional é pendênciaR-announce.
+Referências: [ManualAddressForm](../../packages/ui/src/screens/location/ManualAddressForm.tsx), [SearchField](../../packages/ui/src/components/SearchField.tsx), [actions.css](../../packages/ui/src/styles/actions.css), [discovery.css](../../packages/ui/src/styles/discovery.css), [foundations.css](../../packages/ui/src/styles/foundations.css), [authapplication](../../packages/application/src/auth/index.ts), [HTTP](../../apps/ui-lab/src/server/mvp-local-36/auth-http.ts), [OpenAPIV1.2](../../contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_2.yaml).
 
-## C. PhoneInput — ratificação normativa
-- Prefixo+34 fixo,9dígitos nacionaisASCII,string preservando zeros;type=tel,inputMode=tel,autoComplete=tel. Não acrescentar filtro6/7 ausente no contrato.
-- Máscara A: +34 612 345 678 (3-3-3), apenas apresentação.
-- Paste A: aceitar nacional/+34/0034 e remover espaços,pontos,hífens/parênteses; rejeitar operação inteira com letras,caracteres proibidos,país diferente ou excesso. Preservar valor anterior; não truncar nem “corrigir” país; não duplicar+34.
-- Callback único A: onChange({nationalDigits:string,e164:string|null}) por edição aceita. Vazio/1–8dígitos=>e164=null;9dígitos=>"+34"+nationalDigits. Nunca emitir máscara como valor canônico nem E.164 incompleto. Operação rejeitada não altera valor nem emite sucesso de edição.
-- Validação A: blur/submit; após primeiro erro, revalidar change para corrigir/remover mensagem. Required vazio avaliado apenas quando required=true. Validade de formato não é telefone verificado.
-- NormalizaçãoUI não solicitaOTP, não conhece challengeId, não cria sessão. Não importar auth Node/crypto para o browser.
+A geometria Input deriva de ManualAddressForm. SearchField existente usa radius16 e fundo elevated; não afirmar que tem medidas idênticas nem alterá-lo. CélulasOTP têm exceção expressamente aprovada de tamanho/padding/tipografia, abaixo. Nenhum novo token necessário.
 
-## D. OTP — ratificação normativa e recuperação
-Seis inputs reais, seis dígitosASCII e string lógica completa com zeros preservados; inputMode=numeric,autoComplete=one-time-code. Alvo/distribuição do autofill ainda deve ser decidido/testado; seis inputs não são prova de compatibilidade melhor em todos os navegadores.
+## 2. Valores visuais normativos
 
-Completar o sexto dígito notifica automaticamente o consumidor. Aplicação inicia verificação e bloqueia concorrência/loading antes de await ou renderposterior. Não fazer rede em render/effect; digitação/paste/autofill e eventos duplicados não repetem submit automático do mesmo código no mesmo desafio. Componente não administra challengeId/OpaqueSession.
-
-| Resultado da aplicação | Campos/foco | Nova tentativa |
+| Item | Input/PhoneInput | OtpInput |
 |---|---|---|
-| Em andamento | Preservar código;loading;bloquear edição/submissão concorrente | Nenhuma segunda chamada |
-| INVALID_OTP com tentativas disponíveis | Limpar6campos,focar primeiro habilitado,mensagem ratificada | Nova entrada imediata; servidor continua autoridade |
-| Falha de rede/resultado incerto | **Preservar código**,erro de conexão e botão de nova tentativa; sair de loading | **Retry explícito permitido**, inclusive mesmo código; clique volta imediatamente a loading e trava duplicidade |
-| Expired/locked/cooldown | Estado recebido da aplicação; não tratar como erro recuperável de digitação | Nenhum bypass,reset de tentativas ou resend automático |
-| Sucesso | Consumidor processa resposta/navegação | Componente não cria ou persiste sessão |
+| Tamanho | width100%,min-height touch.recommended48px | seis células dimension.48 × space.56 =48×56px |
+| Padding | space.12 vertical / space.16 horizontal | space.0 (zero); dígito centralizado |
+| Raio/borda | radius.medium12px;borderWidth.hairline1px solid | iguaisInput |
+| Texto | Poppins(font.family.ui),bodySmall14/20,regular400 | Poppins,font.size.title24 / lineHeight.title32,semibold600,centralizado |
+| Label | bodySmall14/20,medium500,text.primary | igualInput |
+| Focus | dimension.2(2px),offsetdimension.2(2px),border.focus#F6B800 | um anel por célula ativa, mesma largura/offset |
+| GapOTP | não aplicável | space.8=8px |
+| Helper/success | caption12/16,gapspace.12;helpertext.secondary#B8B8B8;successsemantic.successText#4ADE80 | mesmos tokens de feedback |
+| Erro | caption12/16,semantic.dangerText#F87171 | igualInput |
+| Reserva feedback | uma linha16px, expandindo para texto longo | igualInput |
+| Prefix/suffix | text.secondary#B8B8B8,14/20,gapspace.8;texto/decorativo | sem adorno embutido |
 
-A exceção de rede substitui “limpar após qualquer erro”. Aplicação classifica erro; componente não inventa que resposta desconhecida equivale a INVALID_OTP. Tentativas/expiração/bloqueio/cooldown/resend são soberanos no servidor; limpar/retry não torna desafio válido.
-Botão retry dispara intenção para o consumidor, não HTTP interno. Permissão de retry não comprova idempotência do endpoint após resposta perdida: integração futura deve verificar reconciliação/consumo do desafio sem presumir reemissão de sessão; não alterar backend neste gate.
-OTP nunca em logs,analytics,URL,storage,telemetria ou replay de sessão. Apenas memória efêmera necessária; não usar OTP como identificador público. Deduplicação no desafio corrente, sob controle da aplicação; nenhum bloqueio global vitalício de um código numérico.
+Box-sizing:border-box. Input/PhoneInput: outline no wrapper focus-within, removendo apenas o outline redundante do input; nunca remover a indicação de foco globalmente. OTP: outline da célula real, não dois anéis simultâneos.
 
-## E. Microcopy ratificada
-Textos apresentados na última resposta estão aprovados literalmente; opções A/B adicionais do anexo não são aprovadas simultaneamente por inferência.
+ResponsividadeOTP: seis células48 com cinco gaps8=328px. Viewport360 com margens16 fornece328px; outline pode ocupar parte da margem e não deve ser recortado por overflow. Para container com largura inferior a328px, duas linhas de três, ordem DOM1–6 preservada, mesmos tamanhos/gap8 em ambos os eixos. Não reduzir células nem introduzir scrollhorizontal. Testar foco/zoom/contêiner sem clipping. Não confundir essa conta com certificação visual já executada.
 
-| Contexto | Texto aprovado |
+## 3. Input — estados, elementos e API
+
+| Estado/dimensão | Regra |
 |---|---|
-| Telefone | Número de teléfono |
-| Ajuda telefone | Introduce los 9 dígitos de tu número de España. |
-| Telefone inválido | Introduce un número válido de 9 dígitos. |
-| OTP | Código de verificación |
-| Ajuda OTP | Introduce los 6 dígitos. Se verificará automáticamente. |
-| Código inválido | El código no es válido. Introduce los 6 dígitos de nuevo. |
-| Expirado | El código ha caducado. Solicita uno nuevo cuando esté disponible. |
-| Bloqueado | Has alcanzado el límite de intentos. Espera para solicitar otro código. |
+| empty | string vazia;placeholder aparece;label permanece |
+| filled | string não vazia;não implica validade |
+| normal/hover | background.primary#000000,text.primary#FFFFFF,border.strong#454545;hoversem mudança |
+| focus | anel2px/offset2px;preservar borda de invalid |
+| valid | borda neutra;successText#4ADE80 em mensagem fornecida;sem ícone automático |
+| invalid | dangerFill#EF4444 na borda,dangerText#F87171 no texto;aria-invalid=true |
+| disabled | background.surface#121212,text.disabled#737373,border.subtle#2A2A2A;sem edição/tab;informação essencial legível fora do texto disabled |
+| read-only | aparência normal,helper “Solo lectura.”;foco/seleção/cópia nativos,sem edição |
+| loading | aparência de leitura,suffix “Procesando…”;preserva valor,bloqueia edição e submissão concorrente;sem spinner |
+| autofill | aplicar tokens normais quando suportado,preservar indicadores do navegador,forced-colors e contraste;processar valor como entrada |
+
+Precedência:disabled > loading > readOnly;invalid vence valid. Erro existente permanece visível sem reanúncio;focus continua perceptível. empty/filled e focus são dimensões combináveis, não enum exclusivo. Validação semântica não é inferida de comprimento no Inputbase.
+
+API ratificada: value?:string,defaultValue?:string,onChange(string),onBlur/onFocus(eventReact),type=text|tel|email|password|search(defaulttext),inputMode,autoComplete,required,disabled,readOnly,loading,id,name,ref. Feedback e adornos textuais; sem ReactNode arbitrário/ação embutida. value definido é autoridade;defaultValue inicializa apenas o modo não controlado;não trocar modos. Ref aponta ao input para foco pelo consumidor. Label,placeholder,helper,error,success,prefix,suffix são dados de apresentação;sem mensagem genérica de sucesso inventada. No estado loading o suffix comunica “Procesando…” como aprovado.
+
+Validação:base apenas apresenta estado e semânticaHTML;especializados normalizam/verificam formato;aplicação valida negócio e servidor revalida. Sem OTPrequests,challenge,session,SQLite ou móduloNode/crypto no componente.
+
+## 4. Acessibilidade e mensagens
+
+Labelvisível com htmlFor/id estável (fornecido ou gerado);placeholder nunca substitui label. IDs exclusivos para helper/error/success;aria-describedby somente elementos presentes, preservando descrições adicionais do consumidor. aria-invalid para erro apresentado, não para simples digitação incompleta. Prefixo+34 integra descrição semântica;decoração não é anunciada. Não copiar rolecombobox de ManualAddressForm, pois não há lista de sugestões.
+
+Erro novo após submit usa role=alert, sem aria-live adicional e sem remontar/reanunciar mensagem a cada render. Erro no blur é visível/associado por descrição, sem anúncio dinâmico adicional. Revalidar após erro corrige texto sem anúncios por tecla. Não incluir OTP em anúncio. Countdown não anuncia cada segundo.
+
+OTP:grupo rotulado “Código de verificación”, seis inputs reais com nomes “Dígito {position} de 6”, erro comum sem seis anúncios duplicados. Rovingtabindex:apenas posiçãoativa tabindex0,outras-1;Tab/ShiftTab entram/saem do conjunto,sem armadilha;setas movem posiçãoativa. Usar semântica de grupo/inputs, não inventar role inadequado de menu/listbox. A motivação do proprietário por navegação composta não dispensa teste real com leitores de tela.
+
+## 5. PhoneInput
+
+type=tel,inputMode=tel,autoComplete=tel. +34fixo,sem seletor;nacional9dígitosASCII. Sem filtro6/7 de primeiro dígito,ausente no contrato. Máscara durante digitação3-3-3: +34 612 345 678,exemplo apenas,não valor inicial. Placeholder “___ ___ ___” separado do prefixo.
+
+value/defaultValue são strings de dígitos nacionais;onChange único entrega {nationalDigits:string,e164:string|null}. Vazio e parcial1–8=>e164null;9=>“+34”+nationalDigits. Não emitir string formatada como canônica. Estadosempty/typing/valid/invalid/disabled/readOnly/loading;valid é formato,não autenticação.
+
+Edição mantém máscara;cursor acompanha posição dos dígitos;inserção/substituição respeita seleção;Backspace ignora separador e apaga dígito anterior. Prefixo nunca editável. Aguardar compositionend antes de normalizar. Converter somente dígitos Unicode de largura completa０–９ paraASCII; não transliterar todos os numeraisUnicode.
+
+Paste aceita nacional/+34/0034 e separadoresespaço,ponto,hífen,parênteses conforme normalizador. Após conversão full-width, rejeitar operação inteira com letras/caracteresproibidos,paísdiferente ou excessonacional>9;preservar estado anterior. Não truncar,não trocar país,não extrair número de texto arbitrário. Autofill usa a mesma normalização sem duplicar+34.
+
+Primeira validação no blur/submit;após primeiroerro,revalidar change para corrigir/remover erro. Requiredvazio falha quando requiredtrue. Componente entrega telefone normalizado,sem solicitarOTP/administrarchallengeId. Aplicação normaliza/revalida novamente.
+
+## 6. OtpInput — valor, edição, paste e foco
+
+Seis inputs reais,um dígitoASCIIporposição,inputMode=numeric. Estadoeditável armazena seis posições vazias/um dígito;não deslocar números ao apagar. Consumidor pode receber posições e completeCode:string|null;somente seis posições preenchidas geram string de6,preservandozeros. API mantém controleexterno/defaultinicial e eventos;aplicaçãoé dona do ciclo de desafio,componente só de apresentação/edição.
+
+one-time-code na primeira célula;handler distribui valor completo conforme paste. Não usar maxlengthque silenciosamente corte autofill de6 para1 antes de distribuí-lo. Validar comportamento em iOS/Android;nenhuma garantia de melhor autofill decorre somente de ter seis inputs.
+
+| Ação | Comportamento |
+|---|---|
+| Digitar número | Preenche/substitui célula e avança;última permaneceúltima |
+| Backspace preenchida | Apaga e permanece |
+| Backspace vazia | Volta à anterior e apaga;primeira não sai do grupo |
+| Left/Right | Navega sem alterarconteúdo,respeitandoextremos |
+| Clique | Foca célula clicada e atualiza posiçãoativa |
+| Home/End | Primeira/última célula |
+| Delete | Apaga sem mover |
+| Tab/ShiftTab | Um ponto de entrada/saída;setas navegam internamente |
+
+Paste:converterfull-width０–９,remover espaços/hífens,rejeitar todo paste com letras ou outrocaractere nãoadmitido,preservandoestado. Validar o conteúdo inteiro antes de truncar:letra após sexto dígito também rejeita.
+- Menosde6:limpar grupo,preencher desdeprimeira,focar próxima vazia;nenhum submit enquanto incompleto.
+- Exatamente6:substituir grupo inteiro,focarúltima,notificarconclusãoautomática.
+- Maisde6:usar primeiros6,ignorar excedente,mesmo fluxo de código completo.
+PhoneInput continua rejeitando excesso;essa truncagem é exclusiva do OTP por decisãoexpressa. Não interpretar paste parcial como mistura com códigoanterior.
+
+Prop autoFocus booleana:composição futuraC003/PhoneInput=false;C004/OtpInput=true na primeiracélula. Não hardcodar por componente nem refocar a cada render/polling;somente entrada no fluxo/montagem habilitada. C003/C004 não implementadas neste gate.
+
+## 7. OtpInput — submissão, estados e fronteira arquitetural
+
+empty=0,partial=posições incompletas,complete=6dígitos (não autenticado). invalid/expired/locked/disabled/loading vêm do consumidor/aplicação. complete notifica automaticamente;consumidor trava envio antesdeawait/renderposterior. Nunca request emrender/effect nem duas submissões por paste/autofill/Enter/StrictMode. Aplicação controla deduplicação por desafio,código e tentativa em memória efêmera;componente não administra challengeId.
+
+| Resultado | Regra |
+|---|---|
+| Em processamento | Loading,preservarcódigo,bloquearedição/novoenvioconcorrente |
+| INVALID_OTP com tentativa disponível | Limpar6,focarprimeira,mensagemratificada;permitirentradaimediata |
+| Falha de rede/resultado incerto | Preservarcódigo,mostrarerroconexão e botão“Reintentar”;focarbotão;retryapenasexplícito,mesmocódigopermitido;travar novamenteantesdeawait |
+| Expired/locked/cooldown | Servidorsoberano;semreset/bypass/resendautomático;resumodoerro recebe foco, não inputdisabled |
+| Sucesso | Aplicação consome resposta/navegação;componente não cria nem guarda sessão |
+
+Erro de rede não é INVALID_OTP. Exceção de preservação na rede substitui regra antiga“limpartodoerro”. Erros de código/expiração/bloqueio mantêm limpeza decidida;foco depende de controlehabilitado. Estados recebidos após retry têm a mesma autoridade;não transformar OTP_UNAVAILABLE em sucesso.
+
+Expiração,tentativas,cooldown,resend e timers vêm da aplicação. Mostrar {seconds} recebido/derivado por ela;não iniciar prazo pela montagem. Retryé intenção de callback paraaplicação,não novoendpoint ou lógica de recuperação no componente. Sem OTP emlogs,analytics,URL,storage,telemetria,erros ou sessionreplay. Sem importcrypto/SQLite ou recuperação daOpaqueSession peloUI.
+
+## 8. Microcopy oficial ratificada
+
+| Contexto | Texto |
+|---|---|
+| Phone label | Número de teléfono |
+| Phone helper | Introduce los 9 dígitos de tu número de España. |
+| Phone invalid | Introduce un número válido de 9 dígitos. |
+| Phone required | Introduce tu número de teléfono. |
+| País | Solo se admiten números de España (+34). |
+| Paste rejeitado | No se ha pegado el contenido. Revisa el formato. |
+| ReadOnly | Solo lectura. |
+| Input loading | Procesando… |
+| OTP label | Código de verificación |
+| OTP helper | Introduce los 6 dígitos. Se verificará automáticamente. |
+| OTP loading | Verificando código… |
+| INVALID_OTP (HTTP OTP_INVALID) | El código no es válido. Introduce los 6 dígitos de nuevo. |
+| OTP_EXPIRED | El código ha caducado. Solicita uno nuevo cuando esté disponible. |
+| OTP_LOCKED | Has alcanzado el límite de intentos. Espera para solicitar otro código. |
 | Cooldown | Podrás solicitar otro código en {seconds} s. |
-| Read-only | Solo lectura. |
-| LoadingInput | Procesando… |
+| Rede | No hemos podido confirmar el resultado. Comprueba tu conexión. |
+| Retry | Reintentar |
+| Serviço indisponível | El servicio no está disponible temporalmente. |
+| OTP_UNAVAILABLE | Este código no está disponible. Solicita otro cuando puedas. |
+| Nome acessível | Dígito {position} de 6 |
 
-Mensagens adicionais de rede e label do botão retry precisam de escolha entre textos anteriores/novo texto, conforme§R. Não inventar texto oficial.
+Mensagens helper/error/success do Inputbase são fornecidas pelo consumidor,sem inventar prova de identidade. Ação de solicitar novoOTP pertence à aplicação e não está implementada por este componente. Não anunciar os dígitos como parte de região de erro/telemetria.
 
-## R. Detalhes residuais não ratificados
-| Grupo | Opções anteriores ainda abertas |
-|---|---|
-| Input | I6autofill,I7tipografiahelper/success,I8reserva feedback,I11alvofocus,I12API,I13types,I14precedência |
-| R-announce | Alert aprovado após submit; definir anúncio dinâmico de erro de blur sem ampliar silenciosamente a regra |
-| Phone | P3cursor/seleção,P6IMEUnicode,shape value/defaultValue do especializado |
-| OTP | O1–O6paste/Backspace/setas/Tab/draft com buracos,O9alvoautofill |
-| Geometria | O7largura/gap/padding/fallback estreito,O8peso/alinhamento |
-| Foco/recuperação | Alvo se primeirocampo está disabled em locked/expired; foco após falha de rede |
-| Copy adicional | Mensagens fora da tabela ratificada e texto exato do botão retry; variantes no anexo |
-| Integração | Comportamento real do endpoint após resposta perdida; não confundir intenção de retry com garantia de sucesso |
+## 9. Investigação real: retry após resposta perdida
 
-Nenhuma dessas pendências altera as escolhas já ratificadas. Documento pronto para revisão das decisões registradas, não autorização para agente completar detalhes por conta própria. C003/C004 continuam bloqueados. PR49 não deve ser mergeado sem autorização explícita.
+Base37dc523013ac13088fffdd70d8d8c6be7292a612. Evidência por leitura dirigida do código, não experimento de perda de rede nem teste novo executado.
 
----
+1. [Route](../../apps/ui-lab/app/api/v1/auth/otp/verify/route.ts) encaminha POST real/api/v1/auth/otp/verify (pathcontratual/auth/otp/verify) para runtimeAuthHandlers.
+2. [HTTPverifyOtp](../../apps/ui-lab/src/server/mvp-local-36/auth-http.ts) chama serviço;somente depois retorna200comsessionToken.
+3. [VerifyCustomerOtp](../../packages/application/src/auth/index.ts) gera token aleatório,passa sótokenHashàpersistência;tokenplaintextédevolvidoapenasnosucesso.
+4. [verifyChallengeSQLite](../../packages/persistence/src/customer-auth.ts) verifica status sobtransação. Sucessograva desafioVERIFIED +sessãoACTIVE. Repetição deVERIFIED retornaOTP_UNAVAILABLE antes de inserir outra sessão ou retornar a existente.
+5. HTTPmapeiaOTP_UNAVAILABLEpara400. Nãoháreplaydecache/respostaidempotente nohandler.
 
-## Anexo histórico — revisão2, fontes e alternativas
-Para itens decididos, esta revisão3 prevalece sobre “aguardando ratificação” e alternativas do anexo. Demais opções seguem abertas.
+**Conclusão:** apóscommitbem-sucedido e perda de resposta,retrymesmodesafio/códigoé rejeitado comHTTP400OTP_UNAVAILABLE. Não retorna mesma sessão,não cria segunda. A primeira permaneceACTIVE,sujeitaàexpiração/revogação normal;retry não a revoga. Sóhashpersistido,nãohá caminho implementado para reobterplaintexttoken. Gerar entropia emmemória antes da rejeição não equivale a criar sessão persistida.
 
-# FORM_COMPONENTS_SPECIFICATION
+[Teste existente](../../tests/unit/mvp-customer-authentication-concurrency.test.ts), “allows a challenge to be verified only once with one customer and one session”, afirma falha na segunda verificação e contagem1sessão. MapeamentoHTTP também consta de [testesHTTP](../../tests/unit/mvp-auth-http.test.ts). Nenhum teste de recuperação de resposta perdida executado nesta investigação.
 
-Issue #48 · 2026-09-07 · **DRAFT / OWNER_DECISIONS_REQUIRED / NOT_READY_FOR_IMPLEMENTATION**.
+É proteção de uso único sem replay de resultado, não idempotência de recuperação. [Issue50](https://github.com/srdarllan-hash/hielya-app/issues/50) bloqueia implementação doOtpInput até especificar/aprovar/resolver backend e contrato de recuperação. Não armazenar token em claro nem emitir sessão adicional para “resolver” noUI; nenhuma solução de backend está escolhida neste documento.
 
-Escopo: Input, PhoneInput e OtpInput; especificação apenas. Não autoriza C-003/C-004, telas, implementação, alteração de tokens, contratos ou sessão. Cada requisito abaixo é identificado como **fixado** (pedido explícito ou contrato existente), **derivado** (componente/token existente) ou **pendente**. Nenhuma opção pendente é default aprovado. Outro agente não deve preencher lacunas por conta própria.
+## 10. Aceite e sequência
 
-## 1. Fontes e divergências verificadas
+Escolhas visuais/comportamentais apresentadas ao proprietário estão ratificadas; não restam alternativasA/B dessas rodadas. DEFAULTS_UNAPPROVED=false. DOCUMENT_READY_FOR_MERGE_REVIEW=true. OTP_IMPLEMENTATION_READY=false porIssue50;C003/C004 continuam nãoautorizadas. Este gate não inicia código.
 
-**Atualização da revisão2:** PR32 mergeado em `37dc523013ac13088fffdd70d8d8c6be7292a612`, após CI34138052743/34138052794 SUCCESS987testes. Tokens1.2.0 agora APPROVED_FROZEN na main, valores inalterados. D0 está RESOLVIDA; os parágrafos de diagnóstico original abaixo preservam o motivo da pendência anterior e não descrevem o estado atual. Decisões OTP aprovadas na seção8 prevalecem sobre opções da revisão1. Opções ainda abertas estão nas seções9–10.
+Próximo gate de backend deve avaliar segurança/contrato/idempotência/reconciliação e testar sucesso+respostaperdida,retryconcorrente,timeout,expiração,revogação,deduplicação e minimização,antes de liberarOtpInput. Não ampliar autorização desta especificação para implementação daIssue50.
 
-Base inspecionada: main `5aca80958afcafd75e91665c4556593e8bdcefaf`.
-
-- [Tokens JSON](../../packages/design-tokens/src/tokens.json), [CSS](../../packages/design-tokens/src/tokens.css).
-- [ManualAddressForm](../../packages/ui/src/screens/location/ManualAddressForm.tsx), [actions.css](../../packages/ui/src/styles/actions.css).
-- [SearchField](../../packages/ui/src/components/SearchField.tsx), [discovery.css](../../packages/ui/src/styles/discovery.css), [foundations.css](../../packages/ui/src/styles/foundations.css).
-- [Domínio de autenticação](../../packages/application/src/auth/index.ts) e [OpenAPI V1.2](../../contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_2.yaml).
-- [Restrições](../CONSTRAINTS.md), [pendências](../KNOWN_DEBT.md), [política](../checkpoints/HIELYA_CHECKPOINT_POLICY.md).
-
-**D0 — status de freeze:** o pedido define tokens1.2.0 APPROVED_FROZEN como autoridade. A main contém versão1.2.0 com `meta.status=CONSOLIDATION_CANDIDATE` (também em tokens.ts). O [PR32](https://github.com/srdarllan-hash/hielya-app/pull/32), HEAD27bb14c47e3513143c1b103655334da1bedab119, permanece aberto/não mergeado. Não concluir que a promoção chegou à main. Este documento referencia os valores existentes, mas não promove status nem incorpora PR32. Resolver esta divergência antes de declarar o gate pronto para implementação.
-
-**D1 — medidas das referências não são idênticas:** ManualAddressForm usa min-height48, padding12/16, radius12, background primary. SearchField usa wrapper height48, radius16 (`radius.large`), background elevated, padding-left12 e slots24/44 com gap8; o input interno não tem borda. Não afirmar que ambos já usam radius12/padding12x16. Para o novo Input, a instrução explícita deste gate fixa a geometria do ManualAddressForm; não modificar SearchField.
-
-PNGs: REFERENCE_ONLY / VISUAL_INTENT; nenhum valor foi extraído de PNG. Não foi necessária reinspeção dos96assets. Último checkpoint na main:v7.2; v7.3 existe em PR47 separado e foi consultado como candidato com estado validado. Este gate parte da main, sem empilhar PR47; próximo checkpoint reservado:v7.4.
-
-## 2. Geometria e valores visuais
-
-| Propriedade | Token / valor | Aplicação e autoridade |
-|---|---|---|
-| Altura mínima | `touch.recommended` 48px | Input/PhoneInput, fixado; altura mínima, não teto para zoom |
-| Padding vertical/horizontal | `space.12` / `space.16` | 12px/16px; fixado |
-| Raio | `radius.medium` 12px | fixado |
-| Borda | `borderWidth.hairline` 1px solid | fixado |
-| Focus | `dimension.2` 2px; offset `dimension.2` 2px; `color.border.focus` #F6B800 | derivado de foundations; não suprimir indicador |
-| Texto do campo | `font.size.bodySmall`14 / `font.lineHeight.bodySmall`20 | fixado |
-| Família/peso do texto | `font.family.ui` Poppins; `typeStyle.bodySmall`400 | derivado; fallback atual Arial,sans-serif |
-| Label | bodySmall14/20; `font.weight.medium`500; `color.text.primary` #FFFFFF | ManualAddressForm |
-| Fundo/texto normal | `color.background.primary` #000000 / `color.text.primary` #FFFFFF | ManualAddressForm |
-| Borda normal | `color.border.strong` #454545 | ambas referências |
-| Placeholder | `color.text.muted` #9A9A9A | SearchField; aplicação ao novo Input necessita aceite D2 |
-| Erro: borda/texto | `color.semantic.dangerFill` #EF4444 / `dangerText` #F87171 | ManualAddressForm; nunca usar dangerBackground como texto |
-| Mensagem de erro | caption12 / lineHeight.caption16; margin space.0 | ManualAddressForm |
-| Espaço label/campo/feedback | `space.12`12px | grid atual ManualAddressForm; extensão a helper/success pendente D2 |
-| Box sizing | border-box; largura100% | existente; padding/borda incluídos |
-
-`dangerBackground` #D83A3A é fundo de ação danger; não substituir automaticamente borda/erro do campo. Tokens `successText` #4ADE80 e `successFill` #22C55E existem, mas **não há regra de Input valid certificada**. Ter um token não autoriza escolher sua aplicação.
-
-Pendente D2: estados hover, valid, read-only, disabled e autofill; helper/success; cor/medidas de prefix/suffix; reserva de altura do feedback; indicador loading e seu slot. Não inventar opacity, ícone, sombra, transição ou cor. As referências bloqueiam edição durante loading, mas não definem um Input loading universal. Focus deve permanecer identificável junto de invalid; decidir um único alvo de outline para wrapper versus input, evitando dois anéis como consequência acidental da cascata.
-
-## 3. Input — contrato base
-
-### Responsabilidade e API
-
-Derivado: componente apresentacional, sem regra de telefone/OTP, request, timer, sessão ou validação assíncrona. Normalização e validade de formato pertencem ao especializado; validade de negócio e resposta de servidor pertencem à aplicação. `valid` não significa telefone verificado; OTP com seis dígitos não significa autenticado.
-
-| API requerida | Semântica |
-|---|---|
-| value / defaultValue | String controlada / inicial não controlada. Modelo SearchField: value definido é autoridade; defaultValue só inicializa. Não alternar modos no ciclo de vida |
-| onChange | Paridade com SearchField: entrega string do campo, não evento como valor principal; nunca normaliza silenciosamente no Input base |
-| onBlur / onFocus | Necessários; assinatura exata evento React versus callback sem argumento deve ser aprovada em D2 |
-| type / inputMode / autoComplete | Encaminhar sem reinterpretar; defaults e lista de types suportados pendentes D2. Especializados fixam os seus abaixo |
-| required / disabled / readOnly | Semântica nativa; required não inventa mensagem ou fluxo de validação |
-| id / label | id estável fornecido ou gerado, label associado; id duplicado é erro de integração |
-| placeholder / helper / error / success / prefix / suffix | Elementos solicitados; shape/string/ReactNode e possibilidade de ação em adornos pendentes D2 |
-| loading / estado de validação | Estado recebido do consumidor, não inferido por requisição interna; nomes públicos/prevalência pendentes D2 |
-| name / ref / aria-describedby adicional | Necessidade de submissão/foco e composição acessível a decidir em D2; não presumir API escondida |
-
-### Matriz de estados
-
-| Estado | Comportamento fixado ou limite | Decisão restante |
-|---|---|---|
-| empty | valor vazio; label continua presente, placeholder não substitui label | required: momento do erro em D3 |
-| filled | valor não vazio; não implica válido | nenhum texto de sucesso automático |
-| hover | não muda valor nem dispara validação de negócio | aparência D2 |
-| focus | indicador2/offset2; eventos normais | alvo único do outline D2 |
-| valid | validade recebida; não autentica | mensagem/borda/ícone D2 |
-| invalid | aria-invalid, mensagem associada; não apenas cor | precedência/error timing D2/D3 |
-| disabled | não editável nem focável pelo tab, sem callbacks de edição | aparência D2 |
-| read-only | não editável; preservar leitura, seleção/cópia e foco nativos | aparência D2; não tratar como disabled |
-| loading | referências existentes desabilitam durante loading | confirmar extensão ao Input e indicador D2 |
-| autofill | processar valor real como entrada; sem request/submit por si só | estilo e reconciliação controlled/mascarado D2/D3 |
-
-Estados são dimensões, não enum mutuamente exclusivo: filled+focus+invalid é possível. Não esconder erro por hover. Decidir em D2 precedência visual de disabled/loading/readOnly e exclusão error/success. Não iniciar timers ou validação de domínio para arbitrar estados.
-
-### Acessibilidade requerida
-
-Label visível associado com htmlFor/id; placeholder não é nome. Error/helper/success possuem IDs únicos e estáveis; aria-describedby referencia apenas elementos existentes, preservando IDs adicionais do consumidor sem duplicar. aria-invalid=true somente para erro apresentado; mensagem textual explica correção. Não reutilizar role=combobox de ManualAddressForm: esse role depende de sugestões, ausentes no Input.
-
-Erro dinâmico deve ser anunciado uma vez sem ler valor/OTP. Pendente D2: região persistente `aria-live=polite` com mensagem atualizada, ou `role=alert` para erro após submit; não usar ambos nem anunciar a cada render. Focus do formulário após submit pertence ao consumidor. Prefix decorativo é oculto da árvore; prefix semântico (+34) integra a descrição. Suffix acionável, se aprovado, necessita botão/nome/foco próprios; não adotar automaticamente botão limpar/revelar.
-
-## 4. PhoneInput
-
-### Requisitos fixados e compatibilidade
-
-- Espanha apenas: prefixo+34 fixo, sem seletor de país; nacional com9dígitos. type=tel, inputMode=tel, autoComplete=tel.
-- E.164 completo é `+34` seguido dos9dígitos ASCII. Manter como string, preservando zeros; não converter para número.
-- O normalizador existente aceita nacional, +34 e0034; remove espaços, pontos, parênteses e hífens; rejeita outros caracteres, múltiplos sinais+ e comprimento diferente de9.
-- O contrato **não restringe primeiro dígito a6/7**, nem comprova alocação real ou recepção de SMS. Não acrescentar filtro de operadora/móvel sem novo requisito.
-- Valor exibido mascarado é distinto do normalizado. O componente entrega telefone normalizado; NÃO solicita OTP, não conhece challengeId, não chama SDK/API nem cria sessão.
-
-### Pendências de edição D3 (bloqueantes)
-
-| Tema | O que precisa ser decidido |
-|---|---|
-| Máscara | Agrupamento exato (ex.:3-3-3 ou3-2-2-2); espaços são apresentação, não payload |
-| Digitação/paste | Aceitar conjunto do normalizador existente ou subconjunto explícito; descartar caracteres proibidos ou rejeitar a edição inteira com feedback; não transformar texto arbitrário em número válido sem decisão |
-| Prefixo colado | Tratar nacional/+34/0034 como o mesmo telefone, sem duplicar+34; prefixo estrangeiro deve falhar, nunca ser trocado por+34 silenciosamente |
-| Excesso | Rejeitar paste/edição >9 nacional ou truncar com feedback? Não truncar sem aprovação |
-| Cursor/seleção | Regra exata de inserção, remoção de separador, seleção parcial, Home/End e preservação de caret após máscara |
-| Entrada parcial | E.164 não existe antes dos9dígitos. Decidir onChange: string nacional parcial normalizada + nullable e164 em payload, ou callback separado de draft e onChange apenas para E.164 completo/null. Nunca emitir `+34` incompleto como E.164 válido |
-| Momento de validar | change, blur ou submit; comportamento depois do primeiro erro; vazio opcional versus required |
-| IME/autofill | Adiar filtragem durante composição; como tratar autofill internacional e numeração não ASCII deve ser aprovado |
-
-Estados: empty=vazio; typing=parcial; valid=9dígitos normalizáveis (não verificado); invalid=formato/erro recebido; disabled/read-only/loading seguem decisão Input. Blur não solicita OTP; submit pertence à futura composição.
-
-### Microcopy espanhola — proposta para aprovação D4, NÃO oficial ainda
-
-| Chave | Texto candidato |
-|---|---|
-| label | Número de teléfono |
-| placeholder | Pendente: depende da máscara; não usar telefone real como exemplo |
-| helper | Introduce los 9 dígitos de tu número de teléfono de España. |
-| required | Introduce tu número de teléfono. |
-| invalid | Introduce un número de teléfono válido de 9 dígitos. |
-| country | Solo se admiten números de teléfono de España (+34). |
-
-Essas frases são propostas editoriais, não evidências de microcopy já aprovada. Erro de configuração/SMS não deve ser apresentado como telefone inválido; consumidor recebe código da aplicação e precisa de mensagem própria aprovada.
-
-## 5. OtpInput
-
-### Requisitos fixados
-
-Seis dígitos ASCII, string preservando zeros; não type=number. inputMode=numeric, autoComplete=one-time-code. Atributos de teclado/autofill não substituem validação. `complete` significa somente seis dígitos, nunca código aceito. Proibido registrar OTP em logs, analytics, URLs, erros, captura de sessão/replay ou telemetria; testes não devem imprimir códigos capturados. Não persistir como credencial/sessão.
-
-ChallengeId, expiração, tentativas, cooldown e resend pertencem à aplicação. O componente recebe estados e informações de apresentação; não cria challenge, não decremente tentativas localmente, não inventa duração, não agenda resend ou solicita verificação. A aplicação é autoridade sobre OTP_EXPIRED, OTP_LOCKED, INVALID_OTP, OTP_RESEND_COOLDOWN e OTP_UNAVAILABLE. O cooldown de lock já pertence ao domínio, não a um relógio de montagem do componente.
-
-### D5 — representação, foco e envio: decisão necessária
-
-| Escolha | Consequências a aprovar |
-|---|---|
-| Um input real com seis células visuais | Uma string e um alvo de autofill/tab; células não viram seis inputs acessíveis. Cursor/seleção nativos controlam a posição visual; não existe transferência de foco entre seis elementos |
-| Seis inputs reais, string agregada | Definir distribuição do autofill/paste, foco seguinte, tab stops e tratamento de lacunas. Nome de grupo e nomes “Dígito 1 de 6”…“Dígito 6 de 6”; não anunciar conteúdo no live region |
-
-O pedido menciona avanço automático e posições individuais, mas oferece explicitamente a escolha de estrutura. Não decidir silenciosamente por seis inputs. Em ambos, valor de domínio continua string única; se seis controles permitirem buraco intermediário, decidir como representá-lo no draft sem deslocar dígitos inadvertidamente.
-
-Pendências detalhadas D5:
-
-- Paste completo: substituir todo código ou inserir na seleção? Paste parcial: inserir desde posição ativa ou substituir conjunto? Excesso: rejeitar ou truncar? Espaços/hífens: ignorar ou rejeitar? Letras/mensagemSMS inteira: não extrair seis números automaticamente sem decisão. Confirmar apenas ASCII versus normalização Unicode.
-- Se seis inputs: avanço após dígito aceito, último permanece? Backspace em célula preenchida apaga sem recuar, ou recua também? Em vazia, recua apenas ou apaga anterior? Delete, Left/Right, Home/End, seleção e Tab precisam de tabela aprovada. Não capturar atalhos de copiar/colar/selecionar de forma incompatível.
-- Sexto dígito: submit explícito ou evento onComplete? Se automático, consumidor executa request e impede duplicidade/replay de render/paste/autofill; componente não faz rede. Não adicionar auto-submit como otimização implícita.
-- Após INVALID_OTP: preservar ou limpar? Após expired/locked, novo challenge e resend: quem solicita reset e onde fica foco? Rede/configuração indisponível não deve consumir tentativa local ou limpar por suposição.
-
-### Matriz de estados e API mínima de fronteira
-
-| Estado | Significado | Comportamento ainda a aprovar |
-|---|---|---|
-| empty | string vazia | foco inicial/autofocus D5 |
-| partial |1–5dígitos | acesso por posições/paste D5 |
-| complete |6dígitos; ainda não verificado | submit D5 |
-| invalid | erro recebido/validação de formato | limpar/preservar e foco D5 |
-| expired | aplicação informa expiração | edição habilitada ou bloqueada; reset D5 |
-| locked | aplicação informa bloqueio | reset e foco; nenhuma verificação/reenvio autônomo |
-| disabled | não interativo | aparência D2/D6 |
-| loading | verificação controlada pelo consumidor | manter código e bloquear edição? confirmar D5 |
-
-API a fechar em D5: value/defaultValue string, onChange(string), callbacks focus/blur, estado recebido, mensagens e disabled/loading; `onComplete` apenas se aprovado. Se timestamp/countdown for renderizado, receber apresentação derivada da aplicação (sem temporizador de domínio dentro do componente). ChallengeId/token não fazem parte da API apresentacional. Validar compatibilidade de `readOnly` herdado caso Input seja usado internamente.
-
-### D6 — células e mobile360
-
-Altura mínima48, raio12, borda1, focus2/offset2 e texto14/20 são a base solicitada; largura, gap, alinhamento e aplicação de padding12x16 **por célula ou pelo grupo** não estão definidos nos componentes existentes.
-
-Verificação geométrica, não aprovação:6×48 +5×8=328px; em viewport360 com margens16 cada lado restam328px. Não sobra espaço lateral para outline externo2+offset2; container não pode recortá-lo. Aplicar padding16 ao grupo deixa296px e essa configuração não cabe. Logo não basta listar tokens48/8: aprovar largura, margens, alvo do foco e regra em containers menores/zoom antes de fixar layout.
-
-Opções precisam ser aprovadas: largura fixa por célula versus colunas flexíveis; gap existente(space4/8), margem herdada da futura tela, altura/padding e fallback estreito. Não inventar novo breakpoint nem reduzir abaixo da geometria acordada para caber. Não criar tela para resolver essa decisão. Tipografia14/20 permanece a solicitada; peso/alinhamento/letra por célula pendentes. Autofill deve preencher o valor lógico; testar navegador móvel, leitor de tela e zoom, sem depender de inspeção de PNG.
-
-Grupo acessível: label comum “Código de verificación” (texto pendente D4). Se um input, um nome, descrição com seis dígitos e erro associado; células decorativas ocultas da acessibilidade. Se seis, group/fieldset rotulado, posições individuais e descrição comum sem seis anúncios duplicados. `aria-invalid` reflete erro apresentado nos controles pertinentes. Countdown não anuncia cada segundo; anúncio de mudança de estado/mensagem pendente D2/D4. Não mover foco por render, polling ou alteração de cooldown.
-
-### Microcopy espanhola — proposta D4, NÃO oficial ainda
-
-| Código/elemento | Texto candidato |
-|---|---|
-| label/helper | Código de verificación / Introduce el código de 6 dígitos. |
-| INVALID_OTP | El código no es válido. Compruébalo e inténtalo de nuevo. |
-| OTP_EXPIRED | El código ha caducado. Solicita uno nuevo. |
-| OTP_LOCKED | Has alcanzado el límite de intentos. Espera para solicitar un nuevo código. |
-| OTP_RESEND_COOLDOWN | Podrás solicitar un nuevo código en {remainingSeconds} s. |
-| OTP_UNAVAILABLE | No se puede verificar este código. Solicita uno nuevo cuando esté disponible. |
-| AUTH_CONFIGURATION_UNAVAILABLE/rede | Serviço indisponível não é código inválido; texto final pendente |
-
-Nenhum placeholder deve exibir código real. Texto de lock/cooldown usa disponibilidade informada pela aplicação; não promete reenvio automático, duração fixa ou crédito de tentativas. Sucesso/autenticação e navegação são responsabilidade da composição, não do OtpInput.
-
-## 6. Decisões exigidas antes da implementação
-
-| ID | Pergunta ao proprietário | Bloqueia |
-|---|---|---|
-| D0 | Como reconciliar o PR32 não mergeado e o status candidate da main com a autoridade APPROVED_FROZEN solicitada? | Certificação da fonte visual; não promover neste gate |
-| D2 | Aprovar aparência dos estados/slots e API adicional; mecanismo de anúncio de erro (polite/alert), loading, helper/success e precedência | Input e especializados |
-| D3 | Qual máscara, política de paste/caret/excesso, momento de validação e payload para telefone parcial? | PhoneInput |
-| D4 | Aprovar ou corrigir cada texto candidato em espanhol, incluindo placeholders/serviço indisponível | Microcopy oficial |
-| D5 | Um input ou seis; regras de edição/foco/paste; submit explícito/automático; limpar/preservar e reset? | OtpInput |
-| D6 | Quais largura/gap/padding/foco e comportamento estreito para células? | Layout OTP sem invenção |
-
-D1 está resolvida pela instrução explícita do usuário em favor das medidas do ManualAddressForm para o novo campo; divergência factual registrada, nenhum componente existente alterado.
-
-## 7. Critério de aceite e roteiro de verificação futura
-
-Antes de marcar READY_FOR_IMPLEMENTATION: cada D0/D2–D6 deve ter decisão explícita registrada, sem opções ambíguas; revisar todos os nomes/tokens contra a fonte congelada; publicar revisão e obter aprovação individual. Até lá este documento oferece cobertura integral dos tópicos, mas **não satisfaz o objetivo de implementação sem decisões**.
-
-Na implementação futura, após autorização própria: testes controlled/uncontrolled e callbacks; estados combinados; label/IDs únicos/error announcement; disabled/readOnly/loading; máscara/paste/caret/autofill/composição; limites8/9/10dígitos e prefixos; OTP0–6, zeros iniciais, paste/Backspace/setas/Tab; sexto dígito sem requests duplicados; erro/expired/locked/resend controlados pelo consumidor; nenhum OTP em logs/analytics; mobile360, zoom e anéis sem clipping; regressões existentes C001/C002/C005/Button sem autorar baseline automaticamente. Teste de arquitetura: componentes não importam implementação auth Node/crypto/SQLite nem criam Opaque Session. Fonte do normalizador é referência de contrato, não autorização de importar módulo servidor no bundle cliente.
-
-Validação desta rodada: leitura dirigida e consistência documental/tokens/links; nenhum componente/teste/baseline foi criado ou executado para alegar implementação. CI eventual do PR valida o repositório, não aprovação visual nem fechamento das decisões acima.
-
-## 8. Decisões do proprietário — revisão2 (prevalece sobre opções anteriores)
-
-**Aprovado: seis inputs reais**, com uma string lógica agregada para o código completo. As opções de input único na revisão1 são histórico da decisão, não alternativas abertas. `inputMode=numeric`, `autoComplete=one-time-code`; manter seis nomes de posição e grupo rotulado. A justificativa mobile do proprietário é registrada como motivação, **não como prova de que seis inputs garantem autofill melhor em iOS/Android**. Distribuição real de SMS autofill deve ser validada nos navegadores-alvo; não trocar silenciosamente a arquitetura se algum navegador falhar.
-
-**Aprovado: envio automático ao completar o sexto dígito.** O componente notifica conclusão; a camada de aplicação verifica. Na mesma ação de conclusão, bloquear novas notificações e apresentar loading; não esperar um render posterior para travar a submissão. A aplicação também deve rejeitar chamada concorrente antes do await. Nenhuma chamada de rede em render/effect de montagem; entrada manual/paste/autofill convergem para uma única notificação. Re-render, Strict Mode, Enter repetido e duplo evento não podem gerar dois submits.
-
-**Aprovado: após erro, limpar seis campos, focar primeiro e mostrar mensagem clara.** Não anunciar nem registrar código. A permissão para nova verificação permanece subordinada ao estado recebido da aplicação: não liberar desafio expired/locked nem ignorar cooldown por limpar inputs. Essa qualificação preserva o contrato e está submetida ao proprietário como pergunta R1 abaixo; não criar um override local.
-
-**Aprovado: não repetir submit do mesmo código.** Deduplicação efêmera, em memória, sem logs/analytics/storage e sem usar o OTP como ID público. Identidade de challenge e seu ciclo de vida pertencem à aplicação; o componente não deve receber challengeId para gerir autenticação. O mecanismo de reset visual vem do consumidor. Escopo exato da deduplicação após erro de transporte/novo desafio está pendente em R2; não fingir que “exatamente uma chamada de rede” é garantível após resposta perdida.
-
-As dimensões, política de edição/paste/navegação e textos abaixo continuam pendentes. Nenhum valor de token foi alterado.
-
-## 9. Opções concretas — escolher por linha, nenhuma aprovada automaticamente
-
-Todos os tokens citados já existem em1.2.0. Opção não equivale a novo valor ou novo token. A geometria fixada48/12x16/12/1/focus2+2/texto14/20 permanece.
-
-### I — Input: aparência, slots e contrato
-
-Base comum: fundo `color.background.primary`#000000, texto `color.text.primary`#FFFFFF, borda `color.border.strong`#454545; invalid borda `dangerFill`#EF4444 e texto `dangerText`#F87171; focus `color.border.focus`#F6B800 com2px/offset2. Não criar fill vermelho para campo inválido.
-
-| ID | A | B | Trade-off |
-|---|---|---|---|
-| I1 hover | Manter borda/fundo de repouso | Borda `color.text.muted`#9A9A9A, mesmo fundo | A reduz mudanças; B reforça affordance no desktop, requer nova evidência visual |
-| I2 valid | Borda neutra; success em `successText`#4ADE80 quando fornecido | Borda `successFill`#22C55E e successText#4ADE80 | A menos ruído; B sinal mais forte, mas não pode significar telefone autenticado |
-| I3 disabled | Texto `text.disabled`#737373, fundo primary, borda strong; sem opacidade global | Fundo `background.surface`#121212, texto disabled e borda subtle#2A2A2A | A preserva estrutura; B distingue melhor o bloqueio; informação essencial continua em label/helper legíveis |
-| I4 readOnly | Mesmo visual normal + helper “Solo lectura.” | Fundo surface#121212, texto primary, helper “Solo lectura.” | Ambos focáveis/selecionáveis; B distingue sem aparência de disabled |
-| I5 loading | Usar visual disabled e helper “Procesando…” | Preservar visual de leitura, suffix textual “Procesando…”; bloquear edição | A segue referências; B preserva contraste. Nenhum spinner/ícone inventado |
-| I6 autofill | Manter aparência nativa do navegador, validar contraste | Aplicar os mesmos tokens normal/text/invalid quando suportado, sem ocultar indicadores do navegador | A menos CSS específico; B mais consistência, exige testes browser e forced-colors |
-| I7 helper/success | helper text.secondary#B8B8B8 e successText; caption12/16, gap12 igual referência | Mesmas cores, bodySmall14/20, gap12 | A compacto; B leitura maior. Error continua caption12/16 derivado |
-| I8 espaço de feedback | Altura natural somente quando existe mensagem | Reservar uma linha16px (`font.lineHeight.caption`), expandindo para texto longo | A compacto porém layout pode deslocar; B reduz salto com espaço vazio |
-| I9 prefix/suffix | Texto/decorativo apenas; text.secondary,14/20, gap space.8; +34 fixo | Mesma base, permitir suffix botão de limpar com alvo touch.recommended48 e label “Borrar” | A menor API/foco; B ação útil, mas requer QA extra e reduz área digitável. Não aplicar limpar ao OTP por inferência |
-| I10 erro acessível | Região persistente aria-live=polite, aria-atomic=true, atualizar só mensagem de erro | role=alert somente quando novo erro após submit; sem live adicional | A não interrompe fala; B anuncia imediatamente após ação. Não anunciar erro a cada tecla/render ou OTP |
-| I11 alvo do focus | Outline no input nativo, adornos fora | Outline no wrapper com focus-within; remover só outline redundante do input | A foco exato; B campo composto contínuo. Ambos preservam2/offset2 e não cortam indicador |
-| I12 API | onChange(string), onBlur/onFocus(eventReact), feedback string, prefix/suffix texto; ref+name encaminhados | onChange(string, eventReact), mesmos callbacks/ref/name, slots ReactNode tipados | A simples e alinhada SearchField; B permite composição avançada, maior responsabilidade a11y |
-| I13 types do Input | text/tel/email/password/search; default text | Somente text/tel nesta primeira versão; demais em gate separado | A base reutilizável mais ampla; B menor matriz de QA. Nenhum mostrar senha implícito |
-| I14 precedência | disabled > loading > readOnly; invalid vence valid; manter erro visível sem novo anúncio; focus sobre borda inválida | Mesma precedência, impedir combinação loading+readOnly na API | A permissiva e determinística; B menos combinações válidas. Valor preenchido não decide estado de erro |
-
-### P — PhoneInput: edição e validação
-
-+34 não editável, exatamente9dígitos nacionais para E.164 completo. Sem filtro6/7, pois o contrato existente não o estabelece.
-
-| ID | A | B | Trade-off |
-|---|---|---|---|
-| P1 máscara | `+34 612 345 678` (3-3-3) | `+34 612 34 56 78` (3-2-2-2) | A menos separadores; B blocos finais menores. Números ilustrativos, nunca placeholder de telefone real |
-| P2 paste/filtragem | Aceitar nacional/+34/0034 e separadores espaço,ponto,hífen,parênteses conforme normalizador; rejeitar operação inteira se letras, outro país ou excesso | Mesmas entradas válidas; remover letras da área nacional com aviso antes de confirmar, rejeitar país/excesso | A previsível e não “corrige” destino; B tolerante, mas pode transformar conteúdo colado no número errado. Nunca truncar para caber |
-| P3 edição/caret | Inserir/substituir na seleção por índice de dígitos; caret após último inserido; Backspace pula separador e apaga dígito anterior | Campo vira9dígitos sem máscara enquanto focado; aplicar máscara no blur | A máscara contínua, maior complexidade; B cursor nativo simples, mas **altera o requisito de máscara durante digitação**, exigindo decisão explícita |
-| P4 onChange parcial | `{nationalDigits: string, e164: string|null}` a cada edição; E.164 só quando completo | `onDraftChange(nationalDigits)` para parcial e `onChange(e164|null)` para valor canônico | A estado atômico e um callback; B separa draft de valor aceito, mas sincronização exige cuidado. Nenhum retorna telefone formatado como valor canônico |
-| P5 validação | Blur/submit; após primeiro erro, revalidar change para removê-lo | Somente submit; change/blur não mostram erro | A feedback antecipado sem punir primeira digitação; B menor ruído mas erro aparece mais tarde |
-| P5-C alternativa | Change com erro somente a partir de9dígitos ou edição rejeitada; parcial não mostra erro até blur/submit | — | Feedback imediato de formato, mais regras de touched/dirty a testar |
-| P6 IME/Unicode | Aguardar compositionend; aceitar apenas0–9ASCII, rejeitar restante com feedback | Converter dígitos full-width0–9 paraASCII após compositionend; outros rejeitados | A coincide com contrato; B tolerância adicional localizada, exige casos novos. Nenhuma transliteração geral |
-
-Paste no meio substitui a seleção segundo P3; remoção do prefixo por Backspace nunca altera+34. AutoComplete tel com+34/0034 segue a mesma entrada do paste, sem duplicar prefixo. Vazio requerido só é invalidado no evento aprovado emP5. ReadOnly preserva texto/copiar; loading não chama OTP.
-
-### O — detalhes restantes do OTP e conflitos com o domínio
-
-| ID | A | B | Trade-off |
-|---|---|---|---|
-| O1 paste completo | Exatamente6dígitos substituem o grupo inteiro, de qualquer célula | Inserir a partir da célula ativa, rejeitar se exceder6 | A melhor paraSMSautofill; B respeita posição, pode surpreender ao colar código inteiro no meio |
-| O2 paste parcial | Inserir desde célula ativa substituindo posições ocupadas; preservar demais | Limpar grupo e preencher desde primeira | A permite correção localizada; B resultado simples, perde edição anterior |
-| O3 caracteres | Rejeitar paste com qualquer não-dígito | Remover apenas espaços/hífens; rejeitar letras e excesso | A estrito; B tolera agrupamento. Não extrair código de SMS inteiro por padrão |
-| O4 Backspace | Preenchida: apagar e permanecer; vazia: recuar e apagar anterior | Preenchida: apagar e recuar; vazia: apenas recuar | A apagar previsível por posição; B navega mais rápido, exige atenção ao apagar sequencial |
-| O5 foco/teclas | Dígito aceito avança; Left/Right mudam posição; Home/End primeira/última; seis tabstops nativos | Mesmas setas, rovingtabindex: um tabstop entra na posição ativa | A navegação HTML simples; B menos Tab, mas maior complexidade de foco/a11y. Nunca capturar Tab em loop |
-| O6 draft com buracos | Array local de6strings vazias/1dígito; consumidor recebe array e completeCode|null | Impedir buracos: apagar desloca dígitos seguintes à esquerda; consumidor recebe string parcial | A conserva posição; B uma string simples, deslocamento pode surpreender. String completa sempre única |
-| O7 geometria | Células48×mín48, gap space.4=4: largura308px; padding horizontal por célula space.8=8 | Células44×mín48, gap space.8=8: largura304px; padding horizontal por célula space.8=8 | A alvo48 com gapmenor; B alvo mínimo44 com separação maior. Ambas pedem exceção explícita ao padding16 por célula; raio12/borda1/focus2+2/texto14/20 mantidos |
-| O8 alinhamento | Dígito centrado, peso regular400 | Dígito centrado, peso medium500 | A segue bodySmall; B enfatiza. Sem nova fonte ou tamanho |
-| O9 autofill | one-time-code apenas na primeira célula; handler distribui código completo | one-time-code em todas; qualquer célula recebe código completo | A único alvo semântico; B facilita foco intermediário, possível comportamento divergente. Validar ambos em iOS/Android antes de ratificar suporte |
-
-O7 em viewport360 com margens16: espaço328; A sobra20 e B24px para folga/focus. Não é prova de suporte a containers menores/zoom. Para largura disponível menor que grupo+8px do outline, escolher: (a) permitir quebra3+3 mantendo tamanho/foco ou (b) exigir largura mínima de316(A)/312(B) e tratar composição mais estreita em revisão específica. Opção(b) não pode ser anunciada como responsividade universal; não ocultar overflow ou reduzir alvo sem aprovação.
-
-**R1 — alcance de “nova tentativa imediata”:** confirmar (A) imediato apenas para INVALID_OTP com tentativa disponível; expired exige novo desafio e locked aguarda liberação da aplicação; ou (B) revisar requisito de domínio em gate separado. (B) não é implementável neste gate e não autoriza bypass. Limpar os campos continua a decisão visual, mas o primeiro campo pode estar bloqueado: nesse caso, confirmar foco no primeiro controle de recuperação habilitado ou no resumo de erro, sem focar artificialmente um input disabled.
-
-**R2 — “mesmo código” e erro de rede:** (A) não reenviar a mesma combinação desafio+código durante toda a vida do desafio; após transporte incerto solicitar recuperação/novo desafio pela aplicação; ou (B) impedir duplicados automáticos/concorrentes e permitir retry explícito após falha de transporte, sob idempotência da aplicação. (A) interpretação literal mais estrita, pode bloquear usuário cujoSMS repete código; (B) recuperação melhor, mas precisa ratificação por flexibilizar “nunca”. Não fixar deduplicação global vitalícia: códigos podem coincidir em desafios independentes; confirmar esse limite. Não armazenar OTP além da necessidade efêmera da tentativa.
-
-## 10. Microcopy — cada texto AGUARDANDO RATIFICAÇÃO
-
-Escolher A ou B por contexto; placeholders devem seguir P1. Estes são textos candidatos, não microcopy oficial já aprovada.
-
-| Contexto | A — aguardando ratificação | B — aguardando ratificação | Trade-off |
-|---|---|---|---|
-| Phone label | Número de teléfono | Tu móvil | A reflete contrato sem restringir a móveis; B coloquial mas pressupõe móvel |
-| Phone placeholder | `___ ___ ___` | `___ __ __ __` | Depende deP1; não representa valor preenchido |
-| Phone helper | Introduce los 9 dígitos de tu número de España. | Número de España (+34), sin el prefijo. | A explicita comprimento; B evita duplicação do prefixo |
-| Phone required | Introduce tu número de teléfono. | Necesitamos tu número para enviarte el código. | A direta; B explica intenção do fluxo, não requisição do componente |
-| Phone invalid | Introduce un número válido de 9 dígitos. | Revisa el número: debe tener 9 dígitos. | A instrução; B correção contextual |
-| Phone país | Solo se admiten números de España (+34). | Usa un número con prefijo +34. | A explica limiteMVP; B curta |
-| Edição rejeitada | No se ha pegado el contenido. Revisa el formato. | El contenido no tiene un formato válido. | A deixa claro que valor anterior foi preservado |
-| ReadOnly | Solo lectura. | Este dato no se puede modificar aquí. | A curta; B contextual |
-| Input loading | Procesando… | Un momento… | A específica; B menos informativa |
-| OTP label | Código de verificación | Código SMS | A independente do canal; B canal explícito |
-| OTP helper | Introduce los 6 dígitos. Se verificará automáticamente. | El código se comprobará al completar los 6 dígitos. | Ambas informam autoenvio |
-| OTP loading | Verificando código… | Comprobando el código… | Variação editorial |
-| INVALID_OTP | El código no es válido. Introduce los 6 dígitos de nuevo. | Código incorrecto. Vuelve a introducirlo. | A comprimento explícito; B curta |
-| OTP_EXPIRED | El código ha caducado. Solicita uno nuevo cuando esté disponible. | Código caducado. Espera a que puedas solicitar otro. | Ambas respeitam possívelcooldown |
-| OTP_LOCKED | Has alcanzado el límite de intentos. Espera para solicitar otro código. | Demasiados intentos. Podrás solicitar un nuevo código cuando termine la espera. | A mais precisa; B linguagem direta |
-| Cooldown | Podrás solicitar otro código en {seconds} s. | Espera {seconds} s para solicitar otro código. | Ambas usam dado da aplicação, não duração inventada |
-| OTP_UNAVAILABLE | Este código no está disponible. Solicita otro cuando puedas. | No se puede usar este código. Espera para solicitar uno nuevo. | Não classifica como erro de digitação |
-| Serviço indisponível | No podemos verificar el código ahora. Inténtalo más tarde. | El servicio no está disponible temporalmente. | A orienta; B explica. A recuperação deve respeitarR2 |
-| Rede/resultado incerto | No hemos podido confirmar el resultado. Comprueba tu conexión. | No se ha confirmado la verificación. Sigue las indicaciones para continuar. | Não afirmar que o servidor rejeitou oOTP |
-| Mesmo código já enviado | Este código ya se ha enviado. Espera las indicaciones para continuar. | No volveremos a enviar el mismo código automáticamente. | A próximaação; B descreveR2-B, usar somente se aprovado |
-| Nome de posição | Dígito {position} de 6 | Posición {position} del código, de 6 | Ambas nomeiam posição sem inserir OTP em anúncio dinâmico |
-
-Textos genéricos de Input valid/helper/error são fornecidos pelo consumidor segundo contexto; não inventar “Datos correctos” como prova de identidade. Reenvio pertence à aplicação: texto “Enviar otro código” versus “Solicitar otro código” aguarda ratificação caso essa ação seja exibida na composição futura, não dentro do OtpInput por suposição.
+Apósautorizaçãofutura,verificar controlled/uncontrolled,estadoscombinados,labels/descrições/alertsemsaturação,rovingtabindex/autofocuscondicional,IMEfull-width,pastecompleto/parcial/excessoletras,carettelefone,selecão/backspace/delete,zeros,dedupe/loading/retryexplícito,servidorsoberano,mobile360/3+3/zoom/focussemclipping,autofillSafari/ChromiumAndroid e leitoresdetela. Nenhum sucesso de CI atual certifica componentes ainda nãoimplementados. Sem alterar baseline para esconder divergência.

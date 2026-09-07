@@ -105,3 +105,5 @@ Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POL
 | v8.3 | 2026-09-07 | PR52_MERGED / C003_C004_AUTHORIZED — clarification pending, Issue #53; Drive v8.2 noncanonical | `10410dded46dfc08e4247835d1ba957f48b3d953` | [v8.3](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v8.3.md) | criado no repositório |
 
 | v8.4 | 2026-09-07 | C003_C004_IMPLEMENTATION_CANDIDATE — Issue #53, CI pending | `126fd8a8ea2ccbf9f25256f034e1201137bd8284` (base) | [v8.4](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v8.4.md) | criado no repositório |
+
+| v8.5 | 2026-09-07 | PR54_MERGED_TO_MAIN — C003/C004, CI green | `fa47cd8271db00e0dec7ec92007de6a289a6ae8f` | [v8.5](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v8.5.md) | criado no repositório |

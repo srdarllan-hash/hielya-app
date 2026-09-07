@@ -44,6 +44,7 @@ describe('MVP Local 36 inventory reservation migration', () => {
       '0003_mvp_local_36_inventory_reservation_lifecycle.sql',
       '0004_mvp_local_36_customer_authentication_foundation.sql',
       '0005_mvp_local_36_order_delivery_foundation.sql',
+      '0006_mvp_local_36_atomic_handover.sql',
     ]);
     expect(createHash('sha256').update(readFileSync(join(
       process.cwd(),
@@ -58,7 +59,7 @@ describe('MVP Local 36 inventory reservation migration', () => {
     const first = persistence.db.prepare(
       'SELECT version,sha256 FROM development_schema_migrations ORDER BY version',
     ).all();
-    expect(first).toHaveLength(5);
+    expect(first).toHaveLength(6);
     persistence.migrate();
     expect(persistence.db.prepare(
       'SELECT version,sha256 FROM development_schema_migrations ORDER BY version',

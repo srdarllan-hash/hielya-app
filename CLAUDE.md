@@ -4,11 +4,11 @@
 
 Before any relevant work, read `docs/checkpoints/HIELYA_CHECKPOINT_POLICY.md`, then `docs/checkpoints/INDEX.md`, then the checkpoint with the highest version. Validate its GitHub branch, PR, SHA and CI claims against live GitHub before structural changes. Never edit an existing historical checkpoint; create the next version as a new file and add it to the index.
 
-## Active Phase 2 gate (2026-09-07)
+## Active Phase 3 gate (2026-09-07)
 
-PR #36 merged by owner authorization. Main `5bbf0b0a24a01effb5d21f17f4b1352c122ad89c`, exact certified tree `d070a88f24d538dc2c13a3ecd0353165776d6495`. Full CI34111172377 + contract34111172419 SUCCESS.
+PR #38 merged with individual owner authorization. Main `ccdd13492dd8348ea8b59b94c6521fc3b760c790`, exact certified tree `b5db656db7fb98df86b2a447c5561dab59ae6760`. Phase2 CI34113530309 and34113530243 SUCCESS (884tests).
 
-Issue #37 / branch `hielya/alcohol-order-delivery-foundation`: internal order/delivery foundation, dynamic SLA policy and additive SQLite migration0005. See `docs/contracts/ALCOHOL_DOMAIN_PHASE_2.md`. HTTP still V1.2; V1.3 is not activated. Required authoritative checkout/SLA/workforce adapters are integration dependencies. No production credentials, no handover or financial execution, no C-003/C-004 or new screens. Phase2 PR requires separate owner merge approval. Phases3–6 remain unstarted; PRs #32/#34 remain independent. Checkpoints v6.0 (merge) and next phase closure preserve v5.9 unchanged.
+Issue #39 / branch `hielya/atomic-handover-terminal-refusal`: single atomic terminal handover (deadline + adult visual verification + PIN), irreversible age refusal and pending full-compensation intent. See `docs/contracts/ALCOHOL_DOMAIN_PHASE_3.md`. Terminal event is sole authority for final order/delivery status; use repository projections, not historical base status. Never use legacy verifyDeliveryPin as handover authorization. Dedicated issuer/pepper and workforce/clock ports are mandatory. No production adapter/HTTPV1.3 activation, no Phase4 money execution or retention job. Phase3 PR requires separate owner merge approval. C003/C004 and new screens remain blocked. Checkpoints v6.2 merge, v6.3 initial candidate and v6.4 replacement-write hardening (PR #40); preserve historical records.
 
 ## Repository architecture
 

@@ -60,3 +60,6 @@ Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POL
 
 | v6.0 | 2026-09-07 | PHASE_1_MERGE / PHASE_2_AUTHORIZATION | `5bbf0b0a24a01effb5d21f17f4b1352c122ad89c` | [v6.0](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.0.md) | criado no repositório |
 | v6.1 | 2026-09-07 | ALCOHOL_ORDER_DELIVERY_FOUNDATION / PHASE_2 — CI pending | `5bbf0b0a24a01effb5d21f17f4b1352c122ad89c` (base) | [v6.1](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.1.md) | criado no repositório |
+| v6.2 | 2026-09-07 | PHASE_2_MERGE / PHASE_3_AUTHORIZATION | `ccdd13492dd8348ea8b59b94c6521fc3b760c790` | [v6.2](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.2.md) | criado no repositório |
+| v6.3 | 2026-09-07 | ATOMIC_HANDOVER_TERMINAL_REFUSAL / PHASE_3 — CI pending | `ccdd13492dd8348ea8b59b94c6521fc3b760c790` (base) | [v6.3](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.3.md) | criado no repositório |
+| v6.4 | 2026-09-07 | PHASE_3_HARDENING — PR40 CI pending | `4412b459c84c8149e540bb6ffe83e768ca5db482` (primeiro candidato) | [v6.4](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.4.md) | criado no repositório |

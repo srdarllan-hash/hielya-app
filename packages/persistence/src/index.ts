@@ -250,6 +250,7 @@ export const DEVELOPMENT_MIGRATIONS = [
   '0003_mvp_local_36_inventory_reservation_lifecycle.sql',
   '0004_mvp_local_36_customer_authentication_foundation.sql',
   '0005_mvp_local_36_order_delivery_foundation.sql',
+  '0006_mvp_local_36_atomic_handover.sql',
 ] as const;
 
 export const resolveDevelopmentMigrationDirectory = (moduleUrl: string): string => moduleUrl.startsWith('file:')
@@ -1120,3 +1121,5 @@ export {
 } from './public-api-read-adapter';
 
 export { SqliteOrderFoundationRepository } from './order-foundation';
+
+export { SqliteHandoverRepository } from './handover';

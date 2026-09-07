@@ -71,16 +71,17 @@ export interface CheckoutContext {
 }
 export interface OrderRecord {
   id: string; customerId: string; revision: number;
-  status: 'AWAITING_PAYMENT' | 'PAYMENT_AUTHORIZED' | 'PREPARING' | 'READY' | 'OUT_FOR_DELIVERY';
+  status: 'AWAITING_PAYMENT' | 'PAYMENT_AUTHORIZED' | 'PREPARING' | 'READY' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'DELIVERY_FAILED';
   containsAlcohol: boolean; requiresAgeVerification: boolean;
   alcoholSnapshot: AlcoholSnapshot | null; promisedLatestHandoverAt: string | null;
   checkout: CheckoutContext; createdAt: string;
 }
 export interface DeliveryRecord {
   id: string; orderId: string; revision: number; courierId: string | null;
-  status: 'ASSIGNED' | 'OUT_FOR_DELIVERY' | 'ARRIVED';
-  ageVerificationStatus: 'PENDING'; ageVerificationMethod: null;
-  verifiedAt: null; verifiedByCourierId: null;
+  status: 'ASSIGNED' | 'OUT_FOR_DELIVERY' | 'ARRIVED' | 'DELIVERED' | 'FAILED';
+  ageVerificationStatus: 'PENDING' | 'VERIFIED_18_PLUS' | 'REFUSED_NO_ID' | 'REFUSED_MINOR' | 'REFUSED_DOUBTFUL_ID';
+  ageVerificationMethod: 'IN_PERSON_DOCUMENT_VISUAL_CHECK' | null;
+  verifiedAt: string | null; verifiedByCourierId: string | null;
 }
 export interface Aggregate { order: OrderRecord; delivery: DeliveryRecord }
 export interface FoundationTransaction {
@@ -177,6 +178,7 @@ export class OrderFoundation {
       tx.save(aggregate, command.expectedRevision); return aggregate;
     }, tx => {
       const current = tx.get(orderId); if (!current) return fail('NOT_FOUND');
+      if (['DELIVERED', 'DELIVERY_FAILED'].includes(current.order.status)) return fail('TERMINAL_DELIVERY');
       const role = command.stage === 'PAYMENT_AUTHORIZED' ? 'PAYMENT' : ['OUT_FOR_DELIVERY', 'ARRIVED'].includes(command.stage) ? 'COURIER' : 'OPERATOR';
       if (!this.ports.authorize(actorId, role, current.order) || (role === 'COURIER' && current.delivery.courierId && current.delivery.courierId !== actorId)) fail('FORBIDDEN');
     });

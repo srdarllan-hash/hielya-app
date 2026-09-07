@@ -1,3 +1,4 @@
+import type { TerminalRow } from './handover';
 import { OrderFoundationError } from '../../application/src/orders';
 import type { Aggregate, CheckoutContext, CreateOrderCommand, FoundationRepository, FoundationTransaction, OrderRecord, DeliveryRecord } from '../../application/src/orders';
 import type { MvpPersistenceDatabase } from './index';
@@ -66,11 +67,12 @@ export class SqliteOrderFoundationRepository implements FoundationRepository {
     if (!row) return undefined;
     const delivery = this.persistence.db.prepare('SELECT * FROM delivery_foundation WHERE order_id=?').get<DeliveryRow>(orderId);
     if (!delivery) return fail('DELIVERY_MISSING');
-    return { order: { id: row.order_id, customerId: row.customer_id, revision: row.revision, status: row.status,
+    const terminal = this.persistence.db.prepare('SELECT * FROM delivery_terminal_events WHERE order_id=?').get<TerminalRow>(orderId);
+    return { order: { id: row.order_id, customerId: row.customer_id, revision: terminal?.revision ?? row.revision, status: terminal ? (terminal.outcome === 'DELIVERED' ? 'DELIVERED' : 'DELIVERY_FAILED') : row.status,
       containsAlcohol: row.contains_alcohol === 1, requiresAgeVerification: row.contains_alcohol === 1,
       alcoholSnapshot: row.snapshot_json ? JSON.parse(row.snapshot_json) : null, promisedLatestHandoverAt: row.promise_at,
       checkout: JSON.parse(row.checkout_json), createdAt: row.created_at },
-    delivery: { id: delivery.delivery_id, orderId, revision: delivery.revision, courierId: delivery.courier_id,
-      status: delivery.status, ageVerificationStatus: 'PENDING', ageVerificationMethod: null, verifiedAt: null, verifiedByCourierId: null } };
+    delivery: { id: delivery.delivery_id, orderId, revision: terminal?.revision ?? delivery.revision, courierId: delivery.courier_id,
+      status: terminal ? (terminal.outcome === 'DELIVERED' ? 'DELIVERED' : 'FAILED') : delivery.status, ageVerificationStatus: terminal?.age_status ?? 'PENDING', ageVerificationMethod: terminal?.age_method ?? null, verifiedAt: terminal?.age_status === 'VERIFIED_18_PLUS' ? terminal.recorded_at : null, verifiedByCourierId: terminal?.age_status === 'VERIFIED_18_PLUS' ? terminal.courier_id : null } };
   }
 }

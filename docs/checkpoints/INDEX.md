@@ -84,3 +84,5 @@ Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POL
 | v7.1 | 2026-09-07 | PHASE6_CERTIFICATION_WITH_GAPS — CI pending | `2853b28fcc638e6974fb190f1e5562400c14421a` (base) | [v7.1](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.1.md) | criado no repositório |
 
 | v7.2 | 2026-09-07 | PR46_MERGED / PR34_RECONCILIATION | `eef73aacd5820fb6b1b0076c38b6b4fe21ad54c0` | [v7.2](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.2.md) | criado no repositório |
+
+| v7.3 | 2026-09-07 | PR34_MERGED / PHASE6_IMPLEMENTED_SCOPE_CERTIFIED | `5aca80958afcafd75e91665c4556593e8bdcefaf` | [v7.3](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.3.md) | criado no repositório |

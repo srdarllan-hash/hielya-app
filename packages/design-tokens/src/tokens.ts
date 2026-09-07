@@ -25,6 +25,7 @@ export const tokens={
   "color.semantic.warningFill": "#F59E0B",
   "color.semantic.warningText": "#FBBF24",
   "color.semantic.dangerFill": "#EF4444",
+  "color.semantic.dangerBackground": "#D83A3A",
   "color.semantic.dangerText": "#F87171",
   "color.semantic.infoFill": "#3B82F6",
   "color.semantic.infoText": "#60A5FA",

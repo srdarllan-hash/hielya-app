@@ -1,0 +1,109 @@
+name: Design System Validation
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: design-system-validation-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  CI: 'true'
+  BASELINE_MODE: GATE_VALIDATION
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm tokens:check
+      - run: pnpm lint
+      - run: pnpm type-check
+      - name: Complete unit suite with coverage (includes Button)
+        run: pnpm test:coverage
+      - run: pnpm build
+      - run: pnpm build-storybook
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ds-quality-${{ github.event.pull_request.head.sha }}
+          path: coverage/
+          if-no-files-found: warn
+
+  browser-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [foundation, c002-delivery-quote-api-alignment, c002-prequote-continuation-contract, home-catalog-api-integration, product-detail-api-integration]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Accessibility, functional and visual validation — never author snapshots
+        env:
+          SUITE: ${{ matrix.suite }}
+        run: |
+          test "$BASELINE_MODE" = GATE_VALIDATION
+          if [ "$SUITE" = foundation ]; then
+            pnpm exec playwright test 'tests/(accessibility|functional|visual)/(splash|location|home)\.' --config playwright.config.ts --update-snapshots=none --forbid-only --workers=1
+          else
+            pnpm exec playwright test --config "playwright.$SUITE.config.ts" --update-snapshots=none --forbid-only
+          fi
+      - name: Verify baseline and test sources were not written
+        if: always()
+        run: |
+          git diff --exit-code -- tests
+          test -z "$(git ls-files --others --exclude-standard -- tests)"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ds-browser-${{ matrix.suite }}-${{ github.event.pull_request.head.sha }}
+          if-no-files-found: warn
+          path: |
+            playwright-report/
+            test-results/
+            screenshots/
+
+  validation-result:
+    if: always()
+    needs: [quality, browser-regressions]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all validation jobs to pass
+        env:
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          BROWSER_RESULT: ${{ needs.browser-regressions.result }}
+        run: |
+          test "$QUALITY_RESULT" = success
+          test "$BROWSER_RESULT" = success

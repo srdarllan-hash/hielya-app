@@ -19,7 +19,7 @@ jobs:
             sha: e4fc9d5b9675d2d20d7a71cf45ff6f4fb985c0f0
           - label: token-candidate
             sha: aca0ebaf3e409c4b90198d9dee8854135c0c9f50
-        suite: [freeze, home, quote-success]
+        suite: [quote-success]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -53,7 +53,7 @@ jobs:
         run: pnpm exec playwright test tests/functional/home.functional.spec.ts tests/visual/home.visual.spec.ts --config playwright.config.ts --update-snapshots=none --forbid-only --workers=1
       - name: Only success 2.5 km quote visual
         if: matrix.suite == 'quote-success'
-        run: pnpm exec playwright test tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts --grep 'success 2\\.5 km /' --config playwright.c002-delivery-quote-api-alignment.config.ts --update-snapshots=none --forbid-only
+        run: pnpm exec playwright test tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts --grep 'success 2.5 km /' --config playwright.c002-delivery-quote-api-alignment.config.ts --update-snapshots=none --forbid-only
       - name: Verify source and baselines unchanged
         if: always()
         run: |

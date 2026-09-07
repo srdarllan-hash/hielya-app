@@ -182,4 +182,3 @@ Comparação estática da main `54998abe407ca2694b3c35e1fd02f846f3e81eb3`; não 
 | `tests/visual/product-detail-api-integration.visual.spec.ts-snapshots/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-ready-hires-1170-linux.png` | 1470e29 test(product): materialize reviewed product detail baselines |
 | `tests/visual/product-detail-api-integration.visual.spec.ts-snapshots/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-ready-mobile-360-linux.png` | 1470e29 test(product): materialize reviewed product detail baselines |
 | `tests/visual/product-detail-api-integration.visual.spec.ts-snapshots/PRODUCT-DETAIL-PUBLIC-API-INTEGRATION-V1-ready-mobile-390-linux.png` | 1470e29 test(product): materialize reviewed product detail baselines |
-

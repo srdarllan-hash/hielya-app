@@ -33,8 +33,14 @@ Este índice rastreia os checkpoints oficiais migrados do Google Drive. Os docum
 | v4.7 | 2026-09-04 | `ASSET_SELECTION_AND_DESIGN_SYSTEM_APPROVAL_PREPARATION` | `df912c101b3db5c910a8c575fb2e2e687a54f4f5` | [HIELYA_CHECKPOINT_2026-09-04_v4.7.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v4.7.md) | [original](https://docs.google.com/document/d/1S1h6rpWj3GNLlBcpknPq7CivU7bM5ODBjv_-CbdsGzE/edit?usp=drivesdk) |
 | v4.8 | 2026-09-04 | `DESIGN_SYSTEM_PARTIAL_APPROVAL_GATE_VALIDATED_NOT_APPROVED` | `df912c101b3db5c910a8c575fb2e2e687a54f4f5` | [HIELYA_CHECKPOINT_2026-09-04_v4.8.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v4.8.md) | [original](https://docs.google.com/document/d/1aOFSwv9VEvld4zlSYniBI_xfmquaLvPFmiz8zQw7rjc/edit?usp=drivesdk) |
 | v4.9 | 2026-09-04 | `DESIGN_SYSTEM_CODE_FIRST_DIRECTION_ANALYSIS` | `df912c101b3db5c910a8c575fb2e2e687a54f4f5` | [HIELYA_CHECKPOINT_2026-09-04_v4.9.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v4.9.md) | [original](https://docs.google.com/document/d/1iJiCYqId_dS-I-mRMZhqWKDY1YGf7liBgoOn-gre-QY/edit?usp=drivesdk) |
-
 | v5.0 | 2026-09-04 | `CHECKPOINT_REPOSITORY_MIGRATION_GATE` | `9ac639cf7c833d18094c6f9765b369ee2107efba` | [HIELYA_CHECKPOINT_2026-09-04_v5.0.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v5.0.md) | não aplicável — criado no repositório |
+| v5.3 | 2026-09-07 | `ISSUE_28_PREEXISTING_REGRESSION_REPAIR — CI SUCCESS / PR #30 DRAFT` | `57559e3ecfbd431e0218ba474b52774935ead36c` | [HIELYA_CHECKPOINT_2026-09-07_v5.3.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.3.md) | criado no repositório; precedentes v5.1/v5.2 em PRs pendentes |
+
+## Precedentes ainda em PRs documentais
+
+- [v5.1 — commit c155ff23](https://github.com/srdarllan-hash/hielya-app/blob/c155ff234255a02b9847b0c5f1c6e011ee01a9b7/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-04_v5.1.md): PR #24 OPEN / DRAFT.
+- [v5.2 — commit 936bd786](https://github.com/srdarllan-hash/hielya-app/blob/936bd786323afa4bed743b4efaf999ec662bdac2/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.2.md): PR #29 OPEN / DRAFT.
+- O v5.3 preserva essas versões e registra que sua incorporação à main ainda está pendente; nenhum conteúdo histórico foi sobrescrito.
 
 ## Documentos complementares migrados
 

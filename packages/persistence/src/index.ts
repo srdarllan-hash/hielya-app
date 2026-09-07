@@ -249,6 +249,7 @@ export const DEVELOPMENT_MIGRATIONS = [
   '0002_mvp_local_36_catalog_read_model.sql',
   '0003_mvp_local_36_inventory_reservation_lifecycle.sql',
   '0004_mvp_local_36_customer_authentication_foundation.sql',
+  '0005_mvp_local_36_order_delivery_foundation.sql',
 ] as const;
 
 export const resolveDevelopmentMigrationDirectory = (moduleUrl: string): string => moduleUrl.startsWith('file:')
@@ -314,6 +315,7 @@ const mapProductRecord = (value: ProductCatalogRow): PersistentProductCatalogRec
 export class MvpPersistenceDatabase {
   readonly db: SqliteDatabase;
   private readonly migrationDirectory: string;
+  private transactionDepth = 0;
 
   constructor(
     filename = ':memory:',
@@ -360,15 +362,20 @@ export class MvpPersistenceDatabase {
   }
 
   transaction<T>(action: () => T): T {
-    this.db.exec('BEGIN IMMEDIATE');
+    const depth = this.transactionDepth++;
+    const savepoint = `hielya_nested_${depth}`;
     try {
-      const value = action();
-      this.db.exec('COMMIT');
-      return value;
-    } catch (error) {
-      this.db.exec('ROLLBACK');
-      throw error;
-    }
+      this.db.exec(depth === 0 ? 'BEGIN IMMEDIATE' : `SAVEPOINT ${savepoint}`);
+      try {
+        const value = action();
+        this.db.exec(depth === 0 ? 'COMMIT' : `RELEASE SAVEPOINT ${savepoint}`);
+        return value;
+      } catch (error) {
+        this.db.exec(depth === 0 ? 'ROLLBACK' : `ROLLBACK TO SAVEPOINT ${savepoint}`);
+        if (depth !== 0) this.db.exec(`RELEASE SAVEPOINT ${savepoint}`);
+        throw error;
+      }
+    } finally { this.transactionDepth -= 1; }
   }
 
   private writeSettings(settings: OperationalSettingsInput): void {
@@ -1111,3 +1118,5 @@ export {
   MvpCatalogReadAdapter,
   MvpOperationalSettingsReadAdapter,
 } from './public-api-read-adapter';
+
+export { SqliteOrderFoundationRepository } from './order-foundation';

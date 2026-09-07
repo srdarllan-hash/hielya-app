@@ -4,11 +4,11 @@
 
 Before any relevant work, read `docs/checkpoints/HIELYA_CHECKPOINT_POLICY.md`, then `docs/checkpoints/INDEX.md`, then the checkpoint with the highest version. Validate its GitHub branch, PR, SHA and CI claims against live GitHub before structural changes. Never edit an existing historical checkpoint; create the next version as a new file and add it to the index.
 
-## Active Phase 1 gate (2026-09-07)
+## Active Phase 2 gate (2026-09-07)
 
-Issue #35 / PR #36: ALCOHOL_DOMAIN_CONTRACT_ALIGNMENT. Base main `4d32cebcc7f68832940f6825177d5348d63f245a`. Contract V1.3 is defined and tested in this branch; runtime remains V1.2. See `docs/contracts/ALCOHOL_DOMAIN_V1_3_PHASE_1.md` and checkpoint v5.9 when present. Earlier current-state/migration sections below are historical context, not authority for this gate.
+PR #36 merged by owner authorization. Main `5bbf0b0a24a01effb5d21f17f4b1352c122ad89c`, exact certified tree `d070a88f24d538dc2c13a3ecd0353165776d6495`. Full CI34111172377 + contract34111172419 SUCCESS.
 
-Cutoff is server-derived: local22:00 minus MAX(45 minutes, current reliable end-to-end upper SLA), not fixed21:15. Demand and alcohol availability are independent concurrent C-005 dimensions. Implementation phases2–6 wait for individual preceding-phase review/merge; no giant combined PR. No runtime/migration/new-screen work in Phase1. PRs #32/#34 remain separate and unmerged by this task. No production or C-003/C-004 authorization.
+Issue #37 / branch `hielya/alcohol-order-delivery-foundation`: internal order/delivery foundation, dynamic SLA policy and additive SQLite migration0005. See `docs/contracts/ALCOHOL_DOMAIN_PHASE_2.md`. HTTP still V1.2; V1.3 is not activated. Required authoritative checkout/SLA/workforce adapters are integration dependencies. No production credentials, no handover or financial execution, no C-003/C-004 or new screens. Phase2 PR requires separate owner merge approval. Phases3–6 remain unstarted; PRs #32/#34 remain independent. Checkpoints v6.0 (merge) and next phase closure preserve v5.9 unchanged.
 
 ## Repository architecture
 

@@ -1,11 +1,11 @@
 # ALCOHOL_COMPLIANCE_DOMAIN_REQUIREMENTS
 
 Data: 2026-09-07. Issue [#33](https://github.com/srdarllan-hash/hielya-app/issues/33).
-Status: **OWNER_DECISIONS_RECORDED / IMPLEMENTATION_PLAN_PENDING_AUTHORIZATION / NOT_IMPLEMENTED**.
-Revisão documental 2: seis decisões expressas do proprietário incorporadas; PR #34 continua draft e sem merge.
+Status: **OWNER_DECISIONS_RECORDED / SIX_PHASE_PLAN_AUTHORIZED_PREIMPLEMENTATION_REPORT / NOT_IMPLEMENTED**.
+Revisão documental 3: cutoff dinâmico, documento com foto/data de nascimento e marco contábil incorporados; seis fases autorizadas. Relatório de impacto precede a primeira branch de implementação. PR #34 continua draft e sem merge.
 Base verificada: main `4d32cebcc7f68832940f6825177d5348d63f245a`.
 
-Este documento especifica requisitos para revisão. Não modifica nem substitui OpenAPI, migrations, contratos certificados ou decisões comerciais. As seis decisões do proprietário são requisitos definidos; o plano técnico de execução aguarda autorização separada. A aprovação deste documento não ativa venda de álcool, produção ou implementação de telas.
+Este documento especifica requisitos para revisão. Não modifica nem substitui OpenAPI, migrations, contratos certificados ou decisões comerciais. As seis decisões do proprietário são requisitos definidos; o plano técnico de seis fases foi autorizado, condicionado à apresentação do impacto antes de abrir a primeira branch de implementação. A aprovação deste documento não ativa venda de álcool, produção ou implementação de telas.
 
 ## 1. Fundamento e limites da análise
 
@@ -22,7 +22,7 @@ Consulta das fontes em 2026-09-07. Esta é análise técnica dos requisitos indi
 | Evidência na main | O que já existe | O que não está implementado |
 |---|---|---|
 | `contracts/openapi/HIELYA_OPENAPI_V1_0.yaml` | Contrato histórico amplo: `containsAlcohol`, `ageDeclarationsAccepted`, `etaMinAt/etaMaxAt`; StoreState com `alcoholCheckoutAllowed/alcoholCutoffAt`; age-check, verify-pin, fail e refunds | Não equivale a endpoints de pedido/entrega ativos no MVP público V1_2 |
-| OpenAPI público V1_2 e `CLAUDE.md` | Catálogo/localização/quote e transporte OTP; camadas de pedido/pagamento/admin ainda fora da implementação autorizada | Orquestração de checkout, aceite, entrega, recusa e reembolso |
+| OpenAPI público V1_2 e `CLAUDE.md` | Catálogo/localização/quote e transporte OTP; camadas de pedido/pagamento/admin ainda não implementadas, previstas no plano agora autorizado | Orquestração de checkout, aceite, entrega, recusa e reembolso |
 | `.dev-migrations/0002_mvp_local_36_catalog_read_model.sql` | `contains_alcohol`, `minimum_age`, restrição de idade mínima >=18 para produto alcoólico | Snapshot imutável do conteúdo de um pedido e guarda de handover |
 | `.dev-migrations/0001_mvp_local_36_persistence.sql` | `delivery_pins`, tentativas, hash e `verified_at`; valores simulados de pedidos | Entidades completas de pedido/entrega/tentativa, resultado de idade, janela de entrega e ciclo financeiro real |
 | `packages/persistence/src/index.ts` | `verifyDeliveryPin` compara credencial e contabiliza tentativas | Não verifica idade, presença física ou horário; não certifica entrega legal |
@@ -33,21 +33,28 @@ Consulta das fontes em 2026-09-07. Esta é análise técnica dos requisitos indi
 
 ## 3. Regra temporal proposta
 
-Requisito solicitado: `alcoholOrderCutoff = 22:00 - 45 minutos = 21:15` (decisão D1).
+Regra D1 corrigida pelo proprietário:
 
-- Usar a data local do serviço e a zona IANA `Europe/Madrid`; armazenar instantes UTC e expor timestamps com offset. Não fixar UTC+1/UTC+2.
-- `alcoholHandoverDeadlineAt` é 22:00 dessa data. O SLA máximo deve cobrir todo o percurso entre autorização de compra e entrega: fila, aceite, preparação, deslocamento, encontro no hotel, inspeção de idade e PIN. Um ETA apenas de viagem não atende ao requisito.
-- Na criação: permitir álcool somente com loja operacionalmente aberta, dados confiáveis, `serverNow < alcoholOrderCutoffAt` e `promisedLatestHandoverAt < alcoholHandoverDeadlineAt`.
-- A operação continua 10:00–22:00. O limite legal inferior de 08:00 não autoriza abrir às 08:00. Não criar pedidos noturnos de álcool para entrega futura nesta especificação.
-- Exatamente 22:00 é proibido. Exatamente no cutoff calculado também é recusado nesta proposta conservadora, pois a promessa máxima atingiria 22:00. SLA de 45 minutos implica cutoff 21:15; às 21:15 não aceitar uma promessa de entrega até 22:00.
-- O SLA máximo ponta a ponta é **45 minutos**, incluindo eventual folga interna. Nenhuma margem adicional ou promessa maior foi autorizada. Capacidade operacional insuficiente deve bloquear álcool, nunca ampliar silenciosamente o SLA/cutoff. Não deduzir SLA do raio de 4 km, de PNG ou da taxa de entrega.
-- Em aceite/replanejamento, recalcular o tempo máximo restante, sem somar novamente etapas concluídas. Conservar o prazo original auditável; não truncar o ETA para parecer elegível, nem ampliar o deadline para o dia seguinte.
-- **Guardas obrigatórias de domínio em checkout, criação atômica do pedido, aceite, início e conclusão de preparação, despacho, chegada e handover**, além de alteração/substituição de itens. Aceite/preparação/despacho exigem janela legal vigente, estado do pedido válido e ETA máximo restante estritamente anterior a 22:00. O cutoff 21:15 bloqueia novas compras; não é o deadline de despacho de pedidos já aceitos. Esses só avançam enquanto puderem cumprir a promessa original (no máximo 45 minutos) e a entrega antes de 22:00. Um pedido aceito cedo não recebe exceção se atrasar.
-- Na entrega física, exigir `08:00 <= horaLocal < 22:00` e janela operacional aplicável. Uma autorização emitida às 21:59 não permite entrega às 22:00. O entregador deve interromper a entrega se a janela expirar entre autorização e transferência física.
-- Falha de relógio confiável, SLA ausente, indisponibilidade de rede ou dados de elegibilidade vencidos bloqueia álcool. Não aceitar relógio do cliente, backdating ou conclusão offline como prova do prazo.
-- Produtos sem álcool permanecem sujeitos às regras normais da loja, estoque, raio, mínimo e pagamento. Não fechar artificialmente a loja para representar restrição exclusiva de álcool.
+```text
+standardSlaMinutes = 45
+actualUpperBoundMinutes = limite superior real vigente da estimativa ponta a ponta
+effectiveSlaMinutes = MAX(standardSlaMinutes, actualUpperBoundMinutes)
+alcoholOrderCutoffAt = alcoholHandoverDeadlineAt - effectiveSlaMinutes
+```
 
-Persistir a versão da política, SLA máximo utilizado, deadline e promessa de entrega junto ao pedido para explicar a decisão. O servidor deve reavaliar a regra vigente sem usar um snapshot antigo como autorização para violá-la.
+`effectiveSlaMinutes` é calculado no servidor. Sem high-demand e com estimativa válida <=45, resulta 45 minutos/21:15. Em high-demand 45–60, usar **60 minutos/21:00**, nunca média, limite inferior ou 45 otimista. Uma estimativa válida maior que 60 também deve entrar no MAX; 60 não é teto artificial. **21:15 não é configuração fixa de cutoff**, apenas resultado do caso padrão.
+
+- Usar data local do serviço e `Europe/Madrid`; armazenar instantes UTC e expor offset. Deadline legal permanece 22:00 e operação 10:00–22:00; nenhum modo de demanda amplia esses limites.
+- O limite superior real cobre fila, aceite, preparo, deslocamento, encontro, inspeção e PIN. ETA apenas de viagem não basta. Persistir origem/versão, instante de cálculo e validade da estimativa. Dado ausente, inválido ou vencido bloqueia álcool; não substituir falha do provedor por 45 minutos otimistas. Fora de demanda alta, o modelo operacional ainda precisa declarar a estimativa válida.
+- Criar pedido com álcool somente se loja aberta, estimativa confiável, `serverNow < alcoholOrderCutoffAt` e `promisedLatestHandoverAt < deadline`. Na criação, promessa máxima = instante server-side de aceite da criação + SLA efetivo. Exatamente cutoff ou 22:00 falha: 21:00 com SLA60 e 21:15 com SLA45 já não são elegíveis.
+- A estimativa corrente no instante da criação tem precedência sobre quote antigo. Se demanda muda entre carrinho/quote e submit, recalcular atomicamente; se mudou a promessa, comunicar a nova condição e exigir reconfirmação antes de concluir a compra. Não aceitar quote antigo para contornar cutoff antecipado.
+- Registrar snapshot da decisão do pedido: SLA padrão/limite real/SLA efetivo, deadline, cutoff derivado, versão/validade e promessa. Cutoff persistido é evidência calculada por pedido, não um horário fixo global.
+- Revalidar **checkout/criação, aceite operacional, início e fim de preparação, despacho, chegada e handover**. Nas fases posteriores usar tempo máximo restante real, sem somar de novo etapas concluídas. Guardar a promessa original e não a ampliar silenciosamente. Mudança de demanda não cancela retroativamente só porque o novo cutoff de novos pedidos passou; avaliar a viabilidade efetiva daquele pedido e impedir avanço quando não puder cumprir a janela.
+- Pedido criado antes da alta de demanda não recebe exceção para entrega tardia. Demanda menor pode reabrir elegibilidade para NOVOS pedidos com cálculo válido, mas não reabre pedido recusado nem reutiliza idade/PIN.
+- Na entrega, manter deadline anterior a 22:00, janela legal e operacional aplicáveis e operação final atômica idade/PIN/prazo. Uma autorização às 21:59 não permite entrega física às 22:00; sem rede/relógio confiável, não presumir autorização ou concluir offline.
+- Verificar substituições/packs no servidor. Itens sem álcool seguem regras normais de loja/estoque/raio/mínimo/pagamento; alta demanda não significa automaticamente loja fechada nem álcool bloqueado o dia inteiro.
+
+Exemplos: 20:59 com máximo60 → potencialmente elegível; 21:00 com máximo60 → bloqueado; 21:05 com máximo45 → potencialmente elegível; 21:05 com máximo60 → bloqueado. Potencialmente elegível ainda exige todas as demais condições. Deadline de handover continua 22:00 em todos os casos.
 
 ## 4. Contrato de domínio proposto
 
@@ -58,7 +65,8 @@ Os nomes seguintes são uma proposta para futura versão de contrato, não alter
 | `order.containsAlcohol` | boolean, servidor | OR dos itens efetivos, incluindo componentes de packs e substituições; nunca confiar no boolean do cliente |
 | `order.requiresAgeVerification` | boolean, readOnly | Igual a `containsAlcohol`; não pode ser desligado pelo cliente/admin |
 | `order.alcoholHandoverDeadlineAt` | date-time ou null | Obrigatório para pedido com álcool; null sem álcool |
-| `order.alcoholOrderCutoffAt` | date-time ou null | Derivado do deadline e SLA certificado |
+| `order.alcoholOrderCutoffAt` | date-time ou null | Snapshot derivado do deadline e MAX(45, limite superior real vigente); nunca configurado como 21:15 fixo |
+| `order.effectiveSlaMinutes` | inteiro positivo, servidor | MAX do SLA padrão e máximo real válido; acompanhado da origem/versão/validade do cálculo |
 | `order.etaMinAt/etaMaxAt` | date-time | Reaproveitar conceitos históricos, definir que o máximo alcança o handover completo |
 | `delivery.ageVerificationStatus` | enum | `PENDING`, `VERIFIED_18_PLUS`, `REFUSED_NO_ID`, `REFUSED_MINOR`, `REFUSED_DOUBTFUL_ID` |
 | `delivery.ageVerificationMethod` | enum ou null | Proposta `IN_PERSON_DOCUMENT_VISUAL_CHECK`; null em PENDING ou ausência de documento; não OCR/upload |
@@ -93,13 +101,13 @@ PENDING → um dos quatro resultados terminais da tentativa. Recusa não é sobr
 
 O registro específico da inspeção conterá apenas **resultado, método, timestamp e courierId**, associado às chaves da tentativa. Não criar campos, anexos, logs ou analytics para fotografia de documento, número, cópia digital, data de nascimento completa, idade exata, selfie, biometria ou transcrição livre do documento. Inspeção visual presencial não significa capturar uma imagem. Não usar notas livres de recusa para contornar a minimização.
 
-**D4 — documentos:** aceitar DNI, NIE ou passaporte conforme decisão do proprietário, com inspeção visual apenas. O entregador compara presencialmente a pessoa com o documento e verifica 18+, sem registrar número, fotografia ou nascimento. Não ampliar automaticamente a lista para carteira de motorista ou outros documentos do enum histórico.
+**D4 — documentos:** aceitar DNI, passaporte ou NIE acompanhado de documento com **FOTO e DATA DE NASCIMENTO visíveis**, com inspeção visual apenas. O suporte apresentado deve permitir conferir ambos os elementos e a correspondência com a pessoa presente. O entregador compara presencialmente a pessoa com o documento e verifica 18+, sem registrar número, fotografia ou nascimento. Não ampliar automaticamente a lista para carteira de motorista ou outros documentos do enum histórico.
 
-Precisão técnica: NIE é identificador, não documento suficiente por si só. Um certificado/número sem elementos para conferir pessoa e idade não pode produzir VERIFIED_18_PLUS. Na opção “NIE”, exigir suporte documental que permita a conferência; se insuficiente, usar o passaporte já aceito, sem copiar dados. Isso preserva a opção aprovada sem equiparar um número à prova de maioridade. A [orientação do Ministério do Interior sobre TIE](https://www.interior.gob.es/opencms/es/servicios-al-ciudadano/tramites-y-gestiones/extranjeria/regimen-general/tarjeta-de-identidad-de-extranjero/) distingue a situação administrativa da comprovação de identidade por passaporte/documento análogo. O manual futuro deve tornar essa distinção clara ao entregador. Ausência de documento verificável → REFUSED_NO_ID; documento apresentado mas insuficiente/duvidoso → REFUSED_DOUBTFUL_ID; menor identificado → REFUSED_MINOR.
+Precisão técnica: NIE é identificador, não documento suficiente por si só. **NIE sozinho resulta em REFUSED_DOUBTFUL_ID**, nunca VERIFIED_18_PLUS. Documento apresentado sem foto ou data de nascimento visível também não comprova a verificação e deve resultar em REFUSED_DOUBTFUL_ID. Na opção “NIE”, exigir suporte documental que permita a conferência; se insuficiente, usar o passaporte já aceito, sem copiar dados. Isso preserva a opção aprovada sem equiparar um número à prova de maioridade. A [orientação do Ministério do Interior sobre TIE](https://www.interior.gob.es/opencms/es/servicios-al-ciudadano/tramites-y-gestiones/extranjeria/regimen-general/tarjeta-de-identidad-de-extranjero/) distingue a situação administrativa da comprovação de identidade por passaporte/documento análogo. O manual futuro deve tornar essa distinção clara ao entregador. Ausência de documento verificável → REFUSED_NO_ID; documento apresentado mas insuficiente/duvidoso → REFUSED_DOUBTFUL_ID; menor identificado → REFUSED_MINOR.
 
 **D5 — conservação vinculada ao pedido:** o registro mínimo de verificação acompanha a mesma política/data de eliminação do dossiê do pedido e seus comprovantes fiscais; não recebe TTL independente nem renovação por leitura ou login. Referência mercantil geral: **seis anos desde o último lançamento nos livros**, ressalvadas disposições especiais, conforme [Código de Comércio, art. 30](https://www.boe.es/buscar/act.php?id=BOE-A-1885-6627#a30). Não significa “até seis anos desde a compra”. A [AEAT informa prazo fiscal geral de quatro anos](https://sede.agenciatributaria.gob.es/Sede/iva/facturacion-registro/facturacion-iva/obligacion-conservar-facturas.html); ele não substitui a obrigação mercantil aplicável e pode haver regras especiais/interrupções.
 
-Especificar no dossiê do pedido um `retentionUntil` derivado da obrigação aplicável e seu marco contábil, herdado pela evidência mínima. Suspensão legal de eliminação deve ser documentada no mesmo dossiê, com fundamento e revisão, sem conservação indefinida genérica. A obrigação de guardar contabilidade não prova automaticamente que todo dado pessoal do pedido seja necessário por seis anos: documentar a finalidade/necessidade da evidência mínima como prova do cumprimento da entrega; não estender por arrasto a sessão, localização detalhada ou dados não necessários.
+Especificar no dossiê do pedido um `retentionUntil` derivado da obrigação aplicável, contado a partir do **último lançamento contábil**, nunca de order.createdAt/deliveredAt, herdado pela evidência mínima. Suspensão legal de eliminação deve ser documentada no mesmo dossiê, com fundamento e revisão, sem conservação indefinida genérica. A obrigação de guardar contabilidade não prova automaticamente que todo dado pessoal do pedido seja necessário por seis anos: documentar a finalidade/necessidade da evidência mínima como prova do cumprimento da entrega; não estender por arrasto a sessão, localização detalhada ou dados não necessários.
 
 Restringir leitura a entregador atribuído durante a operação e suporte/admin por necessidade. Encerrado o uso operacional, conservar em arquivo restrito pelo prazo do pedido. Não usar para marketing/perfilamento. Observar bloqueio e destruição quando aplicáveis segundo [LOPDGDD, art. 32](https://www.boe.es/buscar/act.php?id=BOE-A-2018-16673#a32); conservar para obrigação/defesa não significa disponibilizar para uso corrente. A futura política de dados deve documentar fundamento, acesso, descarte e tratamento de backups, sem inventar prazo exclusivo de verificação etária.
 
@@ -129,7 +137,7 @@ O reembolso aprovado explicitamente cobre falha de verificação; o valor/regime
 | Superfície histórica | Mudança necessária proposta |
 |---|---|
 | StoreState / catálogo | Diferenciar loja OPEN de elegibilidade de álcool; explicitar motivo (`CUTOFF`, `SLA_UNAVAILABLE`, etc.), cutoff, deadline e validade da informação. Informação pública não autoriza checkout |
-| `/delivery/quote` | Associar promessa máxima real de handover, zona temporal, validade e versão da política; distância/preço isolados não bastam |
+| `/delivery/quote` | Associar limite superior real, SLA efetivo MAX(45, estimativa), cutoff dinâmico, promessa máxima de handover, zona temporal, validade e versão da política; distância/preço isolados não bastam |
 | `POST /orders` / CreateOrderInput | Servidor calcula containsAlcohol/requiresAgeVerification, verifica janela e snapshot/revisão. `ageDeclarationsAccepted` não vira verificação presencial |
 | Aceite/preparo: `/admin/orders/{orderId}/start-picking`, `/confirm-items`, `/mark-ready` | Mapear aceite formal e conferir guardas antes de aceite, início/fim do preparo e despacho, incluindo substituições. Usar comandos existentes que correspondam a essas transições, sem deixar fase sem guarda |
 | `/admin/deliveries/{deliveryId}/start` e `/arrive` | Reavaliar prazo restante; chegada não equivale a handover |
@@ -147,7 +155,7 @@ Propor respostas de conflito de domínio com código estável para deadline, ida
 
 ## 8. Persistência e migrations futuras
 
-As migrations 0001–0004 existentes permanecem intactas. Não há tabela operacional completa de pedido/entrega a simplesmente acrescentar um boolean; sua fundação deverá ser autorizada em gate próprio.
+As migrations 0001–0004 existentes permanecem intactas. Não há tabela operacional completa de pedido/entrega a simplesmente acrescentar um boolean; sua fundação consta da fase P2 agora autorizada, a executar pelo fluxo de issue/branch/PR após este relatório.
 
 Proposta de esquema futuro: pedido e itens com snapshot de álcool/revisão; entrega e tentativas com estados/motivos; política temporal/versionamento e promessa; registro mínimo de inspeção; associação de PIN à tentativa única e consumo atômico; eventos idempotentes/outbox de recusa, retorno e compensação integral; referência à retenção do dossiê do pedido. Chaves estrangeiras, unicidade de comandos e transições condicionais devem impedir atores/entregas cruzados e conclusão duplicada.
 
@@ -205,11 +213,11 @@ Plano apenas; nenhum teste de implementação deste domínio foi executado nesta
 
 | Decisão do proprietário | Estado documental |
 |---|---|
-| D1 — SLA 45 minutos / cutoff 21:15 | Incorporada; prazo efetivo de entrega anterior a 22:00; guardas em aceite/preparo/despacho |
+| D1 — Cutoff dinâmico: 22:00 − MAX(45, máximo real vigente) | Incorporada; prazo efetivo de entrega anterior a 22:00; guardas em aceite/preparo/despacho |
 | D2 — Integral automático, custo zero por falha de verificação | Incorporada; cancelamento de autorização versus estorno de captura separados |
 | D3 — Sem nova tentativa/terceiro/recepção | Incorporada; somente novo pedido, sem herdar prova anterior |
-| D4 — DNI/NIE/passaporte, inspeção visual | Incorporada; NIE isolado não comprova idade; nenhuma captura de documento |
+| D4 — DNI/NIE/passaporte, inspeção visual | Incorporada; Foto e nascimento visíveis; NIE isolado → REFUSED_DOUBTFUL_ID; nenhuma captura de documento |
 | D5 — Mesmo prazo do dossiê do pedido/fiscal | Incorporada; referência mercantil seis anos desde último lançamento, não teto absoluto; necessidade e exceções documentadas |
 | D6 — Única operação atômica | Incorporada; três condições conferidas juntas, nenhum sucesso parcial libera entrega |
 
-Plano sequenciado, futuras issues e critérios de aceite em [ALCOHOL_COMPLIANCE_IMPLEMENTATION_PLAN.md](./ALCOHOL_COMPLIANCE_IMPLEMENTATION_PLAN.md). Nenhuma dessas futuras issues/branches de implementação foi criada. Autorização de código, contratos e UI continua pendente; C-003/C-004 não iniciadas. PR #32 e registro de assets permanecem fora das alterações deste gate.
+Plano sequenciado, futuras issues e critérios de aceite em [ALCOHOL_COMPLIANCE_IMPLEMENTATION_PLAN.md](./ALCOHOL_COMPLIANCE_IMPLEMENTATION_PLAN.md). Nenhuma dessas futuras issues/branches de implementação foi criada. Plano de seis fases autorizado; este relatório de impacto deve ser apresentado antes da primeira branch de implementação. C-003/C-004 e telas novas continuam bloqueadas; aprovação de merge continua separada. PR #32 e registro de assets permanecem fora das alterações deste gate.

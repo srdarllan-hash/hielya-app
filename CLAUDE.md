@@ -14,15 +14,11 @@ Before any relevant work, read `docs/checkpoints/HIELYA_CHECKPOINT_POLICY.md`, t
 - For decision rationale, consult `docs/decisions/`; for required behavior, consult `docs/requirements/`.
 - Validate claims against repository/GitHub evidence. Report missing references and document conflicts in the PR; never silently select a conflicting document as the winner.
 
-Reference availability verified for Issue43: `docs/CONSTRAINTS.md`, `docs/KNOWN_DEBT.md`, `docs/INTEGRATIONS.md` and `docs/requirements/` are absent from the checked base tree; the three named files also return404 on GitHub main. This routing instruction does not claim those documents already exist. The Phase5 PR records this gap; canonical contracts, ADRs and checkpoints remain available.
+## Active Phase 6 certification (2026-09-07)
 
-## Active Phase 5 gate (2026-09-07)
+PR44 merged under explicit authorization. Main `2853b28fcc638e6974fb190f1e5562400c14421a`, certified tree `928c163af298321e546248ee438e158ed31e11b2`; CI34132016389/34132016319 SUCCESS982tests. Issue45 / branch `hielya/alcohol-compliance-certification` consolidates evidence and tests controlled cross-phase paths. See `docs/contracts/ALCOHOL_PHASE_6_CERTIFICATION.md` for coverage and gaps. Full operational end-to-end certification is not claimed: return inspection, authenticated purchase/hotel/courier journey, payment provider and physical disposal remain dependencies. No production/C003/C004/new screens; separate approval before this PR merge.
 
-PR42 merged under explicit owner authorization. Main `2b02d459678e7fbc857214ae8260469db5e7f958`, certified tree `2d390154c76771e346ef76dfe180c2f0f756b5d8`, CI34118318166/34118318195 SUCCESS (960tests). Issue43 / branch `hielya/c005-alcohol-domain-integration`: C005 server eligibility, session expiry/revalidation, simultaneous high-demand/alcohol unavailable. See `docs/contracts/ALCOHOL_DOMAIN_PHASE_5.md` and Phase5 runtime profile.
-
-GET /api/v1/store/state activates only this public V1.3 query. `HIELYA_OPERATIONAL_STATE_PATH` is an optional development-only authoritative input file; missing/stale source never grants alcohol availability. No browser SLA/cutoff calculation. C005 emits guarded purchase intentions; actual authenticated cart/checkout UI and HTTP activation remain absent. Existing atomic order creation revalidates destination-specific eligibility; public global availability is not order authorization.
-
-Known mandatory pre-production work: physical disposal after retention is NOT implemented; real Stripe/payment provider must execute pending refunds. Payment/accounting/SLA production adapters remain unconfigured. Preserve minimal age evidence, atomic handover and immutable terminal refusal. No Phase6, production, C003/C004 or new screens. Phase5 PR requires separate owner merge approval. Checkpoints v6.7 (merge) and next candidate checkpoint preserve history. Historical migration-era sections below do not supersede this active gate.
+CONSTRAINTS, KNOWN_DEBT and INTEGRATIONS now exist as sourced references. Requirements README links the original plan/spec by immutable SHA `b96b2907f132d006072b216030353b5352441049` in PR34, not merged into main. Prior absence report inspected main only and omitted that provenance. No implicit PR34 merge; consult the source revision for rationale and current checkpoints for state. Historical migration-era sections below remain historical, not active status.
 
 ## Repository architecture
 

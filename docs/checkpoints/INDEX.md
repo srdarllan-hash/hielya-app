@@ -72,3 +72,7 @@ Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POL
 | v6.8 | 2026-09-07 | PHASE_5_C005_ALCOHOL_INTEGRATION — CI pending | `2b02d459678e7fbc857214ae8260469db5e7f958` (base) | [v6.8](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.8.md) | criado no repositório |
 
 | v6.9 | 2026-09-07 | PHASE_5_TEST_EXPECTATION_ALIGNMENT — CI pending | `ff6e74e1e0f9a075d4412e1ea723b2bb17f248f6` (first candidate) | [v6.9](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.9.md) | criado no repositório |
+
+| v7.0 | 2026-09-07 | PHASE5_MERGE / PHASE6_AUTHORIZATION | `2853b28fcc638e6974fb190f1e5562400c14421a` | [v7.0](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.0.md) | criado no repositório |
+
+| v7.1 | 2026-09-07 | PHASE6_CERTIFICATION_WITH_GAPS — CI pending | `2853b28fcc638e6974fb190f1e5562400c14421a` (base) | [v7.1](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.1.md) | criado no repositório |

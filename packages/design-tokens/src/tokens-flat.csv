@@ -16,6 +16,7 @@
 "color.semantic.warningFill","--hly-color-semantic-warning-fill","#F59E0B","color",""
 "color.semantic.warningText","--hly-color-semantic-warning-text","#FBBF24","color",""
 "color.semantic.dangerFill","--hly-color-semantic-danger-fill","#EF4444","color",""
+"color.semantic.dangerBackground","--hly-color-semantic-danger-background","#D83A3A","color","Danger action background with white text; preserve dangerFill for existing borders"
 "color.semantic.dangerText","--hly-color-semantic-danger-text","#F87171","color",""
 "color.semantic.infoFill","--hly-color-semantic-info-fill","#3B82F6","color",""
 "color.semantic.infoText","--hly-color-semantic-info-text","#60A5FA","color",""

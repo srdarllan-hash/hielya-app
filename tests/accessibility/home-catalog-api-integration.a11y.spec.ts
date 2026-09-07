@@ -6,12 +6,14 @@ import {
   installCatalogErrorRoutes,
   installPausedCatalogRoutes,
   installSyntheticCatalogRoutes,
+  installNormalStoreRoute,
   type RuntimeErrorCollector,
 } from '../integration/home-catalog-api-integration.fixtures';
 
 let runtimeErrors: RuntimeErrorCollector;
 
 test.beforeEach(async ({ page }) => {
+  await installNormalStoreRoute(page);
   runtimeErrors = collectRuntimeErrors(page);
 });
 
@@ -57,4 +59,13 @@ test('C-005 integration LOADING is WCAG 2.1 AA clean', async ({ page }) => {
     pausedRoutes.release();
   }
   await expect(page.locator('[data-home-catalog-state="HOME_CATALOG_READY"]')).toBeVisible();
+});
+
+test('C005 simultaneous high demand and alcohol restriction remains accessible', async ({page}) => {
+  await installSyntheticCatalogRoutes(page);
+  const {readFileSync}=await import('node:fs');
+  const examples=JSON.parse(readFileSync('contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_3.yaml','utf8')).paths['/store/state'].get.responses['200'].content['application/json'].examples;
+  await page.route('**/api/v1/store/state',async route=>route.fulfill({json:examples['high60-and-alcohol-blocked'].value,headers:{'x-hielya-refresh-after-ms':'15000'}}));
+  await page.goto('/');await expect(page.getByText('Alcohol no disponible después de las 21:00 hoy')).toBeVisible();
+  await expect(page.getByText(/Alta demanda/)).toBeVisible();await assertAccessible(page);
 });

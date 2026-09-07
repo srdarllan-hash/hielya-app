@@ -21,6 +21,8 @@ import {
   mapPublicProductPage,
 } from './home-catalog-mapper';
 
+import { useStoreAvailability, type AvailabilityClient } from './store-availability';
+
 const FIRST_PAGE = 1;
 const PAGE_SIZE = 20;
 const SAFE_ERROR_MESSAGE = 'No pudimos cargar el catálogo. Inténtalo de nuevo.';
@@ -61,6 +63,7 @@ export interface HomeCatalogRuntimeMachine {
 
 export interface HomeCatalogRuntimeProps {
   client?: MvpCatalogClient;
+  availabilityClient?: AvailabilityClient;
   requestTimeoutMs?: number;
   onOpenProduct?: (productId: string) => void;
 }
@@ -268,9 +271,19 @@ export const createHomeCatalogRuntimeMachine = (
 
 export function HomeCatalogRuntime({
   client: injectedClient,
+  availabilityClient,
   requestTimeoutMs,
   onOpenProduct,
 }: HomeCatalogRuntimeProps) {
+  const { availability, session } = useStoreAvailability(availabilityClient);
+  const notices: { tone: 'warning' | 'info'; text: string }[] = [];
+  if (availability?.demand.level === 'HIGH' && availability.demand.estimate) notices.push({ tone: 'warning', text: `Alta demanda · La estimación actual es de ${availability.demand.estimate.minimumMinutes}–${availability.demand.estimate.upperBoundMinutes} min` });
+  if (availability?.alcohol.status === 'UNAVAILABLE') {
+    const cutoff = availability.alcohol.snapshot?.alcoholOrderCutoffAt;
+    notices.push({ tone: 'info', text: availability.alcohol.reason === 'CUTOFF_REACHED' && cutoff
+      ? `Alcohol no disponible después de las ${new Intl.DateTimeFormat('es-ES',{timeZone:'Europe/Madrid',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(cutoff))} hoy`
+      : 'Alcohol temporalmente no disponible' });
+  }
   const client = useMemo(
     () => injectedClient ?? createMvpCatalogClient(),
     [injectedClient],
@@ -298,8 +311,18 @@ export function HomeCatalogRuntime({
     globalThis.location.assign(`/products/${encodeURIComponent(productId)}`);
   };
 
+  const add = async (id: string, kind: 'add-product' | 'add-pack') => {
+    const product = [...snapshot.catalog.unitProducts,...snapshot.catalog.packs].find(p => p.id === id);
+    if (!product || product.availability !== 'AVAILABLE') return;
+    if (await session.allow(product.containsAlcohol)) window.dispatchEvent(new CustomEvent('hielya:ui-action',{detail:{action:kind,value:id}}));
+  };
   return (
     <HomeScreen
+      alcoholBlocked={!availability || availability.alcohol.status !== 'AVAILABLE'}
+      storeBlocked={availability !== undefined && availability.storeStatus !== 'OPEN'}
+      availabilityNotices={notices}
+      onAddProduct={id => void add(id,'add-product')}
+      onAddPack={id => void add(id,'add-pack')}
       catalogState={snapshot.catalogState}
       catalog={snapshot.catalog}
       isRefreshing={snapshot.isRefreshing}

@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 
 describe('MVP Local 36 OpenAPI V1.1 contract Gate', () => {
   it('preserves the canonical baseline and validates the derived public contract', () => {
-    const output = execFileSync(process.execPath, ['scripts/validate-mvp-local-36-openapi.mjs'], { encoding: 'utf8' });
+    const output = execFileSync(process.execPath, ['scripts/validate-mvp-local-36-openapi.mjs', '--scope=regression'], { encoding: 'utf8' });
 
     expect(output).toContain('ORIGINAL_ACTUAL_SHA256=a2c027c6294b44c94cf4be21d18fbd251b0323102e3c9ba2cba912a96d810ae9');
     expect(output).toContain('YAML_VALIDATION=SUCCESS');

@@ -69,6 +69,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      - run: pnpm build-storybook
+        if: matrix.suite == 'foundation'
       - run: pnpm exec playwright install --with-deps chromium
       - name: Accessibility, functional and visual validation — never author snapshots
         env:

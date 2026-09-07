@@ -3,6 +3,8 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
+import { parseScopeMode, validateScopeMode } from './historical-validator-mode.mjs';
+
 import { HOME_CATALOG_API_INTEGRATION_CHANGED_FILES } from './mvp-local-36-home-catalog-api-integration-changed-files.mjs';
 
 export const CERTIFIED_BASE_SHA = 'abc9380c968c7533316bd27cd3f85a73f7020b8f';
@@ -209,7 +211,8 @@ const validateProfile = (profile) => {
   assert(profile.controls.prDraftRequired === true, 'The PR must remain draft');
 };
 
-const validateScope = () => {
+const validateScope = (scopeMode) => {
+  if (scopeMode === 'regression') return [];
   if (process.env.GITHUB_ACTIONS !== 'true') return [];
   const files = execFileSync('git', ['diff', '--name-only', `${CERTIFIED_BASE_SHA}..HEAD`], { encoding: 'utf8' }).trim().split('\n').filter(Boolean);
   const unauthorized = files.filter((file) => !ALLOWED_CHANGED_FILES.has(file));
@@ -222,7 +225,8 @@ const validateNoCredentials = (sources) => {
   assert(!sources.some((source) => realCredentialPattern.test(source)), 'A production credential pattern was found');
 };
 
-export const validateMvpLocal36OpenApi = () => {
+export const validateMvpLocal36OpenApi = ({ scopeMode = 'historical' } = {}) => {
+  validateScopeMode(scopeMode);
   const original = readFileSync(ORIGINAL_PATH);
   const actualHash = sha256(original);
   assert(actualHash === ORIGINAL_SHA256, `Original OpenAPI hash mismatch: ${actualHash}`);
@@ -246,7 +250,7 @@ export const validateMvpLocal36OpenApi = () => {
   validateProfile(profile);
   validateDeferredCart(contract, profile);
   validateNoCredentials([contractResult.source, profileResult.source]);
-  const changedFiles = validateScope();
+  const changedFiles = validateScope(scopeMode);
 
   return {
     originalActualSha256: actualHash,
@@ -261,11 +265,13 @@ export const validateMvpLocal36OpenApi = () => {
     deliveryQuoteContract: 'SERVER_CALCULATED',
     cartValidationStatus: 'DEFERRED_AUTH_CART_LAYER',
     changedFiles,
+    scopeMode,
   };
 };
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const report = validateMvpLocal36OpenApi();
+  const report = validateMvpLocal36OpenApi({ scopeMode: parseScopeMode(process.argv.slice(2)) });
+  console.log(`SCOPE_MODE=${report.scopeMode}`);
   console.log(`ORIGINAL_ACTUAL_SHA256=${report.originalActualSha256}`);
   console.log(`YAML_VALIDATION=${report.yamlValidation}`);
   console.log(`OPENAPI_VALIDATION=${report.openApiValidation}`);

@@ -65,6 +65,8 @@ test('success 2.5 km / €3.50 visual', async ({ page }, testInfo) => {
   await expect(page.locator('[data-state="success"]')).toBeVisible();
   await expect(page.getByText('2.5 km', { exact: true })).toBeVisible();
   await expect(page.getByText('€3.50', { exact: true })).toBeVisible();
+  // PR #11 ratified prequote continuation: quoteId is not required for this step.
+  await expect(page.getByRole('button', { name: 'Continuar', exact: true })).toBeEnabled();
   await capture(page, testInfo.project.name, 'success-2-5km-350c');
 });
 

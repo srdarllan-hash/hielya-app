@@ -157,6 +157,15 @@ describe('terminal refusal and atomic persistence', () => {
     const record: TerminalDelivery = { deliveryId: f.aggregate.delivery.id, orderId: f.aggregate.order.id, revision: 7, outcome: 'REFUSED_MINOR', recordedAt: '2026-09-07T18:00:00Z', courierId: 'courier', ageStatus: 'REFUSED_MINOR', ageMethod: null, pinDigest: null, recipientPresent: false };
     expect(() => new SqliteHandoverRepository(f.db).transaction(tx => tx.complete(record))).toThrow(); noTerminal(f.db);
   });
+  it('blocks INSERT OR REPLACE and parent deletion, not only ordinary updates', () => {
+    const f = fixture();
+    expect(() => f.db.db.exec('INSERT OR REPLACE INTO handover_pins SELECT delivery_id,digest,0,maximum FROM handover_pins')).toThrow('cannot replace');
+    f.handover.refuse('courier', f.aggregate.delivery.id, key, { expectedRevision: 6, status: 'REFUSED_MINOR' });
+    expect(() => f.db.db.exec('INSERT OR REPLACE INTO delivery_terminal_events SELECT * FROM delivery_terminal_events')).toThrow('cannot replace');
+    expect(() => f.db.db.exec('DELETE FROM order_foundation')).toThrow('cannot delete');
+    expect(() => f.db.db.exec('DELETE FROM delivery_foundation')).toThrow('cannot delete');
+    expect(f.orders.findOwned('customer', f.aggregate.order.id)!.status).toBe('DELIVERY_FAILED');
+  });
   it('serializes competing handover/refusal with a real SQLite write lock', () => {
     const dir = mkdtempSync(join(tmpdir(), 'hielya-p3-lock-')); dirs.push(dir); const file = join(dir, 'test.sqlite'); const f = fixture(true, file);
     const otherDb = new MvpPersistenceDatabase(file); dbs.push(otherDb); otherDb.migrate();

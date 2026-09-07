@@ -22,3 +22,6 @@ Only REFUSED_NO_ID / REFUSED_MINOR / REFUSED_DOUBTFUL_ID accepted by refuse; VER
 
 ## Regression and certification
 Tests explicitly cover all8combinations, separate SQL guards, deadline boundary/recheck, preserving original promise, replay/changed payload/revoked actor, wrong PIN attempt lock and legacy bypass, every terminal refusal, opposite outcome on another connection, write-lock contention, rollback after event insertion including compensation, and no document/clear PIN data. Full application/browser/contract CI must certify final SHA. No baseline-writing workflow changes.
+
+## Replacement-write hardening
+Review found that SQLite INSERT OR REPLACE need not invoke DELETE triggers when recursive_triggers is disabled. Although no application command uses REPLACE here, relying only on DELETE/UPDATE guards would overstate database immutability. Explicit BEFORE INSERT duplicate guards now reject replacing terminal events or PIN credentials, and terminal parent deletions are blocked. A direct-SQL regression verifies this path. No old migration is edited;0006 is still the unmerged Phase3 candidate. Final CI must validate the hardening commit, not just the earlier41-test revision.

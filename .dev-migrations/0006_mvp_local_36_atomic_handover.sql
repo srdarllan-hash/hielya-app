@@ -34,6 +34,8 @@ CREATE TABLE handover_command_receipts (
 );
 CREATE TRIGGER terminal_delivery_guards BEFORE INSERT ON delivery_terminal_events
 BEGIN
+ SELECT CASE WHEN EXISTS(SELECT 1 FROM delivery_terminal_events WHERE delivery_id=NEW.delivery_id OR order_id=NEW.order_id)
+ THEN RAISE(ABORT,'terminal delivery cannot replace') END;
  SELECT CASE WHEN (SELECT count(*) FROM order_foundation o JOIN delivery_foundation d ON d.order_id=o.order_id
    WHERE o.order_id=NEW.order_id AND d.delivery_id=NEW.delivery_id AND d.status='ARRIVED'
    AND o.status='OUT_FOR_DELIVERY' AND d.courier_id=NEW.courier_id
@@ -74,3 +76,13 @@ WHEN NEW.digest!=OLD.digest OR NEW.maximum!=OLD.maximum OR NEW.attempts!=OLD.att
 BEGIN SELECT RAISE(ABORT,'handover PIN cannot reset'); END;
 CREATE TRIGGER handover_pin_no_delete BEFORE DELETE ON handover_pins
 BEGIN SELECT RAISE(ABORT,'handover PIN cannot reissue'); END;
+
+CREATE TRIGGER handover_pin_no_replace BEFORE INSERT ON handover_pins
+WHEN EXISTS(SELECT 1 FROM handover_pins WHERE delivery_id=NEW.delivery_id)
+BEGIN SELECT RAISE(ABORT,'handover PIN cannot replace'); END;
+CREATE TRIGGER terminal_order_no_delete BEFORE DELETE ON order_foundation
+WHEN EXISTS(SELECT 1 FROM delivery_terminal_events WHERE order_id=OLD.order_id)
+BEGIN SELECT RAISE(ABORT,'terminal order cannot delete'); END;
+CREATE TRIGGER terminal_delivery_no_delete BEFORE DELETE ON delivery_foundation
+WHEN EXISTS(SELECT 1 FROM delivery_terminal_events WHERE delivery_id=OLD.delivery_id)
+BEGIN SELECT RAISE(ABORT,'terminal delivery cannot delete'); END;

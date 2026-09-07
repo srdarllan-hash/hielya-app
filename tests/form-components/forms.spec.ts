@@ -1,7 +1,9 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 const open = async (page: Page, id: string) => {
-  await page.goto(`/iframe.html?id=foundation-${id}&viewMode=story`);
+  // Playwright owns this axe run; keep the addon manual in this iframe only to avoid two concurrent scans.
+  // Normal Storybook previews retain automatic a11y. No rule, state or browser is skipped here.
+  await page.goto(`/iframe.html?id=foundation-${id}&viewMode=story&globals=a11y.manual:!true`);
   await expect(page.locator('.hly-field').first()).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
 };
@@ -18,7 +20,7 @@ const states = {
 for (const [component, variants] of Object.entries(states)) for (const state of variants) {
   test(`${component} ${state}: accessible state`, async ({ page }) => {
     await open(page, `${component}--${state}`);
-    const result = await new AxeBuilder({ page }).include('#storybook-root').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+    const result = await new AxeBuilder({ page }).include('#storybook-root').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
     expect(result.violations.map(({ id, impact }) => ({ id, impact }))).toEqual([]);
   });
 }

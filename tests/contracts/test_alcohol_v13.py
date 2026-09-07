@@ -157,6 +157,16 @@ class AlcoholContract(unittest.TestCase):
                 if '/deliveries/' in path:
                     self.assertEqual(op['security'], [{'courierBearer': []}])
 
+    def test_delivery_projection_names_cannot_diverge_from_single_record(self):
+        uid = '11111111-1111-4111-8111-111111111111'
+        value = {'id': uid, 'orderId': uid, 'revision': 1, 'status': 'ARRIVED',
+                 'ageVerification': {'status': 'PENDING', 'method': None, 'recordedAt': None, 'courierId': None},
+                 'ageVerificationStatus': 'PENDING', 'ageVerificationMethod': None,
+                 'verifiedAt': None, 'verifiedByCourierId': None, 'compensation': None}
+        self.assertEqual(validate('DeliveryCompliance', value), [])
+        value['ageVerificationStatus'] = 'VERIFIED_18_PLUS'
+        self.assertTrue(validate('DeliveryCompliance', value))
+
     def test_retention_and_phase_boundaries(self):
         self.assertEqual(validate('RetentionPolicyV13', PROFILE['retention']), [])
         wrong = dict(PROFILE['retention'], anchor='ORDER_CREATED_AT')

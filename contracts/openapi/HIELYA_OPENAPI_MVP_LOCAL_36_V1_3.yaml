@@ -3220,7 +3220,9 @@
           "ageVerification",
           "verifiedAt",
           "verifiedByCourierId",
-          "compensation"
+          "compensation",
+          "ageVerificationStatus",
+          "ageVerificationMethod"
         ],
         "properties": {
           "id": {
@@ -3281,6 +3283,30 @@
                 "type": "null"
               }
             ]
+          },
+          "ageVerificationStatus": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "VERIFIED_18_PLUS",
+              "REFUSED_NO_ID",
+              "REFUSED_MINOR",
+              "REFUSED_DOUBTFUL_ID"
+            ],
+            "readOnly": true,
+            "description": "Requested public field name in the restricted delivery view; projection of ageVerification.status, never a second stored result."
+          },
+          "ageVerificationMethod": {
+            "oneOf": [
+              {
+                "const": "IN_PERSON_DOCUMENT_VISUAL_CHECK"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "Projection of ageVerification.method; no additional stored identity data."
           }
         },
         "description": "Restricted courier/admin view only. verifiedAt/verifiedByCourierId are projections of the one stored age decision only when VERIFIED_18_PLUS; null otherwise. No parallel identity storage. Delivered alcohol must have valid age record, current physical presence and valid PIN/deadline; enforced by transaction, not this generic response schema.",
@@ -3347,6 +3373,121 @@
                 },
                 "compensation": {
                   "$ref": "#/components/schemas/Compensation"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "ageVerificationStatus": {
+                  "const": "PENDING"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "ageVerification": {
+                  "properties": {
+                    "status": {
+                      "const": "PENDING"
+                    }
+                  }
+                },
+                "ageVerificationMethod": {
+                  "type": "null"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "ageVerificationStatus": {
+                  "const": "VERIFIED_18_PLUS"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "ageVerification": {
+                  "properties": {
+                    "status": {
+                      "const": "VERIFIED_18_PLUS"
+                    }
+                  }
+                },
+                "ageVerificationMethod": {
+                  "const": "IN_PERSON_DOCUMENT_VISUAL_CHECK"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "ageVerificationStatus": {
+                  "const": "REFUSED_NO_ID"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "ageVerification": {
+                  "properties": {
+                    "status": {
+                      "const": "REFUSED_NO_ID"
+                    }
+                  }
+                },
+                "ageVerificationMethod": {
+                  "type": "null"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "ageVerificationStatus": {
+                  "const": "REFUSED_MINOR"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "ageVerification": {
+                  "properties": {
+                    "status": {
+                      "const": "REFUSED_MINOR"
+                    }
+                  }
+                },
+                "ageVerificationMethod": {
+                  "const": "IN_PERSON_DOCUMENT_VISUAL_CHECK"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "ageVerificationStatus": {
+                  "const": "REFUSED_DOUBTFUL_ID"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "ageVerification": {
+                  "properties": {
+                    "status": {
+                      "const": "REFUSED_DOUBTFUL_ID"
+                    }
+                  }
+                },
+                "ageVerificationMethod": {
+                  "const": "IN_PERSON_DOCUMENT_VISUAL_CHECK"
                 }
               }
             }

@@ -36,6 +36,18 @@ Este índice rastreia os checkpoints oficiais migrados do Google Drive. Os docum
 | v5.0 | 2026-09-04 | `CHECKPOINT_REPOSITORY_MIGRATION_GATE` | `9ac639cf7c833d18094c6f9765b369ee2107efba` | [HIELYA_CHECKPOINT_2026-09-04_v5.0.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v5.0.md) | não aplicável — criado no repositório |
 | v5.3 | 2026-09-07 | `ISSUE_28_PREEXISTING_REGRESSION_REPAIR — CI SUCCESS / PR #30 DRAFT` | `57559e3ecfbd431e0218ba474b52774935ead36c` | [HIELYA_CHECKPOINT_2026-09-07_v5.3.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.3.md) | criado no repositório; precedentes v5.1/v5.2 em PRs pendentes |
 | v5.4 | 2026-09-07 | `ISSUE_28_RESOLUTION_MERGED_TO_MAIN` | `4d32cebcc7f68832940f6825177d5348d63f245a` | [HIELYA_CHECKPOINT_2026-09-07_v5.4.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.4.md) | criado no repositório |
+| v5.4 | 2026-09-07 | `Precedente documental em PR #32, não incorporado nesta branch` | `27bb14c47e3513143c1b103655334da1bedab119` | [v5.4](https://github.com/srdarllan-hash/hielya-app/blob/27bb14c47e3513143c1b103655334da1bedab119/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.4.md) | criado no repositório |
+| v5.5 | 2026-09-07 | `Precedente documental em PR #32, não incorporado nesta branch` | `27bb14c47e3513143c1b103655334da1bedab119` | [v5.5](https://github.com/srdarllan-hash/hielya-app/blob/27bb14c47e3513143c1b103655334da1bedab119/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.5.md) | criado no repositório |
+| v5.6 | 2026-09-07 | `Precedente documental em PR #34, não incorporado nesta branch` | `b96b2907f132d006072b216030353b5352441049` | [v5.6](https://github.com/srdarllan-hash/hielya-app/blob/b96b2907f132d006072b216030353b5352441049/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.6.md) | criado no repositório |
+| v5.7 | 2026-09-07 | `Precedente documental em PR #34, não incorporado nesta branch` | `b96b2907f132d006072b216030353b5352441049` | [v5.7](https://github.com/srdarllan-hash/hielya-app/blob/b96b2907f132d006072b216030353b5352441049/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.7.md) | criado no repositório |
+| v5.8 | 2026-09-07 | `Precedente documental em PR #34, não incorporado nesta branch` | `b96b2907f132d006072b216030353b5352441049` | [v5.8](https://github.com/srdarllan-hash/hielya-app/blob/b96b2907f132d006072b216030353b5352441049/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.8.md) | criado no repositório |
+| v5.9 | 2026-09-07 | `ALCOHOL_DOMAIN_CONTRACT_ALIGNMENT / PHASE_1 — PR #36 DRAFT` | `22066a991816b73a0f886062b3a9cecd69573858` (primeiro candidato) | [HIELYA_CHECKPOINT_2026-09-07_v5.9.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.9.md) | criado no repositório |
+
+| v5.4 | 2026-09-07 | `ISSUE_28_RESOLUTION_MERGED_TO_MAIN — documento pendente no PR #32` | `4d32cebcc7f68832940f6825177d5348d63f245a` | [v5.4 no PR #32](https://github.com/srdarllan-hash/hielya-app/blob/27bb14c47e3513143c1b103655334da1bedab119/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.4.md) | criado no repositório |
+| v5.5 | 2026-09-07 | `DESIGN_TOKENS_1.2.0_PROMOTION — OPEN/DRAFT PR #32` | `27bb14c47e3513143c1b103655334da1bedab119` | [v5.5 no PR #32](https://github.com/srdarllan-hash/hielya-app/blob/27bb14c47e3513143c1b103655334da1bedab119/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.5.md) | criado no repositório |
+| v5.6 | 2026-09-07 | `ALCOHOL_COMPLIANCE_DOMAIN_REQUIREMENTS — SPECIFICATION_PROPOSED / PR #34 DRAFT` | `b390a66472519d319a0adc4b5722dbd2084312df` | [HIELYA_CHECKPOINT_2026-09-07_v5.6.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.6.md) | criado no repositório |
+| v5.7 | 2026-09-07 | `ALCOHOL_COMPLIANCE_DOMAIN_REQUIREMENTS — OWNER_DECISIONS_RECORDED / PLAN_PENDING_AUTHORIZATION` | `7dea7b4c52b366215cf56087306ba9a692bae474` (base revisada) | [HIELYA_CHECKPOINT_2026-09-07_v5.7.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.7.md) | criado no repositório / PR #34 |
+| v5.8 | 2026-09-07 | `DYNAMIC_CUTOFF_DECISION_AND_PREIMPLEMENTATION_IMPACT — SIX_PHASE_PLAN_AUTHORIZED` | `df09f7538a79f15cb3dfd5d8538117b5c4e64244` (base revisada) | [HIELYA_CHECKPOINT_2026-09-07_v5.8.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.8.md) | criado no repositório / PR #34 |
 
 ## Precedentes ainda em PRs documentais
 
@@ -52,3 +64,26 @@ Este índice rastreia os checkpoints oficiais migrados do Google Drive. Os docum
 ## Regra de continuidade
 
 Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POLICY.md) e o checkpoint de maior versão neste índice. O Google Drive permanece como arquivo histórico e local dos assets binários excluídos desta migração.
+
+| v6.0 | 2026-09-07 | PHASE_1_MERGE / PHASE_2_AUTHORIZATION | `5bbf0b0a24a01effb5d21f17f4b1352c122ad89c` | [v6.0](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.0.md) | criado no repositório |
+| v6.1 | 2026-09-07 | ALCOHOL_ORDER_DELIVERY_FOUNDATION / PHASE_2 — CI pending | `5bbf0b0a24a01effb5d21f17f4b1352c122ad89c` (base) | [v6.1](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.1.md) | criado no repositório |
+| v6.2 | 2026-09-07 | PHASE_2_MERGE / PHASE_3_AUTHORIZATION | `ccdd13492dd8348ea8b59b94c6521fc3b760c790` | [v6.2](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.2.md) | criado no repositório |
+| v6.3 | 2026-09-07 | ATOMIC_HANDOVER_TERMINAL_REFUSAL / PHASE_3 — CI pending | `ccdd13492dd8348ea8b59b94c6521fc3b760c790` (base) | [v6.3](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.3.md) | criado no repositório |
+| v6.4 | 2026-09-07 | PHASE_3_HARDENING — PR40 CI pending | `4412b459c84c8149e540bb6ffe83e768ca5db482` (primeiro candidato) | [v6.4](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.4.md) | criado no repositório |
+| v6.5 | 2026-09-07 | PHASE_3_MERGE / PHASE_4_AUTHORIZATION | `c45c5702b9bf7ad941113b8b076d593ce1ab7490` | [v6.5](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.5.md) | criado no repositório |
+
+| v6.6 | 2026-09-07 | PHASE_4_COMPENSATION_RETENTION — CI pending | `c45c5702b9bf7ad941113b8b076d593ce1ab7490` (base) | [v6.6](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.6.md) | criado no repositório |
+
+| v6.7 | 2026-09-07 | PHASE_4_MERGE / PHASE_5_AUTHORIZATION | `2b02d459678e7fbc857214ae8260469db5e7f958` | [v6.7](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.7.md) | criado no repositório |
+
+| v6.8 | 2026-09-07 | PHASE_5_C005_ALCOHOL_INTEGRATION — CI pending | `2b02d459678e7fbc857214ae8260469db5e7f958` (base) | [v6.8](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.8.md) | criado no repositório |
+
+| v6.9 | 2026-09-07 | PHASE_5_TEST_EXPECTATION_ALIGNMENT — CI pending | `ff6e74e1e0f9a075d4412e1ea723b2bb17f248f6` (first candidate) | [v6.9](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.9.md) | criado no repositório |
+
+| v7.0 | 2026-09-07 | PHASE5_MERGE / PHASE6_AUTHORIZATION | `2853b28fcc638e6974fb190f1e5562400c14421a` | [v7.0](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.0.md) | criado no repositório |
+
+| v7.1 | 2026-09-07 | PHASE6_CERTIFICATION_WITH_GAPS — CI pending | `2853b28fcc638e6974fb190f1e5562400c14421a` (base) | [v7.1](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.1.md) | criado no repositório |
+
+| v7.2 | 2026-09-07 | PR46_MERGED / PR34_RECONCILIATION | `eef73aacd5820fb6b1b0076c38b6b4fe21ad54c0` | [v7.2](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.2.md) | criado no repositório |
+
+| v7.5 | 2026-09-07 | TOKENS_PROMOTION_MERGE_PREPARATION | `5aca80958afcafd75e91665c4556593e8bdcefaf` | [v7.5](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.5.md) | criado no repositório |

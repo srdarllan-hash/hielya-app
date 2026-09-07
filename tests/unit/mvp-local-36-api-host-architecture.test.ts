@@ -65,7 +65,9 @@ const AUTH_ROUTE_HANDLERS: AuthorizedRouteHandler[] = [
   },
 ];
 
-const AUTHORIZED_ROUTE_HANDLERS = [...FROZEN_PUBLIC_ROUTE_HANDLERS, ...AUTH_ROUTE_HANDLERS];
+// Issue43 activates exactly the existing V1.3 public store-state contract.
+const PHASE5_ROUTE_HANDLERS: AuthorizedRouteHandler[] = [{method:'GET',path:'/store/state',file:'apps/ui-lab/app/api/v1/store/state/route.ts'}];
+const AUTHORIZED_ROUTE_HANDLERS = [...FROZEN_PUBLIC_ROUTE_HANDLERS, ...AUTH_ROUTE_HANDLERS, ...PHASE5_ROUTE_HANDLERS];
 const normalizePath = (path: string): string => path.replaceAll('\\', '/');
 
 const sourceFiles = (root: string): string[] => {
@@ -146,7 +148,7 @@ describe('MVP Local 36 API host architecture Gate', () => {
     expect(publicApiAdr).toContain('HTTP 400');
   });
 
-  it('keeps the package boundaries and creates only the four frozen plus two authorized auth Route Handlers', () => {
+  it('keeps the package boundaries and creates only the four frozen, two auth and one Phase5 store-state Route Handlers', () => {
     const application = combinedSource('packages/application');
     const persistence = combinedSource('packages/persistence');
     const ui = combinedSource('packages/ui');

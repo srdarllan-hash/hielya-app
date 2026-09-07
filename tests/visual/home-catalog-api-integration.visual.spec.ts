@@ -7,6 +7,7 @@ import {
   installCatalogErrorRoutes,
   installPausedCatalogRoutes,
   installSyntheticCatalogRoutes,
+  installNormalStoreRoute,
   type RuntimeErrorCollector,
 } from '../integration/home-catalog-api-integration.fixtures';
 
@@ -15,6 +16,7 @@ const namespace = 'C-005-HOME-CATALOG-API-INTEGRATION-V1';
 let runtimeErrors: RuntimeErrorCollector;
 
 test.beforeEach(async ({ page }) => {
+  await installNormalStoreRoute(page);
   runtimeErrors = collectRuntimeErrors(page);
 });
 

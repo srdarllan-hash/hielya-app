@@ -1,21 +1,13 @@
+import { openHomePresentation, presentationStates } from '../integration/home-presentation.fixtures';
 import { expect, test } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const states = [
-  'ready',
-  'loading',
-  'closed',
-  'high-demand',
-  'error',
-  'empty-cart',
-  'alcohol-cutoff',
-  'out-of-area',
-] as const;
+const states = presentationStates;
 
 for (const state of states) {
-  test(`C-005 ${state} visual baseline`, async ({ page }, testInfo) => {
-    await page.goto(`/?state=${state}`);
+  test(`C-005 presentation ${state} visual baseline`, async ({ page }, testInfo) => {
+    await openHomePresentation(page, state);
     await page.waitForLoadState('networkidle');
     await page.evaluate(async () => {
       await document.fonts.ready;

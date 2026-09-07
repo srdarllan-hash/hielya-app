@@ -23,10 +23,18 @@ export default defineConfig({
     { name: 'mobile-390', use: { viewport: { width: 390, height: 844 } } },
     { name: 'hires-1170', use: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 3 } },
   ],
-  webServer: {
+  webServer: [{
     command: process.env.CI ? 'pnpm start' : 'pnpm dev',
     url: 'http://127.0.0.1:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
-  },
+  }, {
+    // Only component presentation runs against Storybook; runtime tests retain the real Next host.
+    command: process.env.CI
+      ? 'python3 -m http.server 6006 --bind 127.0.0.1 --directory storybook-static'
+      : 'pnpm storybook --ci',
+    url: 'http://127.0.0.1:6006/iframe.html',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120000,
+  }],
 });

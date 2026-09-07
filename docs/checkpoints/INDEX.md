@@ -99,3 +99,5 @@ Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POL
 | v7.9 | 2026-09-07 | OTP_RECOVERY_OPTIONS_FOR_OWNER_DECISION | `3bb27c3f289f06983640170338abbc5dad43f0ec` (base) | [v7.9](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.9.md) | criado no repositório |
 
 | v8.0 | 2026-09-07 | FORM_SPEC_CLOSED / OTP_DEBT_DEFERRED | `b69bcf93ce452e781cc6404691b1877780cba90b` (base remota) | [v8.0](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v8.0.md) | criado no repositório |
+
+| v8.1 | 2026-09-07 | FORM_COMPONENTS_IMPLEMENTATION_CANDIDATE — Issue #51 | `9a6fb1451473652cfcb07b62cffe433e049871b4` (base) | [v8.1](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v8.1.md) | criado no repositório |

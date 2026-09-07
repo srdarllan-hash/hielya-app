@@ -1,0 +1,18 @@
+import React from 'react';
+import type { Meta, StoryObj } from '@storybook/react';
+import { Input } from './Input';
+const meta = { title: 'Foundation/Input', component: Input, tags: ['autodocs'], args: { label: 'Etiqueta', autoFocus: false }, decorators: [(Story) => <div className="hly-story-frame"><Story /></div>] } satisfies Meta<typeof Input>;
+export default meta;
+type Story = StoryObj<typeof meta>;
+export const Empty: Story = { args: { placeholder: 'Texto' } };
+export const Filled: Story = { args: { defaultValue: 'Texto' } };
+export const Hover: Story = {};
+export const Focus: Story = { args: { autoFocus: true } };
+export const Valid: Story = { args: { defaultValue: 'Texto', success: 'Correcto' } };
+export const Invalid: Story = { args: { error: 'Revisa este campo.', errorSource: 'submit' } };
+export const BlurError: Story = { args: { error: 'Revisa este campo.', errorSource: 'blur' } };
+export const Disabled: Story = { args: { disabled: true, defaultValue: 'Texto' } };
+export const ReadOnly: Story = { args: { readOnly: true, defaultValue: 'Texto' } };
+export const Loading: Story = { args: { loading: true, defaultValue: 'Texto' } };
+export const Adornments: Story = { args: { prefix: '€', suffix: 'EUR', defaultValue: '25' } };
+export const Autofill: Story = { args: { autoComplete: 'email', type: 'email', name: 'email' } };

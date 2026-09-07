@@ -66,3 +66,7 @@ Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POL
 | v6.5 | 2026-09-07 | PHASE_3_MERGE / PHASE_4_AUTHORIZATION | `c45c5702b9bf7ad941113b8b076d593ce1ab7490` | [v6.5](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.5.md) | criado no repositório |
 
 | v6.6 | 2026-09-07 | PHASE_4_COMPENSATION_RETENTION — CI pending | `c45c5702b9bf7ad941113b8b076d593ce1ab7490` (base) | [v6.6](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.6.md) | criado no repositório |
+
+| v6.7 | 2026-09-07 | PHASE_4_MERGE / PHASE_5_AUTHORIZATION | `2b02d459678e7fbc857214ae8260469db5e7f958` | [v6.7](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.7.md) | criado no repositório |
+
+| v6.8 | 2026-09-07 | PHASE_5_C005_ALCOHOL_INTEGRATION — CI pending | `2b02d459678e7fbc857214ae8260469db5e7f958` (base) | [v6.8](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.8.md) | criado no repositório |

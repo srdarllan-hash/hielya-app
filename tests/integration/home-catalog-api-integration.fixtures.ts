@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import type { Page, Route } from '@playwright/test';
 
 export interface RuntimeErrorCollector {
@@ -134,11 +135,19 @@ const fulfillJson = async (route: Route, body: unknown, status = 200) => {
   });
 };
 
+export async function installNormalStoreRoute(page: Page) {
+  await page.route('**/api/v1/store/state', async route => {
+    const contract = JSON.parse(readFileSync('contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_3.yaml','utf8'));
+    await route.fulfill({ json: contract.paths['/store/state'].get.responses['200'].content['application/json'].examples.normal45.value, headers: { 'x-hielya-refresh-after-ms':'15000' } });
+  });
+}
+
 export async function installSyntheticCatalogRoutes(
   page: Page,
   options: SyntheticRouteOptions = {},
 ): Promise<SyntheticCatalogRoutes> {
   const calls: string[] = [];
+  await installNormalStoreRoute(page);
 
   await page.route(/\/api\/v1\/catalog\/categories(?:\?.*)?$/, async (route) => {
     calls.push(route.request().url());
@@ -192,6 +201,7 @@ export async function installCatalogErrorRoutes(
   status = 400,
   message = 'Solicitud de catálogo inválida.',
 ) {
+  await installNormalStoreRoute(page);
   const error = {
     code: status === 400 ? 'INVALID_INPUT' : 'CONFIGURATION_UNAVAILABLE',
     message,

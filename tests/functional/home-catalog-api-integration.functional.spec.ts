@@ -5,6 +5,7 @@ import {
   collectRuntimeErrors,
   installCatalogErrorRoutes,
   installSyntheticCatalogRoutes,
+  installNormalStoreRoute,
   syntheticCategories,
   syntheticProducts,
   type RuntimeErrorCollector,
@@ -24,6 +25,7 @@ const forbiddenPublicFields = [
 ];
 
 const allowedApiPaths = new Set([
+  'GET /api/v1/store/state',
   'GET /api/v1/catalog/categories',
   'GET /api/v1/catalog/products',
 ]);
@@ -32,6 +34,7 @@ let apiRequests: string[];
 let runtimeErrors: RuntimeErrorCollector;
 
 test.beforeEach(async ({ page }) => {
+  await installNormalStoreRoute(page);
   apiRequests = [];
   runtimeErrors = collectRuntimeErrors(page);
   page.on('request', (request) => {
@@ -187,4 +190,40 @@ test('a later search wins when an older response completes out of order', async 
   await page.waitForTimeout(600);
   await expect(page.locator('[data-home-catalog-state="HOME_CATALOG_READY"]')).toBeVisible();
   await expect(page.getByText('Pack sintético frío con hielo')).toHaveCount(0);
+});
+
+test('C005 refreshes server eligibility during a session and keeps HIGH plus alcohol cutoff simultaneous', async ({page}) => {
+  await installSyntheticCatalogRoutes(page);
+  const { readFileSync } = await import('node:fs');
+  const contract = JSON.parse(readFileSync('contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_3.yaml','utf8'));
+  const examples = contract.paths['/store/state'].get.responses['200'].content['application/json'].examples;
+  let blocked = false; let reads = 0;
+  await page.route('**/api/v1/store/state', async route => {
+    reads++;
+    await route.fulfill({json:examples[blocked?'high60-and-alcohol-blocked':'normal45'].value,headers:{'x-hielya-refresh-after-ms':'1000'}});
+  });
+  await page.goto('/');
+  const alcoholic = syntheticProducts.find(p=>p.containsAlcohol && p.availability==='AVAILABLE')!;
+  await expect(page.getByRole('button',{name:`Añadir ${alcoholic.name} al carrito`,exact:true})).toBeEnabled();
+  blocked = true;
+  await expect(page.getByText('Alta demanda · La estimación actual es de 45–60 min')).toBeVisible();
+  await expect(page.getByText('Alcohol no disponible después de las 21:00 hoy')).toBeVisible();
+  await expect(page.getByRole('button',{name:`${alcoholic.name} no disponible`,exact:true})).toBeDisabled();
+  await expect(page.getByRole('button',{name:`Ver detalles de ${alcoholic.name}`,exact:true})).toBeEnabled();
+  expect(reads).toBeGreaterThan(1);
+});
+
+test('C005 revalidates a stale enabled alcohol purchase intent before emitting it', async ({page}) => {
+  await installSyntheticCatalogRoutes(page);
+  const { readFileSync } = await import('node:fs');
+  const examples = JSON.parse(readFileSync('contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_3.yaml','utf8')).paths['/store/state'].get.responses['200'].content['application/json'].examples;
+  let blocked = false;
+  await page.route('**/api/v1/store/state',async route => route.fulfill({json:examples[blocked?'high60-and-alcohol-blocked':'normal45'].value,headers:{'x-hielya-refresh-after-ms':'15000'}}));
+  await page.goto('/');
+  const alcoholic = syntheticProducts.find(p=>p.containsAlcohol && p.availability==='AVAILABLE')!;
+  const add=page.getByRole('button',{name:`Añadir ${alcoholic.name} al carrito`,exact:true});await expect(add).toBeEnabled();
+  await page.evaluate(()=>{(window as unknown as { purchaseEvents:string[] }).purchaseEvents=[];window.addEventListener('hielya:ui-action',event=>{const detail=(event as CustomEvent).detail;if(detail.action.startsWith('add-'))(window as unknown as {purchaseEvents:string[]}).purchaseEvents.push(detail.action);});});
+  blocked=true;await add.click();
+  await expect(page.getByText('Alcohol no disponible después de las 21:00 hoy')).toBeVisible();
+  expect(await page.evaluate(()=>(window as unknown as {purchaseEvents:string[]}).purchaseEvents)).toEqual([]);
 });

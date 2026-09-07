@@ -4,13 +4,25 @@
 
 Before any relevant work, read `docs/checkpoints/HIELYA_CHECKPOINT_POLICY.md`, then `docs/checkpoints/INDEX.md`, then the checkpoint with the highest version. Validate its GitHub branch, PR, SHA and CI claims against live GitHub before structural changes. Never edit an existing historical checkpoint; create the next version as a new file and add it to the index.
 
-## Active Phase 4 gate (2026-09-07)
+## Document routing
 
-PR #40 merged with individual owner authorization. Main `c45c5702b9bf7ad941113b8b076d593ce1ab7490`, exact certified tree `f0bd11f7e7023fa579e07262c47a6396ce715dab`. Phase3 CI34115975383 and34115975346 SUCCESS (926 tests).
+- Before implementing or modifying behavior, read `docs/CONSTRAINTS.md`.
+- Before estimating scope, declaring completion or planning production closure, read `docs/KNOWN_DEBT.md`.
+- Before implementing, replacing or activating an external service, read `docs/INTEGRATIONS.md`.
+- These three documents are consolidated references, not new sources of project state. Do not copy checkpoint state into them; entries should link to canonical ADR, requirement, issue, contract or checkpoint evidence whenever possible.
+- Determine current state only through `docs/checkpoints/HIELYA_CHECKPOINT_POLICY.md` → `docs/checkpoints/INDEX.md` → highest-version checkpoint → validation against live GitHub. These references never replace that sequence.
+- For decision rationale, consult `docs/decisions/`; for required behavior, consult `docs/requirements/`.
+- Validate claims against repository/GitHub evidence. Report missing references and document conflicts in the PR; never silently select a conflicting document as the winner.
 
-Issue #41 / branch `hielya/compensation-retention-foundation`: automatic full compensation for all three terminal age refusals; durable plan, worker lease and provider idempotency key; refund capture and/or void authorization without customer cost. Payment and accounting ports are unconfigured by default. No real money movement, Stripe, production scheduler or HTTP V1.3 activation. Retention is assessed for the whole dossier from the last accounting entry, with six calendar years, holds and reconciliation checks; missing accounting information retains data. No physical disposal or independent age-evidence TTL. See `docs/contracts/ALCOHOL_DOMAIN_PHASE_4.md`.
+Reference availability verified for Issue43: `docs/CONSTRAINTS.md`, `docs/KNOWN_DEBT.md`, `docs/INTEGRATIONS.md` and `docs/requirements/` are absent from the checked base tree; the three named files also return404 on GitHub main. This routing instruction does not claim those documents already exist. The Phase5 PR records this gap; canonical contracts, ADRs and checkpoints remain available.
 
-Phase3 terminal event remains the sole final order/delivery authority; compensation processing is a separate projection. Preserve atomic handover and immutable refusal evidence. No identity photo, document number or full birth date. Phase4 PR requires separate owner merge approval. C003/C004, Phase5 and new screens remain blocked. Checkpoints v6.5 (merge) and v6.6 (candidate); prior checkpoints remain unchanged. The historical migration-era sections below do not supersede this active gate.
+## Active Phase 5 gate (2026-09-07)
+
+PR42 merged under explicit owner authorization. Main `2b02d459678e7fbc857214ae8260469db5e7f958`, certified tree `2d390154c76771e346ef76dfe180c2f0f756b5d8`, CI34118318166/34118318195 SUCCESS (960tests). Issue43 / branch `hielya/c005-alcohol-domain-integration`: C005 server eligibility, session expiry/revalidation, simultaneous high-demand/alcohol unavailable. See `docs/contracts/ALCOHOL_DOMAIN_PHASE_5.md` and Phase5 runtime profile.
+
+GET /api/v1/store/state activates only this public V1.3 query. `HIELYA_OPERATIONAL_STATE_PATH` is an optional development-only authoritative input file; missing/stale source never grants alcohol availability. No browser SLA/cutoff calculation. C005 emits guarded purchase intentions; actual authenticated cart/checkout UI and HTTP activation remain absent. Existing atomic order creation revalidates destination-specific eligibility; public global availability is not order authorization.
+
+Known mandatory pre-production work: physical disposal after retention is NOT implemented; real Stripe/payment provider must execute pending refunds. Payment/accounting/SLA production adapters remain unconfigured. Preserve minimal age evidence, atomic handover and immutable terminal refusal. No Phase6, production, C003/C004 or new screens. Phase5 PR requires separate owner merge approval. Checkpoints v6.7 (merge) and next candidate checkpoint preserve history. Historical migration-era sections below do not supersede this active gate.
 
 ## Repository architecture
 

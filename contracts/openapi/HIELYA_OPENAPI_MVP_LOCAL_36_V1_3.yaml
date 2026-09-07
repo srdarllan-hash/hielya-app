@@ -1,0 +1,3523 @@
+{
+  "openapi": "3.1.1",
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "info": {
+    "title": "HIELYA MVP Local 36 Public API",
+    "version": "1.3.0",
+    "summary": "Phase 1 versioned alcohol domain contract; runtime remains V1.2 until separately gated implementation.",
+    "description": "Issue #35. Adds dynamic alcohol eligibility, simultaneous demand/availability, future order/delivery commands and terminal refusal. Contract and tests only in Phase 1; no deployment, new UI, database migration or production authorization.",
+    "license": {
+      "name": "Proprietary",
+      "identifier": "LicenseRef-Proprietary"
+    }
+  },
+  "x-hielya-profile": "MVP_LOCAL_36",
+  "x-hielya-baseline": {
+    "file": "contracts/openapi/HIELYA_OPENAPI_V1_0.yaml",
+    "sha256": "a2c027c6294b44c94cf4be21d18fbd251b0323102e3c9ba2cba912a96d810ae9",
+    "modified": false
+  },
+  "servers": [
+    {
+      "url": "/api/v1",
+      "description": "Relative API base; the host is environment-specific."
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Public OTP transport for an opaque, revocable customer session."
+    },
+    {
+      "name": "Catalog",
+      "description": "Public category and product discovery."
+    },
+    {
+      "name": "Store",
+      "description": "Public store and simulated delivery operations."
+    },
+    {
+      "name": "Checkout",
+      "description": "Authenticated checkout contracts whose implementation may be deferred."
+    },
+    {
+      "name": "Orders"
+    },
+    {
+      "name": "DeliveryCompliance"
+    }
+  ],
+  "paths": {
+    "/catalog/categories": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "List publicly visible categories",
+        "operationId": "listPublicCategories",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Public categories in persisted display order.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicCategory"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/catalog/products": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "Search and list publicly visible MVP products",
+        "operationId": "listPublicProducts",
+        "security": [],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "availableOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page of public products.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicProductPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        }
+      }
+    },
+    "/catalog/products/{productId}": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "Get a publicly visible product",
+        "operationId": "getPublicProduct",
+        "security": [],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public product detail.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicProduct"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/delivery/quote": {
+      "post": {
+        "tags": [
+          "Store"
+        ],
+        "summary": "Quote delivery from server-calculated road distance",
+        "operationId": "quoteDelivery",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryQuoteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Server-calculated simulated delivery quote.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryQuote"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        },
+        "x-hielya-implementation-status": "V1_3_RESPONSE_DEFERRED_TO_DOMAIN_PHASES"
+      }
+    },
+    "/carts/{cartId}/validate": {
+      "post": {
+        "tags": [
+          "Checkout"
+        ],
+        "summary": "Validate a persisted cart against MVP rules",
+        "operationId": "validateCart",
+        "x-hielya-implementation-status": "V1_3_RESPONSE_DEFERRED_TO_DOMAIN_PHASES",
+        "x-hielya-deferred-reason": "Requires customerBearer, a persisted cart and a persisted address.",
+        "security": [
+          {
+            "customerBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cartId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CartValidationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validation result. This operation is contract-only and deferred.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartValidation"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/auth/otp/request": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Request a customer OTP challenge",
+        "operationId": "requestCustomerOtp",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OtpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "OTP challenge accepted. Replays during cooldown return the same challenge without another delivery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OtpChallenge"
+                },
+                "example": {
+                  "challengeId": "00000000-0000-4000-8000-000000000001",
+                  "expiresInSeconds": 300,
+                  "resendAfterSeconds": 60
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/AuthBadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/AuthTooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/AuthServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/auth/otp/verify": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Verify a customer OTP and create one opaque session",
+        "operationId": "verifyCustomerOtp",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OtpVerify"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Customer authenticated with one opaque, revocable session.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpaqueSessionAuthentication"
+                },
+                "example": {
+                  "sessionToken": "opaque-session-token",
+                  "expiresInSeconds": 2592000,
+                  "customer": {
+                    "id": "00000000-0000-4000-8000-000000000002",
+                    "phoneE164": "+34612345678",
+                    "phoneVerifiedAt": "2030-01-01T12:00:00.000Z",
+                    "status": "ACTIVE"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/AuthBadRequest"
+          },
+          "429": {
+            "$ref": "#/components/responses/AuthTooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/AuthServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/store/state": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "operationId": "getOperationalAvailability",
+        "summary": "getOperationalAvailability",
+        "description": "Public current store/demand/alcohol dimensions; no user identity or age result. HIGH and alcohol UNAVAILABLE may coexist. Global snapshot is indicative; destination-specific quote and submit are authoritative.",
+        "security": [],
+        "x-hielya-implementation-status": "CONTRACT_ONLY_PHASE_1",
+        "x-hielya-domain-guards": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful command/query. Public current store/demand/alcohol dimensions; no user identity or age result. HIGH and alcohol UNAVAILABLE may coexist. Global snapshot is indicative; destination-specific quote and submit are authoritative.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationalAvailability"
+                },
+                "examples": {
+                  "normal45": {
+                    "value": {
+                      "storeStatus": "OPEN",
+                      "demand": {
+                        "level": "NORMAL",
+                        "estimate": {
+                          "estimateId": "11111111-1111-4111-8111-111111111111",
+                          "version": "estimate-v1",
+                          "source": "controlled-fixture-not-production",
+                          "calculatedAt": "2026-09-07T20:00:00+02:00",
+                          "validUntil": "2026-09-07T20:05:00+02:00",
+                          "minimumMinutes": 30,
+                          "upperBoundMinutes": 45
+                        }
+                      },
+                      "alcohol": {
+                        "status": "AVAILABLE",
+                        "reason": "ELIGIBLE",
+                        "snapshot": {
+                          "decisionId": "11111111-1111-4111-8111-111111111111",
+                          "policyVersion": "alcohol-v1.3",
+                          "estimate": {
+                            "estimateId": "11111111-1111-4111-8111-111111111111",
+                            "version": "estimate-v1",
+                            "source": "controlled-fixture-not-production",
+                            "calculatedAt": "2026-09-07T20:00:00+02:00",
+                            "validUntil": "2026-09-07T20:05:00+02:00",
+                            "minimumMinutes": 30,
+                            "upperBoundMinutes": 45
+                          },
+                          "standardSlaMinutes": 45,
+                          "effectiveSlaMinutes": 45,
+                          "timezone": "Europe/Madrid",
+                          "alcoholOrderCutoffAt": "2026-09-07T21:15:00+02:00",
+                          "alcoholHandoverDeadlineAt": "2026-09-07T22:00:00+02:00"
+                        }
+                      }
+                    }
+                  },
+                  "high60-and-alcohol-blocked": {
+                    "value": {
+                      "storeStatus": "OPEN",
+                      "demand": {
+                        "level": "HIGH",
+                        "estimate": {
+                          "estimateId": "11111111-1111-4111-8111-111111111111",
+                          "version": "estimate-v1",
+                          "source": "controlled-fixture-not-production",
+                          "calculatedAt": "2026-09-07T21:01:00+02:00",
+                          "validUntil": "2026-09-07T21:06:00+02:00",
+                          "minimumMinutes": 45,
+                          "upperBoundMinutes": 60
+                        }
+                      },
+                      "alcohol": {
+                        "status": "UNAVAILABLE",
+                        "reason": "CUTOFF_REACHED",
+                        "snapshot": {
+                          "decisionId": "11111111-1111-4111-8111-111111111111",
+                          "policyVersion": "alcohol-v1.3",
+                          "estimate": {
+                            "estimateId": "11111111-1111-4111-8111-111111111111",
+                            "version": "estimate-v1",
+                            "source": "controlled-fixture-not-production",
+                            "calculatedAt": "2026-09-07T21:01:00+02:00",
+                            "validUntil": "2026-09-07T21:06:00+02:00",
+                            "minimumMinutes": 45,
+                            "upperBoundMinutes": 60
+                          },
+                          "standardSlaMinutes": 45,
+                          "effectiveSlaMinutes": 60,
+                          "timezone": "Europe/Madrid",
+                          "alcoholOrderCutoffAt": "2026-09-07T21:00:00+02:00",
+                          "alcoholHandoverDeadlineAt": "2026-09-07T22:00:00+02:00"
+                        }
+                      }
+                    }
+                  },
+                  "unknown-fails-closed": {
+                    "value": {
+                      "storeStatus": "OPEN",
+                      "demand": {
+                        "level": "UNKNOWN",
+                        "estimate": null
+                      },
+                      "alcohol": {
+                        "status": "UNAVAILABLE",
+                        "reason": "SLA_UNAVAILABLE",
+                        "snapshot": null
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wrong role or object access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Object not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain/revision/idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Authoritative service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders": {
+      "post": {
+        "tags": [
+          "Orders"
+        ],
+        "operationId": "createAlcoholAwareOrder",
+        "summary": "createAlcoholAwareOrder",
+        "description": "",
+        "security": [
+          {
+            "customerBearer": []
+          }
+        ],
+        "x-hielya-implementation-status": "CONTRACT_ONLY_PHASE_1",
+        "x-hielya-domain-guards": [
+          "CURRENT_SLA",
+          "DYNAMIC_CUTOFF",
+          "CART_REVISION",
+          "SERVER_DERIVED_ALCOHOL",
+          "PAYMENT_CONFIRMATION_SEPARATE"
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            },
+            "description": "Bound to authenticated actor, operation, object and payload. Same key+payload replay; different payload409; retry never reopens a refused delivery."
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful command/query. ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderCompliance"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wrong role or object access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Object not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain/revision/idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Authoritative service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAlcoholAwareOrder"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{orderId}": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "operationId": "getAlcoholAwareOrder",
+        "summary": "getAlcoholAwareOrder",
+        "description": "Only owning customer; no courier identity or document evidence.",
+        "security": [
+          {
+            "customerBearer": []
+          }
+        ],
+        "x-hielya-implementation-status": "CONTRACT_ONLY_PHASE_1",
+        "x-hielya-domain-guards": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful command/query. Only owning customer; no courier identity or document evidence.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderCompliance"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wrong role or object access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Object not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain/revision/idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Authoritative service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/orders/{orderId}/start-picking": {
+      "post": {
+        "tags": [
+          "Orders"
+        ],
+        "operationId": "acceptOrderAndStartPreparation",
+        "summary": "acceptOrderAndStartPreparation",
+        "description": "Server rechecks legal window, authorized order status and real remaining ETA before transition. start-picking maps formal acceptance and preparation start; mark-ready completes preparation. No phase may bypass window checks.",
+        "security": [
+          {
+            "operatorBearer": []
+          }
+        ],
+        "x-hielya-implementation-status": "CONTRACT_ONLY_PHASE_1",
+        "x-hielya-domain-guards": [
+          "LEGAL_WINDOW",
+          "REMAINING_ETA",
+          "ORDER_STATE",
+          "REVISION"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            },
+            "description": "Bound to authenticated actor, operation, object and payload. Same key+payload replay; different payload409; retry never reopens a refused delivery."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful command/query. Server rechecks legal window, authorized order status and real remaining ETA before transition. start-picking maps formal acceptance and preparation start; mark-ready completes preparation. No phase may bypass window checks.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderCompliance"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wrong role or object access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Object not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain/revision/idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Authoritative service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevisionCommand"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/orders/{orderId}/mark-ready": {
+      "post": {
+        "tags": [
+          "Orders"
+        ],
+        "operationId": "completeOrderPreparation",
+        "summary": "completeOrderPreparation",
+        "description": "Server rechecks legal window, authorized order status and real remaining ETA before transition. start-picking maps formal acceptance and preparation start; mark-ready completes preparation. No phase may bypass window checks.",
+        "security": [
+          {
+            "operatorBearer": []
+          }
+        ],
+        "x-hielya-implementation-status": "CONTRACT_ONLY_PHASE_1",
+        "x-hielya-domain-guards": [
+          "LEGAL_WINDOW",
+          "REMAINING_ETA",
+          "ORDER_STATE",
+          "REVISION"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            },
+            "description": "Bound to authenticated actor, operation, object and payload. Same key+payload replay; different payload409; retry never reopens a refused delivery."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful command/query. Server rechecks legal window, authorized order status and real remaining ETA before transition. start-picking maps formal acceptance and preparation start; mark-ready completes preparation. No phase may bypass window checks.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderCompliance"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wrong role or object access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Object not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain/revision/idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Authoritative service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevisionCommand"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/deliveries/{deliveryId}/start": {
+      "post": {
+        "tags": [
+          "DeliveryCompliance"
+        ],
+        "operationId": "dispatchDelivery",
+        "summary": "dispatchDelivery",
+        "description": "Assigned courier only. Recheck window and remaining ETA; arrival is not handover.",
+        "security": [
+          {
+            "courierBearer": []
+          }
+        ],
+        "x-hielya-implementation-status": "CONTRACT_ONLY_PHASE_1",
+        "x-hielya-domain-guards": [
+          "LEGAL_WINDOW",
+          "REMAINING_ETA",
+          "ASSIGNED_COURIER",
+          "REVISION"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deliveryId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            },
+            "description": "Bound to authenticated actor, operation, object and payload. Same key+payload replay; different payload409; retry never reopens a refused delivery."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful command/query. Assigned courier only. Recheck window and remaining ETA; arrival is not handover.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryCompliance"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wrong role or object access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Object not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain/revision/idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Authoritative service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevisionCommand"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/deliveries/{deliveryId}/arrive": {
+      "post": {
+        "tags": [
+          "DeliveryCompliance"
+        ],
+        "operationId": "recordDeliveryArrival",
+        "summary": "recordDeliveryArrival",
+        "description": "Assigned courier only. Recheck window and remaining ETA; arrival is not handover.",
+        "security": [
+          {
+            "courierBearer": []
+          }
+        ],
+        "x-hielya-implementation-status": "CONTRACT_ONLY_PHASE_1",
+        "x-hielya-domain-guards": [
+          "LEGAL_WINDOW",
+          "REMAINING_ETA",
+          "ASSIGNED_COURIER",
+          "REVISION"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deliveryId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            },
+            "description": "Bound to authenticated actor, operation, object and payload. Same key+payload replay; different payload409; retry never reopens a refused delivery."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful command/query. Assigned courier only. Recheck window and remaining ETA; arrival is not handover.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryCompliance"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wrong role or object access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Object not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain/revision/idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Authoritative service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevisionCommand"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/deliveries/{deliveryId}/verify-pin": {
+      "post": {
+        "tags": [
+          "DeliveryCompliance"
+        ],
+        "operationId": "completeAtomicHandover",
+        "summary": "completeAtomicHandover",
+        "description": "Unique final command. Atomically require actual deadline, contemporaneous adult visual verification for alcohol, recipient presence and correct PIN; then consume PIN, write minimal age result and DELIVERED. No reusable partial success. No offline/backdated delivery. Same-person/current revision, no third-party hotel drop. Commit is software authorization; courier must not physically transfer at/after22:00.",
+        "security": [
+          {
+            "courierBearer": []
+          }
+        ],
+        "x-hielya-implementation-status": "CONTRACT_ONLY_PHASE_1",
+        "x-hielya-domain-guards": [
+          "ACTUAL_HANDOVER_DEADLINE",
+          "AGE_18_PLUS_IF_ALCOHOL",
+          "PIN",
+          "PRESENCE",
+          "NO_TERMINAL_REFUSAL",
+          "ASSIGNED_COURIER",
+          "ATOMIC_ALL_OR_NOTHING"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deliveryId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            },
+            "description": "Bound to authenticated actor, operation, object and payload. Same key+payload replay; different payload409; retry never reopens a refused delivery."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful command/query. Unique final command. Atomically require actual deadline, contemporaneous adult visual verification for alcohol, recipient presence and correct PIN; then consume PIN, write minimal age result and DELIVERED. No reusable partial success. No offline/backdated delivery. Same-person/current revision, no third-party hotel drop. Commit is software authorization; courier must not physically transfer at/after22:00.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryCompliance"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wrong role or object access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Object not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain/revision/idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Authoritative service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AtomicHandoverInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/deliveries/{deliveryId}/age-check": {
+      "post": {
+        "tags": [
+          "DeliveryCompliance"
+        ],
+        "operationId": "refuseAgeVerification",
+        "summary": "refuseAgeVerification",
+        "description": "Terminal age refusal only; legacy isolated APPROVED request removed in V1.3. Success can only be recorded by completeAtomicHandover. No second attempt; full automatic compensation intent in same transaction.",
+        "security": [
+          {
+            "courierBearer": []
+          }
+        ],
+        "x-hielya-implementation-status": "CONTRACT_ONLY_PHASE_1",
+        "x-hielya-domain-guards": [
+          "ASSIGNED_COURIER",
+          "REVISION",
+          "TERMINAL_REFUSAL",
+          "FULL_COMPENSATION_INTENT"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deliveryId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            },
+            "description": "Bound to authenticated actor, operation, object and payload. Same key+payload replay; different payload409; retry never reopens a refused delivery."
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful command/query. Terminal age refusal only; legacy isolated APPROVED request removed in V1.3. Success can only be recorded by completeAtomicHandover. No second attempt; full automatic compensation intent in same transaction.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TerminalRefusalResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wrong role or object access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Object not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain/revision/idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Authoritative service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefuseAgeInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/deliveries/{deliveryId}/fail": {
+      "post": {
+        "tags": [
+          "DeliveryCompliance"
+        ],
+        "operationId": "failDeliveryTerminal",
+        "summary": "failDeliveryTerminal",
+        "description": "Terminal logistical failure; no retry. PIN exhaustion or inability to verify adult invokes full compensation; cutoff failure does not fabricate age refusal.",
+        "security": [
+          {
+            "courierBearer": []
+          }
+        ],
+        "x-hielya-implementation-status": "CONTRACT_ONLY_PHASE_1",
+        "x-hielya-domain-guards": [
+          "ASSIGNED_COURIER",
+          "REVISION",
+          "NO_REDELIVERY"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deliveryId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            },
+            "description": "Bound to authenticated actor, operation, object and payload. Same key+payload replay; different payload409; retry never reopens a refused delivery."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful command/query. Terminal logistical failure; no retry. PIN exhaustion or inability to verify adult invokes full compensation; cutoff failure does not fabricate age refusal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryCompliance"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wrong role or object access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Object not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain/revision/idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Authoritative service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryFailureInputV13"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "customerBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "OpaqueSessionToken",
+        "description": "Opaque token; only its hash is stored server-side. The revocable session has an absolute 30-day lifetime, is not a JSON Web Token, and has no refresh token."
+      },
+      "courierBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "OpaqueCourierCredential",
+        "description": "Future workforce identity, separate from customer session. Never accept customerBearer for courier commands. Require assigned courier and object-level access; no admin remote age override. Not implemented/issued in Phase1."
+      },
+      "operatorBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "OpaqueOperatorCredential",
+        "description": "Future store operator authorization for order acceptance/preparation, not permission to bypass handover or impersonate courier. Not implemented in Phase1."
+      }
+    },
+    "parameters": {
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      "PageSize": {
+        "name": "pageSize",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 20
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Invalid input or controlled business-rule failure.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PublicError"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Public resource not found.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PublicError"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Customer authentication is required or invalid.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PublicError"
+            }
+          }
+        }
+      },
+      "AuthBadRequest": {
+        "description": "Invalid authentication input or a controlled OTP failure.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AuthPublicError"
+            }
+          }
+        }
+      },
+      "AuthTooManyRequests": {
+        "description": "OTP attempts or resend timing temporarily blocks the operation.",
+        "headers": {
+          "Retry-After": {
+            "description": "Whole seconds until the operation may be retried, when known.",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AuthPublicError"
+            }
+          }
+        }
+      },
+      "AuthServiceUnavailable": {
+        "description": "Authentication configuration or simulated delivery is unavailable.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AuthPublicError"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "PublicAvailability": {
+        "type": "string",
+        "enum": [
+          "AVAILABLE",
+          "UNAVAILABLE",
+          "TEMPORARILY_UNAVAILABLE"
+        ]
+      },
+      "PublicCategory": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "sortOrder"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          },
+          "sortOrder": {
+            "type": "integer"
+          }
+        }
+      },
+      "PublicBundleComponent": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Commercial composition only. quantity is the number of units included in the pack, never an inventory balance.",
+        "required": [
+          "productId",
+          "sku",
+          "name",
+          "quantity"
+        ],
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Commercial quantity included in the pack."
+          }
+        }
+      },
+      "PublicProduct": {
+        "type": "object",
+        "additionalProperties": false,
+        "x-hielya-dto-boundary": "PUBLIC_ONLY",
+        "required": [
+          "id",
+          "sku",
+          "name",
+          "categoryId",
+          "salePriceCents",
+          "currency",
+          "availability",
+          "isPack",
+          "iceIncluded",
+          "maxPerOrder",
+          "containsAlcohol"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "ean": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "brand": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subcategory": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "volumeLabel": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "grossWeightKg": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "estimatedVolumeLiters": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "salePriceCents": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Persisted total sale price in euro cents."
+          },
+          "currency": {
+            "type": "string",
+            "const": "EUR"
+          },
+          "unitPriceLabel": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "availability": {
+            "$ref": "#/components/schemas/PublicAvailability"
+          },
+          "maxPerOrder": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "temperatureProfile": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "CHILLED",
+              "FROZEN",
+              "CELLAR",
+              "AMBIENT",
+              null
+            ]
+          },
+          "readyToConsume": {
+            "type": "boolean"
+          },
+          "containsAlcohol": {
+            "type": "boolean"
+          },
+          "minimumAge": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 18
+          },
+          "alcoholPercentage": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "imageUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          },
+          "keywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "isPack": {
+            "type": "boolean"
+          },
+          "iceIncluded": {
+            "type": "boolean"
+          },
+          "bundleComponents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicBundleComponent"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "isPack": {
+                  "const": true
+                }
+              },
+              "required": [
+                "isPack"
+              ]
+            },
+            "then": {
+              "properties": {
+                "iceIncluded": {
+                  "const": true
+                },
+                "bundleComponents": {
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "iceIncluded",
+                "bundleComponents"
+              ]
+            }
+          }
+        ]
+      },
+      "PublicProductPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicProduct"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "DeliveryQuoteRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "latitude",
+          "longitude"
+        ],
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "addressType": {
+            "type": "string",
+            "enum": [
+              "HOME",
+              "HOTEL",
+              "BUSINESS",
+              "OTHER"
+            ]
+          }
+        }
+      },
+      "DeliveryQuote": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "withinArea",
+          "routeDistanceKm",
+          "feeCents",
+          "operationalAvailability"
+        ],
+        "properties": {
+          "withinArea": {
+            "type": "boolean"
+          },
+          "routeDistanceKm": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Road distance calculated by the server routing port."
+          },
+          "feeCents": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Server-calculated simulated fee in euro cents."
+          },
+          "publicSpaceBlocked": {
+            "type": "boolean"
+          },
+          "operationalAvailability": {
+            "$ref": "#/components/schemas/OperationalAvailability"
+          }
+        }
+      },
+      "CartValidationRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "addressId"
+        ],
+        "properties": {
+          "addressId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "couponCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tipCents": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "PublicCartItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "product",
+          "quantity",
+          "unitPriceCents",
+          "lineTotalCents"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "product": {
+            "$ref": "#/components/schemas/PublicProduct"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "unitPriceCents": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "lineTotalCents": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "PublicCart": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "status",
+          "items",
+          "productSubtotalCents",
+          "deliveryFeeCents",
+          "discountCents",
+          "tipCents",
+          "totalCents",
+          "minimumReached"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "RESERVED",
+              "CONVERTED",
+              "EXPIRED",
+              "ABANDONED"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicCartItem"
+            }
+          },
+          "productSubtotalCents": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "deliveryFeeCents": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "discountCents": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "tipCents": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalCents": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minimumReached": {
+            "type": "boolean"
+          },
+          "amountMissingForMinimumCents": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "totalWeightKg": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "totalVolumeLiters": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "containsAlcohol": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CartValidation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "valid",
+          "violations",
+          "cart",
+          "operationalAvailability"
+        ],
+        "properties": {
+          "valid": {
+            "type": "boolean"
+          },
+          "violations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "STORE_CLOSED",
+                "OUTSIDE_AREA",
+                "MINIMUM_NOT_REACHED",
+                "PRODUCT_UNAVAILABLE",
+                "COMPOSITE_COMPONENT_UNAVAILABLE",
+                "MAX_WEIGHT_EXCEEDED",
+                "MAX_VOLUME_EXCEEDED",
+                "SKU_LIMIT_EXCEEDED",
+                "CAPACITY_REACHED",
+                "ALCOHOL_CUTOFF",
+                "PUBLIC_SPACE_BLOCKED"
+              ]
+            }
+          },
+          "cart": {
+            "$ref": "#/components/schemas/PublicCart"
+          },
+          "operationalAvailability": {
+            "$ref": "#/components/schemas/OperationalAvailability"
+          }
+        }
+      },
+      "PublicError": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "message",
+          "correlationId"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "INVALID_INPUT",
+              "PRODUCT_NOT_FOUND",
+              "PRODUCT_UNAVAILABLE",
+              "COMPOSITE_COMPONENT_UNAVAILABLE",
+              "MINIMUM_NOT_REACHED",
+              "INVALID_DISTANCE",
+              "OUT_OF_AREA",
+              "CONFIGURATION_UNAVAILABLE"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "field": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "correlationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "details": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true
+          }
+        }
+      },
+      "AuthPublicError": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "message",
+          "correlationId"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "INVALID_INPUT",
+              "INVALID_PHONE",
+              "OTP_INVALID",
+              "OTP_EXPIRED",
+              "OTP_UNAVAILABLE",
+              "OTP_LOCKED",
+              "OTP_RESEND_COOLDOWN",
+              "AUTH_CONFIGURATION_UNAVAILABLE",
+              "OTP_DELIVERY_UNAVAILABLE"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "field": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "correlationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "details": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true
+          }
+        }
+      },
+      "OtpRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phoneE164",
+          "locale"
+        ],
+        "properties": {
+          "phoneE164": {
+            "type": "string",
+            "pattern": "^\\+34[0-9]{9}$"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "es-ES",
+              "en-GB",
+              "pt-BR"
+            ]
+          }
+        }
+      },
+      "OtpChallenge": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "challengeId",
+          "expiresInSeconds",
+          "resendAfterSeconds"
+        ],
+        "properties": {
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expiresInSeconds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "resendAfterSeconds": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "OtpVerify": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "challengeId",
+          "code"
+        ],
+        "properties": {
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$"
+          }
+        }
+      },
+      "AuthenticatedCustomer": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "phoneE164",
+          "phoneVerifiedAt",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "phoneE164": {
+            "type": "string",
+            "pattern": "^\\+34[0-9]{9}$"
+          },
+          "phoneVerifiedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "const": "ACTIVE"
+          }
+        }
+      },
+      "OpaqueSessionAuthentication": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sessionToken",
+          "expiresInSeconds",
+          "customer"
+        ],
+        "properties": {
+          "sessionToken": {
+            "type": "string",
+            "description": "Opaque revocable session token."
+          },
+          "expiresInSeconds": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "customer": {
+            "$ref": "#/components/schemas/AuthenticatedCustomer"
+          }
+        }
+      },
+      "SlaEstimate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "estimateId",
+          "version",
+          "source",
+          "calculatedAt",
+          "validUntil",
+          "minimumMinutes",
+          "upperBoundMinutes"
+        ],
+        "properties": {
+          "estimateId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "calculatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "minimumMinutes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "upperBoundMinutes": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "description": "Server-owned end-to-end estimate including queue, acceptance, preparation, travel, hotel encounter, ID and PIN. Minimum <= upper; calculatedAt <= serverNow < validUntil. No averaging or optimistic fallback. Cross-field/time checks are runtime invariants, not JSON Schema arithmetic."
+      },
+      "DemandState": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "level",
+          "estimate"
+        ],
+        "properties": {
+          "level": {
+            "type": "string",
+            "enum": [
+              "NORMAL",
+              "HIGH",
+              "UNKNOWN"
+            ]
+          },
+          "estimate": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SlaEstimate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "description": "Independent from alcohol availability. HIGH can coexist with UNAVAILABLE; UNKNOWN or stale/missing estimate cannot authorize alcohol.",
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "level": {
+                  "const": "UNKNOWN"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "estimate": {
+                  "type": "null"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "estimate": {
+                  "$ref": "#/components/schemas/SlaEstimate"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AlcoholQuoteSnapshot": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "decisionId",
+          "policyVersion",
+          "estimate",
+          "standardSlaMinutes",
+          "effectiveSlaMinutes",
+          "timezone",
+          "alcoholOrderCutoffAt",
+          "alcoholHandoverDeadlineAt"
+        ],
+        "properties": {
+          "decisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "policyVersion": {
+            "type": "string",
+            "minLength": 1
+          },
+          "estimate": {
+            "$ref": "#/components/schemas/SlaEstimate"
+          },
+          "standardSlaMinutes": {
+            "const": 45
+          },
+          "effectiveSlaMinutes": {
+            "type": "integer",
+            "minimum": 45
+          },
+          "timezone": {
+            "const": "Europe/Madrid"
+          },
+          "alcoholOrderCutoffAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "alcoholHandoverDeadlineAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "description": "Derived server decision: effectiveSlaMinutes=MAX(45, estimate.upperBoundMinutes); deadline is local service-date22:00; cutoff=deadline-effectiveSlaMinutes. Both timestamps are computed per decision, not a configured fixed21:15. Validity inherited from estimate. No maximum60 cap."
+      },
+      "AlcoholAvailability": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "reason",
+          "snapshot"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "AVAILABLE",
+              "UNAVAILABLE"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "ELIGIBLE",
+              "CUTOFF_REACHED",
+              "STORE_NOT_OPEN",
+              "SLA_UNAVAILABLE"
+            ]
+          },
+          "snapshot": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AlcoholQuoteSnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "AVAILABLE"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "reason": {
+                  "const": "ELIGIBLE"
+                },
+                "snapshot": {
+                  "$ref": "#/components/schemas/AlcoholQuoteSnapshot"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "reason": {
+                  "type": "string",
+                  "enum": [
+                    "CUTOFF_REACHED",
+                    "STORE_NOT_OPEN",
+                    "SLA_UNAVAILABLE"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "reason": {
+                  "const": "SLA_UNAVAILABLE"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "snapshot": {
+                  "type": "null"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "reason": {
+                  "const": "CUTOFF_REACHED"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "snapshot": {
+                  "$ref": "#/components/schemas/AlcoholQuoteSnapshot"
+                }
+              }
+            }
+          }
+        ],
+        "description": "AVAILABLE is informational, never purchase authorization. At serverNow >= computed cutoff use CUTOFF_REACHED. Invalid/stale/missing estimate => SLA_UNAVAILABLE, null snapshot, no 45-minute fallback."
+      },
+      "OperationalAvailability": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "storeStatus",
+          "demand",
+          "alcohol"
+        ],
+        "properties": {
+          "storeStatus": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "PAUSED",
+              "CLOSED"
+            ]
+          },
+          "demand": {
+            "$ref": "#/components/schemas/DemandState"
+          },
+          "alcohol": {
+            "$ref": "#/components/schemas/AlcoholAvailability"
+          }
+        },
+        "description": "Orthogonal dimensions for Phase5 C-005. UI must simultaneously render demand and alcohol notices: HIGH(45–60) plus UNAVAILABLE(cutoff21:00), without replacing one with the other. Public response must not depend on login.",
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "storeStatus": {
+                  "type": "string",
+                  "enum": [
+                    "PAUSED",
+                    "CLOSED"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "alcohol": {
+                  "properties": {
+                    "status": {
+                      "const": "UNAVAILABLE"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "demand": {
+                  "properties": {
+                    "level": {
+                      "const": "UNKNOWN"
+                    }
+                  }
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "alcohol": {
+                  "properties": {
+                    "status": {
+                      "const": "UNAVAILABLE"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "CreateAlcoholAwareOrder": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "cartId",
+          "reservationId",
+          "addressId",
+          "expectedCartRevision",
+          "acceptedAlcoholDecisionId",
+          "ageDeclarationsAccepted"
+        ],
+        "properties": {
+          "cartId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reservationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "addressId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedCartRevision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "acceptedAlcoholDecisionId": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ageDeclarationsAccepted": {
+            "type": "boolean"
+          }
+        },
+        "description": "Server derives containsAlcohol from persisted item/bundle/substitution snapshots; requiresAgeVerification is not writable. Alcohol requires age declaration and current accepted decision ID. Re-evaluate real upper estimate at submit; changed promise ->409 with current availability for explicit reconfirmation before order/payment creation. No alcohol allows null decision and false declaration. Technical order can await payment, not a confirmed sale. Third-party hotel handover and redelivery of refused order prohibited."
+      },
+      "OrderCompliance": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "revision",
+          "status",
+          "containsAlcohol",
+          "requiresAgeVerification",
+          "alcoholSnapshot",
+          "promisedLatestHandoverAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "AWAITING_PAYMENT",
+              "PAYMENT_AUTHORIZED",
+              "AWAITING_PICKING",
+              "PREPARING",
+              "READY",
+              "OUT_FOR_DELIVERY",
+              "DELIVERED",
+              "CANCELLED",
+              "DELIVERY_FAILED",
+              "RETURNING",
+              "RETURNED"
+            ]
+          },
+          "containsAlcohol": {
+            "type": "boolean"
+          },
+          "requiresAgeVerification": {
+            "type": "boolean"
+          },
+          "alcoholSnapshot": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AlcoholQuoteSnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "promisedLatestHandoverAt": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "containsAlcohol": {
+                  "const": true
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "requiresAgeVerification": {
+                  "const": true
+                },
+                "alcoholSnapshot": {
+                  "$ref": "#/components/schemas/AlcoholQuoteSnapshot"
+                },
+                "promisedLatestHandoverAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "requiresAgeVerification": {
+                  "const": false
+                },
+                "alcoholSnapshot": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        ],
+        "description": "Customer-safe order view. requiresAgeVerification=containsAlcohol, including actual pack components. Original promise/snapshot retained; later eligibility uses real remaining time without silently extending original promise. No physical identity evidence exposed here."
+      },
+      "RevisionCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "expectedRevision"
+        ],
+        "properties": {
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "AgeRefusalStatus": {
+        "type": "string",
+        "enum": [
+          "REFUSED_NO_ID",
+          "REFUSED_MINOR",
+          "REFUSED_DOUBTFUL_ID"
+        ]
+      },
+      "AgeVerificationRecord": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "method",
+          "recordedAt",
+          "courierId"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "VERIFIED_18_PLUS",
+              "REFUSED_NO_ID",
+              "REFUSED_MINOR",
+              "REFUSED_DOUBTFUL_ID"
+            ]
+          },
+          "method": {
+            "oneOf": [
+              {
+                "const": "IN_PERSON_DOCUMENT_VISUAL_CHECK"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recordedAt": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "courierId": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "PENDING"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "method": {
+                  "type": "null"
+                },
+                "recordedAt": {
+                  "type": "null"
+                },
+                "courierId": {
+                  "type": "null"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "recordedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "courierId": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "VERIFIED_18_PLUS",
+                    "REFUSED_MINOR",
+                    "REFUSED_DOUBTFUL_ID"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "method": {
+                  "const": "IN_PERSON_DOCUMENT_VISUAL_CHECK"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "REFUSED_NO_ID"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "method": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        ],
+        "description": "Only result/method/server timestamp/courier actor are stored as age evidence (plus operational linkage). No photo, document number, birth date, exact age, free text or document type. PENDING on non-alcohol does not fabricate adult verification."
+      },
+      "AtomicHandoverInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "expectedRevision",
+          "pin",
+          "adultDocumentVisuallyVerified",
+          "recipientPresent"
+        ],
+        "properties": {
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "pin": {
+            "type": "string",
+            "pattern": "^[0-9]{4}$",
+            "writeOnly": true
+          },
+          "adultDocumentVisuallyVerified": {
+            "type": "boolean"
+          },
+          "recipientPresent": {
+            "const": true
+          }
+        },
+        "description": "ONE final command. For alcohol adultDocumentVisuallyVerified must be true, after seeing matching photo and DOB on DNI/passport or NIE accompanied by sufficient photo/DOB document. NIE alone never qualifies: submit terminal REFUSED_DOUBTFUL_ID instead. Non-alcohol accepts false. Actor/time/containsAlcohol not accepted from caller. Confirmation is transient attestation, not retained document data. Server verifies all conditions atomically; no prior successful age-check/PIN call can authorize completion."
+      },
+      "RefuseAgeInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "expectedRevision",
+          "status"
+        ],
+        "properties": {
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "status": {
+            "$ref": "#/components/schemas/AgeRefusalStatus"
+          }
+        },
+        "description": "Terminal refusal by assigned courier; cannot mark success. NO_ID means no document; NIE alone/photo or DOB not visible => DOUBTFUL_ID. Whole order not delivered, automatic full compensation, no redelivery/reassignment to third party. New independent order allowed only with adult present and fresh eligibility."
+      },
+      "DeliveryFailureInputV13": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "expectedRevision",
+          "reason"
+        ],
+        "properties": {
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "CUSTOMER_ABSENT",
+              "THIRD_PARTY_HANDOVER",
+              "ALCOHOL_DEADLINE_EXCEEDED",
+              "WRONG_PIN",
+              "PIN_BLOCKED",
+              "ACCESS_BLOCKED"
+            ]
+          }
+        },
+        "description": "Terminal failure, no same-order retry and no free-text document data. Do not invent age result when nobody was inspected. Verification failure compensation is integral; financial policy for other operational reasons needs approved general cancellation rules before activating those reasons."
+      },
+      "Compensation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "policy",
+          "status",
+          "mode",
+          "amountToRefundCents",
+          "amountToVoidCents",
+          "currency"
+        ],
+        "properties": {
+          "policy": {
+            "const": "FULL_NO_CUSTOMER_COST"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "PROCESSING",
+              "COMPLETED",
+              "FAILED"
+            ]
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "VOID_AUTHORIZATION",
+              "REFUND_CAPTURE",
+              "REFUND_AND_VOID",
+              "NO_PAYMENT"
+            ]
+          },
+          "amountToRefundCents": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "amountToVoidCents": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "currency": {
+            "const": "EUR"
+          }
+        },
+        "description": "Automatic intent on verification refusal, no customer request/manual approval. Full captured outstanding total incl fees; void uncaptured authorization, partial capture refunds+voids. COMPlETED only on provider confirmation/no payment; no fees. External payment via idempotent outbox/worker in Phase4, not in database transaction."
+      },
+      "DeliveryCompliance": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "orderId",
+          "revision",
+          "status",
+          "ageVerification",
+          "verifiedAt",
+          "verifiedByCourierId",
+          "compensation"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ASSIGNED",
+              "OUT_FOR_DELIVERY",
+              "ARRIVED",
+              "DELIVERED",
+              "FAILED",
+              "RETURNING",
+              "RETURNED"
+            ]
+          },
+          "ageVerification": {
+            "$ref": "#/components/schemas/AgeVerificationRecord"
+          },
+          "verifiedAt": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "verifiedByCourierId": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "compensation": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Compensation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "description": "Restricted courier/admin view only. verifiedAt/verifiedByCourierId are projections of the one stored age decision only when VERIFIED_18_PLUS; null otherwise. No parallel identity storage. Delivered alcohol must have valid age record, current physical presence and valid PIN/deadline; enforced by transaction, not this generic response schema.",
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "ageVerification": {
+                  "properties": {
+                    "status": {
+                      "const": "VERIFIED_18_PLUS"
+                    }
+                  }
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "verifiedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "verifiedByCourierId": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "verifiedAt": {
+                  "type": "null"
+                },
+                "verifiedByCourierId": {
+                  "type": "null"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "ageVerification": {
+                  "properties": {
+                    "status": {
+                      "enum": [
+                        "REFUSED_NO_ID",
+                        "REFUSED_MINOR",
+                        "REFUSED_DOUBTFUL_ID"
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "status": {
+                  "enum": [
+                    "FAILED",
+                    "RETURNING",
+                    "RETURNED"
+                  ]
+                },
+                "compensation": {
+                  "$ref": "#/components/schemas/Compensation"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "TerminalRefusalResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "delivery",
+          "compensation",
+          "redeliveryAllowed"
+        ],
+        "properties": {
+          "delivery": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryCompliance"
+              },
+              {
+                "properties": {
+                  "status": {
+                    "enum": [
+                      "FAILED",
+                      "RETURNING",
+                      "RETURNED"
+                    ]
+                  },
+                  "ageVerification": {
+                    "properties": {
+                      "status": {
+                        "$ref": "#/components/schemas/AgeRefusalStatus"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "compensation": {
+            "$ref": "#/components/schemas/Compensation"
+          },
+          "redeliveryAllowed": {
+            "const": false
+          }
+        },
+        "description": "202 means refusal and compensation intent committed, not that bank refund already arrived. Whole mixed or alcohol-only order remains undelivered; inspect returned goods before restocking. Replay same idempotency key returns same result, not a second physical attempt."
+      },
+      "RetentionPolicyV13": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "anchor",
+          "generalCommercialYears",
+          "inheritsOrderDossierRetention",
+          "independentAgeEvidenceTtl"
+        ],
+        "properties": {
+          "anchor": {
+            "const": "LAST_ACCOUNTING_ENTRY"
+          },
+          "generalCommercialYears": {
+            "const": 6
+          },
+          "inheritsOrderDossierRetention": {
+            "const": true
+          },
+          "independentAgeEvidenceTtl": {
+            "const": false
+          }
+        },
+        "description": "Article30 commercial general period from last accounting entry, NOT order creation/delivery. Inherit dossier retentionUntil and documented legal holds/special obligations; six years is not universal cap. Restricted archive after operational need, coordinated deletion; necessity/legal basis for minimal evidence documented, no extension of unrelated customer/session data."
+      },
+      "ComplianceError": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "message",
+          "currentAvailability"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "INVALID_REQUEST",
+              "UNAUTHORIZED",
+              "FORBIDDEN",
+              "NOT_FOUND",
+              "STALE_REVISION",
+              "SLA_UNAVAILABLE",
+              "CUTOFF_REACHED",
+              "PROMISE_RECONFIRMATION_REQUIRED",
+              "AGE_NOT_VERIFIED",
+              "PIN_INVALID",
+              "TERMINAL_REFUSAL",
+              "IDEMPOTENCY_CONFLICT",
+              "DELIVERY_DEADLINE_EXCEEDED",
+              "SERVICE_UNAVAILABLE"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "currentAvailability": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/OperationalAvailability"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "description": "No sensitive document data or PIN in message. Reconfirmation requires currentAvailability; do not create/charge order on quote conflict.",
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "code": {
+                  "const": "PROMISE_RECONFIRMATION_REQUIRED"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "currentAvailability": {
+                  "$ref": "#/components/schemas/OperationalAvailability"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "x-hielya-lineage": [
+    {
+      "file": "contracts/openapi/HIELYA_OPENAPI_V1_0.yaml",
+      "version": "1.0.0",
+      "sha256": "a2c027c6294b44c94cf4be21d18fbd251b0323102e3c9ba2cba912a96d810ae9",
+      "modified": false
+    },
+    {
+      "file": "contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_1.yaml",
+      "version": "1.1.0",
+      "sha256": "92e1ebcc1d817718a7f2fe9ef1ce93df60194e049d3e0349855bd4ddd24d2ec8",
+      "modified": false
+    },
+    {
+      "file": "contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_2.yaml",
+      "sha256": "f71918b043ae6d24cc1c27ace5073fafc644a92bbe736de486a83e4465898d88",
+      "modified": false
+    }
+  ],
+  "x-hielya-phase": 1,
+  "x-hielya-runtime-activation": "NOT_IMPLEMENTED_IN_PHASE_1",
+  "x-hielya-requirements-source": "https://github.com/srdarllan-hash/hielya-app/blob/b96b2907f132d006072b216030353b5352441049/docs/requirements/ALCOHOL_COMPLIANCE_DOMAIN_REQUIREMENTS.md",
+  "x-hielya-domain-invariants": {
+    "cutoff": "deadline - MAX(45, authoritative valid end-to-end upperBoundMinutes)",
+    "simultaneousNotices": "storeStatus, demand.level and alcohol.status are independent; HIGH and UNAVAILABLE must coexist",
+    "freshness": "Re-evaluate current estimate atomically on submit; stale/changed promise =>409 reconfirmation; unavailable authoritative service =>503; no optimistic45 fallback",
+    "laterStages": "Recheck acceptance/preparation/dispatch/arrival/handover with remaining time; retain original promise, no retroactive refusal just because cutoff for new orders passed",
+    "atomicHandover": "Actual deadline AND age18+ if alcohol AND PIN, with same-person presence/actor/revision, in one transaction; no partial completion",
+    "privacy": "Only outcome, method, one server timestamp and courierId per operational linkage; no document photo/number/DOB/type or free text",
+    "hotel": "No unattended/third-party/reception handover; adult intended recipient present; no redelivery on same order",
+    "refund": "Verification refusal ->full automatic compensation incl fees, no customer cost; idempotent outbox and provider confirmation, no distributed transaction claim",
+    "retention": "Age evidence inherits order dossier retention anchored at last accounting entry, general6 years subject to legal special rules/holds; not order date"
+  },
+  "x-hielya-schema-enforcement-limit": "JSON Schema validates shape and expressible conditions, not cross-field timestamp arithmetic, ownership, real-world inspection or atomic database transactions. Those are explicit runtime obligations for phases2–4; phase1 tests validate contract examples, not implemented endpoints."
+}

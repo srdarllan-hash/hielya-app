@@ -2,9 +2,9 @@
 
 Issue45. Objetivo: confrontar plano/requisitos com a implementação e executar toda a validação no SHA candidato. Não é certificado jurídico, autorização de produção ou declaração de jornada operacional completa.
 
-## Proveniência resolvida
+## Proveniência reconciliada
 
-O [plano](https://github.com/srdarllan-hash/hielya-app/blob/b96b2907f132d006072b216030353b5352441049/docs/requirements/ALCOHOL_COMPLIANCE_IMPLEMENTATION_PLAN.md) existe na branch hielya/alcohol-compliance-domain-requirements, PR34 não mergeado. A main consultada anteriormente não continha esse caminho. A resposta anterior omitiu a linhagem separada; não houve prova de perda/deleção. [v5.9](../checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.9.md) documenta explicitamente que PR34 permaneceu separado ao iniciar Fase1. A leitura de main foi factual, mas insuficiente para localizar toda a documentação. [Roteamento](../requirements/README.md) usa links por SHA, não cópias silenciosas. O PR34 não foi mergeado nesta tarefa.
+[Plano](../requirements/ALCOHOL_COMPLIANCE_IMPLEMENTATION_PLAN.md) e [requisitos](../requirements/ALCOHOL_COMPLIANCE_DOMAIN_REQUIREMENTS.md) foram preservados na branch do PR34 enquanto as Fases1–5 chegavam separadamente à main, conforme v5.9. Esta reconciliação remove a separação documental sem reescrever o histórico. Os requisitos não implementados permanecem no plano e em KNOWN_DEBT.
 
 ## Matriz de evidências e lacunas
 
@@ -30,3 +30,9 @@ Mesmo com CI verde, a conclusão máxima é **VALIDAÇÃO TÉCNICA DO ESCOPO IMP
 ## Validação de preparação
 
 Cinco novos casos atravessam componentes reais de aplicação/SQLite, com portas controladas. Na primeira tentativa, três casos tinham chave de idempotência curta (menos de16caracteres): corrigida a fixture para o contrato existente, sem alterar guardas de produto. Demais chaves negativas também tornadas válidas para testar a condição pretendida, não a validação de formato. Relógios controlados, sem dependência da data de execução. A suíte completa e CI final serão registrados no PR; não atualizar baseline. A documentação consolidada foi criada antes dos testes de certificação; nenhuma nova regra de negócio foi inventada.
+
+## Certificação do escopo existente autorizada pelo proprietário
+
+PR46 foi aprovado e mergeado em `eef73aacd5820fb6b1b0076c38b6b4fe21ad54c0`. Evidência no HEAD `f23d621a1c12c33f0f152b07e2a02c079eabf933`: CI34133575497 e contratos34133575733 SUCCESS,987testes, sem falhas/flaky reportados. Árvore do merge igual à certificada. O proprietário delimitou a Fase6 ao que existe: isso permite certificar a matriz implementada, sem declarar a jornada operacional integral concluída. A revisão documental do PR34 requer CI próprio; resultado final fica no PR/checkpoint seguinte, sem editar checkpoints históricos.
+
+Lacuna adicional explicitada na reconciliação: V1.3 descreve falhas logísticas terminais (PIN/ausência/deadline), mas o fluxo executável de recusa/compensação certificado cobre as três recusas etárias. Não converter bloqueio de comando em declaração de cancelamento/reembolso realizado.

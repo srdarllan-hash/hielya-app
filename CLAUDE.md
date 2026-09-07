@@ -16,9 +16,9 @@ Before any relevant work, read `docs/checkpoints/HIELYA_CHECKPOINT_POLICY.md`, t
 
 ## Active Phase 6 certification (2026-09-07)
 
-PR44 merged under explicit authorization. Main `2853b28fcc638e6974fb190f1e5562400c14421a`, certified tree `928c163af298321e546248ee438e158ed31e11b2`; CI34132016389/34132016319 SUCCESS982tests. Issue45 / branch `hielya/alcohol-compliance-certification` consolidates evidence and tests controlled cross-phase paths. See `docs/contracts/ALCOHOL_PHASE_6_CERTIFICATION.md` for coverage and gaps. Full operational end-to-end certification is not claimed: return inspection, authenticated purchase/hotel/courier journey, payment provider and physical disposal remain dependencies. No production/C003/C004/new screens; separate approval before this PR merge.
+PR46 merged under explicit authorization. Main `eef73aacd5820fb6b1b0076c38b6b4fe21ad54c0`, tree `4cdc0ccb9c0dfe9b367c49e667d0442294221798`; CI34133575497/34133575733 SUCCESS987tests. PR34 reconciles requirements with Phases1–5. Phase6 certifies implemented scope only; return/inspection, authenticated purchase/hotel/courier journey, real integrations and physical disposal remain documented gaps. No production/C003/C004/new screens.
 
-CONSTRAINTS, KNOWN_DEBT and INTEGRATIONS now exist as sourced references. Requirements README links the original plan/spec by immutable SHA `b96b2907f132d006072b216030353b5352441049` in PR34, not merged into main. Prior absence report inspected main only and omitted that provenance. No implicit PR34 merge; consult the source revision for rationale and current checkpoints for state. Historical migration-era sections below remain historical, not active status.
+CONSTRAINTS, KNOWN_DEBT and INTEGRATIONS are sourced references, not project-state sources. Requirements README points to local requirements/plan reconciled in PR34 and retains immutable original provenance. Historical migration-era sections below remain historical, not active status.
 
 ## Repository architecture
 

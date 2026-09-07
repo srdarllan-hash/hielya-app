@@ -101,3 +101,5 @@ Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POL
 | v8.0 | 2026-09-07 | FORM_SPEC_CLOSED / OTP_DEBT_DEFERRED | `b69bcf93ce452e781cc6404691b1877780cba90b` (base remota) | [v8.0](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v8.0.md) | criado no repositório |
 
 | v8.1 | 2026-09-07 | FORM_COMPONENTS_IMPLEMENTATION_CANDIDATE — Issue #51 | `9a6fb1451473652cfcb07b62cffe433e049871b4` (base) | [v8.1](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v8.1.md) | criado no repositório |
+
+| v8.3 | 2026-09-07 | PR52_MERGED / C003_C004_AUTHORIZED — clarification pending, Issue #53; Drive v8.2 noncanonical | `10410dded46dfc08e4247835d1ba957f48b3d953` | [v8.3](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v8.3.md) | criado no repositório |

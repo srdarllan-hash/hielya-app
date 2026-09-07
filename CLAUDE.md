@@ -84,14 +84,14 @@ Production activation and deployment are not authorized. The simulated SMS gatew
 
 ## Current certified state
 
-- Certified `main`: `df912c101b3db5c910a8c575fb2e2e687a54f4f5`.
-- Current documentation Gate: `CHECKPOINT_REPOSITORY_MIGRATION_GATE`.
-- Previous checkpoint: `HIELYA_CHECKPOINT_2026-09-04_v4.9.md`.
+- Certified `main`: `4d32cebcc7f68832940f6825177d5348d63f245a`.
+- Current Gate: `DESIGN_TOKENS_1.2.0_PROMOTION` (Issue #31); merge of this Gate requires separate owner approval.
+- Latest checkpoint: `HIELYA_CHECKPOINT_2026-09-07_v5.5.md` (promotion); v5.4 records the PR #30 merge.
 - Implemented/certified chain includes C-001 Splash, C-002 location and delivery quote/prequote continuation, C-005 Home, public catalog and product detail integration, persistence foundations, inventory reservation lifecycle, customer-authentication foundation, OpenAPI V1.2 and the opaque-session OTP request/verify HTTP transport.
 - The opaque session is server-side, revocable and absolute-expiry; only its hash is persisted. Client session consumption is not implemented.
-- Design System code-first direction has been analyzed but not formally approved. Selected visual assets remain pending Design System approval.
+- Design System direction is formally code-first. Tokens 1.2.0 are owner-authorized `APPROVED_FROZEN` in this promotion branch; promotion run `34080055741` passed all 835 tests; the final documentary HEAD also requires green CI before merge. Main SHA above is the pre-promotion integration reference.
 - Not implemented/authorized: C-003 Login UI, C-004 OTP UI, bearer middleware/client session storage, real SMS, cart/checkout/order/payment/admin layers, production activation or deployment.
-- No screen may be created as part of the checkpoint migration.
+- No screen may be created as part of this promotion.
 
 The normal governance flow remains: Issue → branch → implementation/documentation → tests and validations → Pull Request → review → separately authorized merge.
 
@@ -118,7 +118,7 @@ The operational source of truth takes precedence over mockups. The current certi
 - Catalogue navigation is public; `PHONE_LOGIN_EMPTY` preserves “Ahora no”. Login is required at purchase, not for browsing.
 - The current authentication contract is server-side opaque session only: revocable, 30-day absolute expiry, with only a token hash persisted. No JWT, refresh token, bearer middleware or client session storage is implemented.
 - Live delivery tracking and a live courier map are outside the MVP. The selected transit direction is timeline/status plus support, without promising a live map.
-- Visual asset selection does not equal formal approval. Selected assets remain pending the formal Design System approval path and any operational-data remediation.
+- Visual asset selection does not equal formal approval. The seven selected assets remain `SELECTED_PENDING_ASSET_ACCEPTANCE`: a frozen Design System alone does not satisfy the eight cumulative criteria. See `docs/design-system/SELECTED_ASSET_ACCEPTANCE_1_2_0.md`.
 
 ## Alcohol compliance and safety boundary
 
@@ -133,8 +133,15 @@ Alcohol handling is a controlled future checkout/delivery concern, not an implem
 
 - C-003 Login UI and C-004 OTP UI remain blocked. No screen may be created until the required visual and component approvals are complete.
 - `Input`, `PhoneInput` and `OtpInput` still need approved behavior, accessibility, validation, state and sizing specifications before implementation.
-- Design Tokens 1.2.0 and the current component layer are candidates, not `APPROVED_FROZEN`. The code-first Design System direction is not yet a formal approval.
-- Selected assets are `SELECTED / PENDING_DESIGN_SYSTEM`, not `APPROVED`; CART and OUT_OF_STOCK also require operational-data remediation.
+- Design Tokens 1.2.0: `APPROVED_FROZEN` by the authorized promotion; formal record in `docs/design-system/DESIGN_TOKENS_1_2_0_PROMOTION.md`. This certifies existing values and consumers, not missing component specifications.
+- Selected assets are `SELECTED_PENDING_ASSET_ACCEPTANCE`, not `APPROVED`; all seven lack complete per-asset DS conformity, QA and editable/code-first source evidence. CART and OUT_OF_STOCK also require operational-data remediation; OUT_OF_STOCK retains an archive/superseded naming conflict.
 - Client session storage, session restoration, logout, expiry handling and bearer middleware are intentionally not implemented.
 - Real SMS, payment, checkout, ordering, admin, deployment and production activation remain blocked.
 - A future, separately authorized CI guardrail must fail when an existing file inside `docs/checkpoints/` is modified instead of a new checkpoint file being added. Do not implement that guardrail as part of this migration.
+
+## Design System authority and promotion boundary
+
+- `HIELYA_VISUAL_DIRECTION`: six original DS PNGs and nine boards remain `REFERENCE_ONLY / VISUAL_INTENT`. They are not normative specifications or acceptance criteria.
+- `DESIGN_SYSTEM_CONTRACT`: design-tokens and certified React components are the implementable authority. Preserve historical 1.1.0 certifications. `@hielya/ui` is currently 1.3.0 with its existing `GATE_2_APPROVED_FROZEN` component manifest; this token-only gate does not relabel all component-version history.
+- The regression debt in Issue #28 was resolved by merged PR #30. Run `34079006607` passed 835 tests with no failures or reported flaky tests; its tested tree equals main `4d32cebcc7f68832940f6825177d5348d63f245a`. The promotion branch must also pass full CI at its exact HEAD.
+- Detailed 1.1.0 → 1.2.0 inventory: `docs/design-system/TOKENS_1_2_0_DELTA.md`. Existing 106 tokens unchanged, 64 already-integrated additions; no values change in this promotion.

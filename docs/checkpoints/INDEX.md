@@ -35,6 +35,7 @@ Este índice rastreia os checkpoints oficiais migrados do Google Drive. Os docum
 | v4.9 | 2026-09-04 | `DESIGN_SYSTEM_CODE_FIRST_DIRECTION_ANALYSIS` | `df912c101b3db5c910a8c575fb2e2e687a54f4f5` | [HIELYA_CHECKPOINT_2026-09-04_v4.9.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v4.9.md) | [original](https://docs.google.com/document/d/1iJiCYqId_dS-I-mRMZhqWKDY1YGf7liBgoOn-gre-QY/edit?usp=drivesdk) |
 | v5.0 | 2026-09-04 | `CHECKPOINT_REPOSITORY_MIGRATION_GATE` | `9ac639cf7c833d18094c6f9765b369ee2107efba` | [HIELYA_CHECKPOINT_2026-09-04_v5.0.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v5.0.md) | não aplicável — criado no repositório |
 | v5.3 | 2026-09-07 | `ISSUE_28_PREEXISTING_REGRESSION_REPAIR — CI SUCCESS / PR #30 DRAFT` | `57559e3ecfbd431e0218ba474b52774935ead36c` | [HIELYA_CHECKPOINT_2026-09-07_v5.3.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.3.md) | criado no repositório; precedentes v5.1/v5.2 em PRs pendentes |
+| v5.4 | 2026-09-07 | `ISSUE_28_RESOLUTION_MERGED_TO_MAIN` | `4d32cebcc7f68832940f6825177d5348d63f245a` | [HIELYA_CHECKPOINT_2026-09-07_v5.4.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.4.md) | criado no repositório |
 | v5.4 | 2026-09-07 | `Precedente documental em PR #32, não incorporado nesta branch` | `27bb14c47e3513143c1b103655334da1bedab119` | [v5.4](https://github.com/srdarllan-hash/hielya-app/blob/27bb14c47e3513143c1b103655334da1bedab119/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.4.md) | criado no repositório |
 | v5.5 | 2026-09-07 | `Precedente documental em PR #32, não incorporado nesta branch` | `27bb14c47e3513143c1b103655334da1bedab119` | [v5.5](https://github.com/srdarllan-hash/hielya-app/blob/27bb14c47e3513143c1b103655334da1bedab119/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.5.md) | criado no repositório |
 | v5.6 | 2026-09-07 | `Precedente documental em PR #34, não incorporado nesta branch` | `b96b2907f132d006072b216030353b5352441049` | [v5.6](https://github.com/srdarllan-hash/hielya-app/blob/b96b2907f132d006072b216030353b5352441049/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.6.md) | criado no repositório |
@@ -85,4 +86,8 @@ Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POL
 
 | v7.2 | 2026-09-07 | PR46_MERGED / PR34_RECONCILIATION | `eef73aacd5820fb6b1b0076c38b6b4fe21ad54c0` | [v7.2](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.2.md) | criado no repositório |
 
+| v7.5 | 2026-09-07 | TOKENS_PROMOTION_MERGE_PREPARATION | `5aca80958afcafd75e91665c4556593e8bdcefaf` | [v7.5](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.5.md) | criado no repositório |
+
 | v7.4 | 2026-09-07 | FORM_COMPONENTS_SPECIFICATION — decisions pending; predecessor v7.3 in PR47 | `5aca80958afcafd75e91665c4556593e8bdcefaf` | [v7.4](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.4.md) | criado no repositório |
+
+| v7.6 | 2026-09-07 | TOKENS32_MERGED / FORM_SPEC_OWNER_DECISIONS | `37dc523013ac13088fffdd70d8d8c6be7292a612` | [v7.6](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.6.md) | criado no repositório |

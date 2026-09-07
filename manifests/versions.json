@@ -12,8 +12,15 @@
     "poppins": "5.3.0"
   },
   "designTokens": {
-    "frozenSource": "1.1.0",
-    "consolidationCandidate": "1.2.0"
+    "frozenSource": "1.2.0",
+    "status": "APPROVED_FROZEN",
+    "previousFrozenSource": "1.1.0",
+    "promotedAt": "2026-09-07T03:32:13.922340+00:00",
+    "mainShaAtPromotion": "4d32cebcc7f68832940f6825177d5348d63f245a",
+    "referenceWorkflowRunId": 34079006607,
+    "promotionRecord": "docs/design-system/DESIGN_TOKENS_1_2_0_PROMOTION.md",
+    "consolidationCandidate": "1.2.0",
+    "consolidationCandidateMeaning": "Historical consolidation version retained for existing audit consumers; current status is APPROVED_FROZEN and frozenSource is 1.2.0."
   },
   "componentLibrary": {
     "frozenSource": "1.1.1",

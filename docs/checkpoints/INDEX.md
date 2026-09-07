@@ -87,3 +87,15 @@ Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POL
 | v7.2 | 2026-09-07 | PR46_MERGED / PR34_RECONCILIATION | `eef73aacd5820fb6b1b0076c38b6b4fe21ad54c0` | [v7.2](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.2.md) | criado no repositório |
 
 | v7.5 | 2026-09-07 | TOKENS_PROMOTION_MERGE_PREPARATION | `5aca80958afcafd75e91665c4556593e8bdcefaf` | [v7.5](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.5.md) | criado no repositório |
+
+| v7.4 | 2026-09-07 | FORM_COMPONENTS_SPECIFICATION — decisions pending; predecessor v7.3 in PR47 | `5aca80958afcafd75e91665c4556593e8bdcefaf` | [v7.4](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.4.md) | criado no repositório |
+
+| v7.6 | 2026-09-07 | TOKENS32_MERGED / FORM_SPEC_OWNER_DECISIONS | `37dc523013ac13088fffdd70d8d8c6be7292a612` | [v7.6](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.6.md) | criado no repositório |
+
+| v7.7 | 2026-09-07 | FORM_SPECIFICATION_RATIFICATION | `37dc523013ac13088fffdd70d8d8c6be7292a612` | [v7.7](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.7.md) | criado no repositório |
+
+| v7.8 | 2026-09-07 | FORM_DECISIONS_CLOSED / OTP_RETRY_BACKEND_BLOCKER | `37dc523013ac13088fffdd70d8d8c6be7292a612` | [v7.8](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.8.md) | criado no repositório |
+
+| v7.9 | 2026-09-07 | OTP_RECOVERY_OPTIONS_FOR_OWNER_DECISION | `3bb27c3f289f06983640170338abbc5dad43f0ec` (base) | [v7.9](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.9.md) | criado no repositório |
+
+| v8.0 | 2026-09-07 | FORM_SPEC_CLOSED / OTP_DEBT_DEFERRED | `b69bcf93ce452e781cc6404691b1877780cba90b` (base remota) | [v8.0](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v8.0.md) | criado no repositório |

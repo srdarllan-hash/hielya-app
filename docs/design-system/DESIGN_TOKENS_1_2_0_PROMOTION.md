@@ -21,3 +21,15 @@ Workflow Design System Validation: instalação frozen-lockfile, tokens:check, l
 Os seis PNGs originais DS e nove boards permanecem REFERENCE_ONLY / VISUAL_INTENT. Não são promovidos. Novas mudanças de valor exigem nova versão, matriz de impacto, CI/QA e aprovação explícita.
 
 Sem C-003/C-004, telas, Input/PhoneInput/OtpInput, produção, deploy ou merge automático.
+
+## Compatibilidade do manifest
+
+O auditor existente `scripts/audit-global-manifests.mjs` lê o campo `designTokens.consolidationCandidate` para conferir a versão consumida pelos componentes. Esse identificador histórico 1.2.0 é preservado, com significado explicitado no manifest; status atual e frozenSource passam a APPROVED_FROZEN/1.2.0. Nenhum validador é enfraquecido ou alterado. A ausência desse campo quebraria o auditor por formato, sem relação com valores de tokens.
+
+## Validação observada nesta branch
+
+[Run 34080055741](https://github.com/srdarllan-hash/hielya-app/actions/runs/34080055741) **SUCCESS**, HEAD `4deb628524b175d7f3b54d4e87d104bc3b2582aa`, árvore `c87c273684b93d58751400926840db78d86fe13c`. Sete jobs verdes: 312 unidades + 369 foundation + 49 C-002 alignment + 12 prequote + 48 Home + 45 Product Detail = **835 PASS**, zero falhas, nenhum flaky reportado. Tokens/lint/typecheck/Next build/Storybook build aprovados; baselines não gravados.
+
+O checkpoint v5.5 registra esse resultado. O commit documental de fechamento será também validado integralmente pelo mesmo workflow; o resultado do HEAD final ficará no PR #32, sem reescrever o checkpoint. Esse segundo run não é presumido antes da conclusão.
+
+Registro canônico Drive atualizado e relido: status DS em Resumo; sete seleções passam a SELECTED_PENDING_ASSET_ACCEPTANCE, zero APPROVED; 15 referências mantidas.

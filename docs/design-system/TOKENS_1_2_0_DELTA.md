@@ -83,3 +83,7 @@ Comparação semântica de tokens.json: **106 tokens preservados integralmente, 
 
 ## Integridade do contrato
 SHA-256 do JSON sem meta (JSON ordenado, compacto): `874aa0b958569b99a4fdd68d95897f12dd1d3b2e44956c3fe7b8ad0b9c1f59f5`. A promoção pode alterar somente metadados; os valores e o typeStyle devem produzir esse mesmo hash. CSS e CSV gerados devem permanecer byte a byte iguais à main.
+
+## Metadados e empacotamento da consolidação
+
+O mesmo commit 8bd134f alterou package.json de 1.1.0 para 1.2.0 e adicionou a exportação `./tokens-flat.csv`; exports CSS/JSON/TS foram preservados. No JSON, meta passou de FROZEN/1.1.0 para CONSOLIDATION_CANDIDATE/1.2.0, com escopo/data/política de consolidação; typeStyles e propriedades fora das adições listadas permanecem iguais. CSS/TS/CSV foram recompilados de forma determinística, incluindo serialização CSS correta de sombras. Não há outro commit do pacote entre a baseline e a main além de 8bd134f e 1ada833.

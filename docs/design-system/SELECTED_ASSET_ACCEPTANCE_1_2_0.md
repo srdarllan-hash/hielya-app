@@ -39,4 +39,3 @@ As observações operacionais são evidências da auditoria de 2026-09-04, relid
 Fonte de baseline operacional: main df912c101b3db5c910a8c575fb2e2e687a54f4f5 da auditoria; main atual 4d32cebcc7f68832940f6825177d5348d63f245a. Os contratos comerciais não foram alterados pelos PRs #26/#30. Não inventar cupom, preço, SLA ou comportamento para tornar uma imagem elegível.
 
 Seis PNGs DS + nove boards continuam REFERENCE_ONLY / VISUAL_INTENT; nenhum deles recebe APPROVED. Este gate não implementa as lacunas, não inicia C-003/C-004 e não cria telas.
-

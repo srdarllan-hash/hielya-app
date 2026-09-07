@@ -70,10 +70,10 @@ Production activation and deployment are not authorized. The simulated SMS gatew
 
 - Certified `main`: `4d32cebcc7f68832940f6825177d5348d63f245a`.
 - Current Gate: `DESIGN_TOKENS_1.2.0_PROMOTION` (Issue #31); merge of this Gate requires separate owner approval.
-- Post-merge checkpoint: `HIELYA_CHECKPOINT_2026-09-07_v5.4.md`; read the highest version in INDEX for subsequent Gate results.
+- Latest checkpoint: `HIELYA_CHECKPOINT_2026-09-07_v5.5.md` (promotion); v5.4 records the PR #30 merge.
 - Implemented/certified chain includes C-001 Splash, C-002 location and delivery quote/prequote continuation, C-005 Home, public catalog and product detail integration, persistence foundations, inventory reservation lifecycle, customer-authentication foundation, OpenAPI V1.2 and the opaque-session OTP request/verify HTTP transport.
 - The opaque session is server-side, revocable and absolute-expiry; only its hash is persisted. Client session consumption is not implemented.
-- Design System direction is formally code-first. Tokens 1.2.0 are owner-authorized `APPROVED_FROZEN` in this promotion branch; exact-head CI is required before merge. Main SHA above is the pre-promotion integration reference.
+- Design System direction is formally code-first. Tokens 1.2.0 are owner-authorized `APPROVED_FROZEN` in this promotion branch; promotion run `34080055741` passed all 835 tests; the final documentary HEAD also requires green CI before merge. Main SHA above is the pre-promotion integration reference.
 - Not implemented/authorized: C-003 Login UI, C-004 OTP UI, bearer middleware/client session storage, real SMS, cart/checkout/order/payment/admin layers, production activation or deployment.
 - No screen may be created as part of this promotion.
 

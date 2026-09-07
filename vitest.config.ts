@@ -4,6 +4,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   resolve: {
     alias: {
+      '@hielya/application/client-auth': fileURLToPath(new URL('./packages/application/src/client-auth/index.ts', import.meta.url)),
       '@hielya/ui': fileURLToPath(
         new URL('./packages/ui/src/index.ts', import.meta.url),
       ),

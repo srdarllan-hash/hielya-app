@@ -4,6 +4,7 @@ Referência de lacunas e critérios de encerramento, não snapshot de projeto. C
 
 | Pendência | Critério de encerramento | Evidência |
 |---|---|---|
+| Armazenamento persistente seguro da sessão e gatilho real de compra | ADR formal de secure storage antes de persistir; substituir entrada temporária /login e continuação na Home quando checkout existir. Neste escopo sessão apenas em memória, perda no reload aceita pelo proprietário | [Issue #53](https://github.com/srdarllan-hash/hielya-app/issues/53), [fluxo C003/C004](requirements/C003_C004_APPLICATION_FLOW.md) |
 | Descarte físico após retenção não implementado | Descarte coordenado do dossiê/backups, rechecagem de impedimentos/reconciliação e evidência verificável | [Fase4](contracts/ALCOHOL_DOMAIN_PHASE_4.md), [Issue43](https://github.com/srdarllan-hash/hielya-app/issues/43) |
 | Pagamento real/Stripe e execução efetiva de estornos pendentes | Adaptador aprovado com idempotência, reconciliação e confirmação financeira | [Fase4](contracts/ALCOHOL_DOMAIN_PHASE_4.md), [Issue43](https://github.com/srdarllan-hash/hielya-app/issues/43) |
 | SLA real, checkout autenticado e identidade operacional são dependências não ativadas | Integrações aprovadas e testadas em fronteiras reais, sem usar fixtures como produção | [Fase2](contracts/ALCOHOL_DOMAIN_PHASE_2.md), [Fase3](contracts/ALCOHOL_DOMAIN_PHASE_3.md), [Fase5](contracts/ALCOHOL_DOMAIN_PHASE_5.md) |

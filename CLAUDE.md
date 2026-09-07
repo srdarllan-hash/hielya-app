@@ -14,6 +14,10 @@ Before any relevant work, read `docs/checkpoints/HIELYA_CHECKPOINT_POLICY.md`, t
 - For decision rationale, consult `docs/decisions/`; for required behavior, consult `docs/requirements/`.
 - Validate claims against repository/GitHub evidence. Report missing references and document conflicts in the PR; never silently select a conflicting document as the winner.
 
+## C-003/C-004 authorization update
+
+The owner authorized C-003/C-004 in Issue #53 after PR #52 merge. Follow checkpoint v8.4 and docs/requirements/C003_C004_APPLICATION_FLOW.md for the candidate scope: temporary /login, memory-only session, public catalog, no production/real SMS/checkout. Historical screen/component blocking statements below are superseded by that authorization and PR #52. Persistent secure storage awaits a formal ADR. Future PR merge still requires separate owner approval.
+
 ## Active Phase 6 certification (2026-09-07)
 
 PR46 merged under explicit authorization. Main `eef73aacd5820fb6b1b0076c38b6b4fe21ad54c0`, tree `4cdc0ccb9c0dfe9b367c49e667d0442294221798`; CI34133575497/34133575733 SUCCESS987tests. PR34 reconciles requirements with Phases1–5. Phase6 certifies implemented scope only; return/inspection, authenticated purchase/hotel/courier journey, real integrations and physical disposal remain documented gaps. No production/C003/C004/new screens.

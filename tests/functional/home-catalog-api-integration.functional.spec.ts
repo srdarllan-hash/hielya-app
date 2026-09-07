@@ -70,13 +70,16 @@ test('synthetic fixtures exercise READY, unit, pack, ice, alcohol and availabili
   await expect(page.getByText('Venta 18+').first()).toBeVisible();
   await expect(page.getByText('Temporalmente no disponible')).toBeVisible();
 
-  const requestsBeforeNonAuthorizedActions = apiRequests.length;
+  const requestsBeforeActions = apiRequests.length;
   await page.getByRole('button', { name: 'Abrir perfil' }).click();
   await page.getByRole('button', { name: 'Abrir carrito' }).click();
-  await page.getByRole('button', { name: 'Añadir Agua sintética fría al carrito' }).click();
-  await page.getByRole('button', { name: 'Añadir Pack sintético frío con hielo al carrito' }).click();
-  await page.waitForTimeout(100);
-  expect(apiRequests).toHaveLength(requestsBeforeNonAuthorizedActions);
+  for (const name of ['Añadir Agua sintética fría al carrito','Añadir Pack sintético frío con hielo al carrito']) {
+    const validation = page.waitForResponse(response => new URL(response.url()).pathname === '/api/v1/store/state');
+    await page.getByRole('button', { name }).click();
+    await (await validation).finished();
+  }
+  // Phase5 authorizes exactly two read-only revalidations, not cart/profile mutations.
+  expect(apiRequests.slice(requestsBeforeActions)).toEqual(['GET /api/v1/store/state','GET /api/v1/store/state']);
 
   const body = await page.locator('body').innerText();
   for (const field of forbiddenPublicFields) expect(body).not.toContain(field);

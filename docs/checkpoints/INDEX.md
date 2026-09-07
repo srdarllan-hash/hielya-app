@@ -91,3 +91,5 @@ Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POL
 | v7.4 | 2026-09-07 | FORM_COMPONENTS_SPECIFICATION — decisions pending; predecessor v7.3 in PR47 | `5aca80958afcafd75e91665c4556593e8bdcefaf` | [v7.4](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.4.md) | criado no repositório |
 
 | v7.6 | 2026-09-07 | TOKENS32_MERGED / FORM_SPEC_OWNER_DECISIONS | `37dc523013ac13088fffdd70d8d8c6be7292a612` | [v7.6](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.6.md) | criado no repositório |
+
+| v7.7 | 2026-09-07 | FORM_SPECIFICATION_RATIFICATION | `37dc523013ac13088fffdd70d8d8c6be7292a612` | [v7.7](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.7.md) | criado no repositório |

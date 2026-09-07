@@ -1,3 +1,90 @@
+# FORM_COMPONENTS_SPECIFICATION — revisão 3
+
+Issue48 / PR49 · 2026-09-07.
+**DECISÕES RATIFICADAS / PR PARA REVISÃO DE MERGE.**
+Esta seção consolida a decisão vigente; o anexo preserva fontes/opções anteriores. Nenhuma opção não selecionada vira default. READY_FOR_IMPLEMENTATION permanece false apenas pelos detalhes residuais explicitados em §R. Nenhuma implementação autorizada.
+
+## A. Autoridade
+Tokens1.2.0 APPROVED_FROZEN confirmados na main37dc523013ac13088fffdd70d8d8c6be7292a612 após PR32; D0 resolvida. Valores não alterados. PNGs REFERENCE_ONLY. Medidas Input/PhoneInput: min48px,padding12x16,radius12,border1,focus2/offset2,Poppins14/20; tokens/fontes no anexo. SearchField existente radius16 não será alterado.
+
+## B. Input — ratificação normativa
+| Item | Decisão |
+|---|---|
+| Hover A | Borda normal border.strong#454545, background.primary#000000,text.primary#FFFFFF; sem mudança no hover |
+| Válido A | Borda neutra; successText#4ADE80 somente na mensagem fornecida; não significa telefone autenticado |
+| Inválido | dangerFill#EF4444 na borda, dangerText#F87171 na mensagem; aria-invalid=true; foco não desaparece |
+| Disabled B | background.surface#121212,text.disabled#737373,border.subtle#2A2A2A; sem edição/tab, informação essencial continua legível |
+| Read-only A | Visual normal e helper “Solo lectura.”; focável, selecionável/copiável, não editável |
+| Loading B | Visual de leitura, suffix “Procesando…”; bloquear edição, preservar valor; sem spinner inventado |
+| Adornos A | Texto/decorativo apenas;text.secondary#B8B8B8,14/20,gapspace.8; sem botão limpar/revelar |
+| Erro B | role=alert para novo erro após submit; sem aria-live adicional nem novo anúncio por re-render |
+
+Label/id estáveis; error/helper/success com IDs e aria-describedby somente para elementos existentes. Placeholder não substitui label. Foco border.focus#F6B800,2px/offset2px. Base não normaliza telefone/OTP ou chama rede; controlled/uncontrolled seguem value externo ou defaultValue inicial, sem troca de modo.
+A escolha alert após submit não aprova automaticamente alert em blur/change; a descrição associada permanece disponível, e a política de anúncio adicional é pendênciaR-announce.
+
+## C. PhoneInput — ratificação normativa
+- Prefixo+34 fixo,9dígitos nacionaisASCII,string preservando zeros;type=tel,inputMode=tel,autoComplete=tel. Não acrescentar filtro6/7 ausente no contrato.
+- Máscara A: +34 612 345 678 (3-3-3), apenas apresentação.
+- Paste A: aceitar nacional/+34/0034 e remover espaços,pontos,hífens/parênteses; rejeitar operação inteira com letras,caracteres proibidos,país diferente ou excesso. Preservar valor anterior; não truncar nem “corrigir” país; não duplicar+34.
+- Callback único A: onChange({nationalDigits:string,e164:string|null}) por edição aceita. Vazio/1–8dígitos=>e164=null;9dígitos=>"+34"+nationalDigits. Nunca emitir máscara como valor canônico nem E.164 incompleto. Operação rejeitada não altera valor nem emite sucesso de edição.
+- Validação A: blur/submit; após primeiro erro, revalidar change para corrigir/remover mensagem. Required vazio avaliado apenas quando required=true. Validade de formato não é telefone verificado.
+- NormalizaçãoUI não solicitaOTP, não conhece challengeId, não cria sessão. Não importar auth Node/crypto para o browser.
+
+## D. OTP — ratificação normativa e recuperação
+Seis inputs reais, seis dígitosASCII e string lógica completa com zeros preservados; inputMode=numeric,autoComplete=one-time-code. Alvo/distribuição do autofill ainda deve ser decidido/testado; seis inputs não são prova de compatibilidade melhor em todos os navegadores.
+
+Completar o sexto dígito notifica automaticamente o consumidor. Aplicação inicia verificação e bloqueia concorrência/loading antes de await ou renderposterior. Não fazer rede em render/effect; digitação/paste/autofill e eventos duplicados não repetem submit automático do mesmo código no mesmo desafio. Componente não administra challengeId/OpaqueSession.
+
+| Resultado da aplicação | Campos/foco | Nova tentativa |
+|---|---|---|
+| Em andamento | Preservar código;loading;bloquear edição/submissão concorrente | Nenhuma segunda chamada |
+| INVALID_OTP com tentativas disponíveis | Limpar6campos,focar primeiro habilitado,mensagem ratificada | Nova entrada imediata; servidor continua autoridade |
+| Falha de rede/resultado incerto | **Preservar código**,erro de conexão e botão de nova tentativa; sair de loading | **Retry explícito permitido**, inclusive mesmo código; clique volta imediatamente a loading e trava duplicidade |
+| Expired/locked/cooldown | Estado recebido da aplicação; não tratar como erro recuperável de digitação | Nenhum bypass,reset de tentativas ou resend automático |
+| Sucesso | Consumidor processa resposta/navegação | Componente não cria ou persiste sessão |
+
+A exceção de rede substitui “limpar após qualquer erro”. Aplicação classifica erro; componente não inventa que resposta desconhecida equivale a INVALID_OTP. Tentativas/expiração/bloqueio/cooldown/resend são soberanos no servidor; limpar/retry não torna desafio válido.
+Botão retry dispara intenção para o consumidor, não HTTP interno. Permissão de retry não comprova idempotência do endpoint após resposta perdida: integração futura deve verificar reconciliação/consumo do desafio sem presumir reemissão de sessão; não alterar backend neste gate.
+OTP nunca em logs,analytics,URL,storage,telemetria ou replay de sessão. Apenas memória efêmera necessária; não usar OTP como identificador público. Deduplicação no desafio corrente, sob controle da aplicação; nenhum bloqueio global vitalício de um código numérico.
+
+## E. Microcopy ratificada
+Textos apresentados na última resposta estão aprovados literalmente; opções A/B adicionais do anexo não são aprovadas simultaneamente por inferência.
+
+| Contexto | Texto aprovado |
+|---|---|
+| Telefone | Número de teléfono |
+| Ajuda telefone | Introduce los 9 dígitos de tu número de España. |
+| Telefone inválido | Introduce un número válido de 9 dígitos. |
+| OTP | Código de verificación |
+| Ajuda OTP | Introduce los 6 dígitos. Se verificará automáticamente. |
+| Código inválido | El código no es válido. Introduce los 6 dígitos de nuevo. |
+| Expirado | El código ha caducado. Solicita uno nuevo cuando esté disponible. |
+| Bloqueado | Has alcanzado el límite de intentos. Espera para solicitar otro código. |
+| Cooldown | Podrás solicitar otro código en {seconds} s. |
+| Read-only | Solo lectura. |
+| LoadingInput | Procesando… |
+
+Mensagens adicionais de rede e label do botão retry precisam de escolha entre textos anteriores/novo texto, conforme§R. Não inventar texto oficial.
+
+## R. Detalhes residuais não ratificados
+| Grupo | Opções anteriores ainda abertas |
+|---|---|
+| Input | I6autofill,I7tipografiahelper/success,I8reserva feedback,I11alvofocus,I12API,I13types,I14precedência |
+| R-announce | Alert aprovado após submit; definir anúncio dinâmico de erro de blur sem ampliar silenciosamente a regra |
+| Phone | P3cursor/seleção,P6IMEUnicode,shape value/defaultValue do especializado |
+| OTP | O1–O6paste/Backspace/setas/Tab/draft com buracos,O9alvoautofill |
+| Geometria | O7largura/gap/padding/fallback estreito,O8peso/alinhamento |
+| Foco/recuperação | Alvo se primeirocampo está disabled em locked/expired; foco após falha de rede |
+| Copy adicional | Mensagens fora da tabela ratificada e texto exato do botão retry; variantes no anexo |
+| Integração | Comportamento real do endpoint após resposta perdida; não confundir intenção de retry com garantia de sucesso |
+
+Nenhuma dessas pendências altera as escolhas já ratificadas. Documento pronto para revisão das decisões registradas, não autorização para agente completar detalhes por conta própria. C003/C004 continuam bloqueados. PR49 não deve ser mergeado sem autorização explícita.
+
+---
+
+## Anexo histórico — revisão2, fontes e alternativas
+Para itens decididos, esta revisão3 prevalece sobre “aguardando ratificação” e alternativas do anexo. Demais opções seguem abertas.
+
 # FORM_COMPONENTS_SPECIFICATION
 
 Issue #48 · 2026-09-07 · **DRAFT / OWNER_DECISIONS_REQUIRED / NOT_READY_FOR_IMPLEMENTATION**.

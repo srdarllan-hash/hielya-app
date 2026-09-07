@@ -1,7 +1,7 @@
-# FORM_COMPONENTS_SPECIFICATION — revisão 4 consolidada
+# FORM_COMPONENTS_SPECIFICATION — revisão 5 consolidada
 
-Issue48 / PR49 · 2026-09-07 · **DESIGN_DECISIONS_RATIFIED / BACKEND_DEPENDENCY_BLOCKED**.
-Esta revisão substitui as alternativas anteriores no documento corrente. Revisões anteriores permanecem na história Git; checkpoints não são alterados. Revisão documental para aprovação de merge, sem autorização de implementação. OtpInput/C004 bloqueados pela [Issue50](https://github.com/srdarllan-hash/hielya-app/issues/50).
+Issue48 / PR49 · 2026-09-07 · **SPECIFICATION_CLOSED / READY_FOR_IMPLEMENTATION**.
+Esta revisão substitui as alternativas anteriores no documento corrente. Revisões anteriores permanecem na história Git; checkpoints não são alterados. As especificações dos três componentes estão fechadas e prontas para implementação. Merge documental expressamente autorizado; nenhuma implementação integra este PR. A [Issue50](https://github.com/srdarllan-hash/hielya-app/issues/50) é dívida média, não bloqueia MVP nem OtpInput/C-004.
 
 ## 1. Autoridade e fontes
 
@@ -154,12 +154,20 @@ Base37dc523013ac13088fffdd70d8d8c6be7292a612. Evidência por leitura dirigida do
 
 [Teste existente](../../tests/unit/mvp-customer-authentication-concurrency.test.ts), “allows a challenge to be verified only once with one customer and one session”, afirma falha na segunda verificação e contagem1sessão. MapeamentoHTTP também consta de [testesHTTP](../../tests/unit/mvp-auth-http.test.ts). Nenhum teste de recuperação de resposta perdida executado nesta investigação.
 
-É proteção de uso único sem replay de resultado, não idempotência de recuperação. [Issue50](https://github.com/srdarllan-hash/hielya-app/issues/50) bloqueia implementação doOtpInput até especificar/aprovar/resolver backend e contrato de recuperação. Não armazenar token em claro nem emitir sessão adicional para “resolver” noUI; nenhuma solução de backend está escolhida neste documento.
+É proteção de uso único sem replay de resultado, não idempotência de recuperação. [Issue50](https://github.com/srdarllan-hash/hielya-app/issues/50) permanece aberta com prioridade média, não bloqueia MVP nem implementação do OtpInput/C-004; resolver antes de escala. Não armazenar token em claro nem emitir sessão adicional para resolver no UI. Recuperação adiada; A/B descartadas, C ou D preferidas para avaliação futura, sem seleção final.
 
 ## 10. Aceite e sequência
 
-Escolhas visuais/comportamentais apresentadas ao proprietário estão ratificadas; não restam alternativasA/B dessas rodadas. DEFAULTS_UNAPPROVED=false. DOCUMENT_READY_FOR_MERGE_REVIEW=true. OTP_IMPLEMENTATION_READY=false porIssue50;C003/C004 continuam nãoautorizadas. Este gate não inicia código.
+Escolhas visuais/comportamentais apresentadas ao proprietário estão ratificadas; não restam alternativasA/B dessas rodadas. DEFAULTS_UNAPPROVED=false. DOCUMENT_READY_FOR_MERGE_REVIEW=true. INPUT_SPEC_READY=true; PHONE_INPUT_SPEC_READY=true; OTP_IMPLEMENTATION_READY=true. As três especificações estão fechadas e prontas para implementação. Este PR é exclusivamente documental e não implementa componentes ou telas.
 
-Próximo gate de backend deve avaliar segurança/contrato/idempotência/reconciliação e testar sucesso+respostaperdida,retryconcorrente,timeout,expiração,revogação,deduplicação e minimização,antes de liberarOtpInput. Não ampliar autorização desta especificação para implementação daIssue50.
+Próximo gate de backend deve avaliar segurança/contrato/idempotência/reconciliação e testar sucesso+respostaperdida,retryconcorrente,timeout,expiração,revogação,deduplicação e minimização,antes de escala. Não ampliar autorização desta especificação para implementação da Issue50; essa dívida não condiciona o início do OtpInput.
 
 Apósautorizaçãofutura,verificar controlled/uncontrolled,estadoscombinados,labels/descrições/alertsemsaturação,rovingtabindex/autofocuscondicional,IMEfull-width,pastecompleto/parcial/excessoletras,carettelefone,selecão/backspace/delete,zeros,dedupe/loading/retryexplícito,servidorsoberano,mobile360/3+3/zoom/focussemclipping,autofillSafari/ChromiumAndroid e leitoresdetela. Nenhum sucesso de CI atual certifica componentes ainda nãoimplementados. Sem alterar baseline para esconder divergência.
+
+## 11. Decisão final: dívida adiada e especificações fechadas
+
+O proprietário autorizou publicação pública dos documentos e merge do PR #49 após revisão de dados sensíveis e verificações. Input, PhoneInput e OtpInput estão com especificação fechada e pronta para implementação. Issue #50 passa a prioridade média, não bloqueia MVP ou OtpInput/C-004; resolver antes de escala. A/B descartadas por conflito com minimização. C ou D preferidas para análise futura, sem escolha final ou implementação agora. [Decisão detalhada](OTP_VERIFY_RECOVERY_OPTIONS.md).
+
+Em falha de rede: preservar código, mostrar erro de conexão e oferecer retry explícito. O componente NÃO promete recuperação. Se o retry receber OTP_UNAVAILABLE, exibir exatamente “Este código no está disponible. Solicita otro cuando puedas.” e orientar a solicitar novo código quando o cooldown permitir. A aplicação mantém autoridade sobre cooldown/reenvio; não executar reenvio automático nem contornar restrições do servidor.
+
+Mitigação provisória a especificar no backend: limpeza/expiração de sessões ACTIVE nunca utilizadas; não tratar falta de ACK como prova de não uso. Nenhuma rotina de limpeza, recuperação, mudança de contrato ou implementação de componente é realizada neste PR.

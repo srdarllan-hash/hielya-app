@@ -63,3 +63,6 @@ Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POL
 | v6.2 | 2026-09-07 | PHASE_2_MERGE / PHASE_3_AUTHORIZATION | `ccdd13492dd8348ea8b59b94c6521fc3b760c790` | [v6.2](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.2.md) | criado no repositório |
 | v6.3 | 2026-09-07 | ATOMIC_HANDOVER_TERMINAL_REFUSAL / PHASE_3 — CI pending | `ccdd13492dd8348ea8b59b94c6521fc3b760c790` (base) | [v6.3](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.3.md) | criado no repositório |
 | v6.4 | 2026-09-07 | PHASE_3_HARDENING — PR40 CI pending | `4412b459c84c8149e540bb6ffe83e768ca5db482` (primeiro candidato) | [v6.4](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.4.md) | criado no repositório |
+| v6.5 | 2026-09-07 | PHASE_3_MERGE / PHASE_4_AUTHORIZATION | `c45c5702b9bf7ad941113b8b076d593ce1ab7490` | [v6.5](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.5.md) | criado no repositório |
+
+| v6.6 | 2026-09-07 | PHASE_4_COMPENSATION_RETENTION — CI pending | `c45c5702b9bf7ad941113b8b076d593ce1ab7490` (base) | [v6.6](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.6.md) | criado no repositório |

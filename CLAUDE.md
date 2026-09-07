@@ -4,11 +4,13 @@
 
 Before any relevant work, read `docs/checkpoints/HIELYA_CHECKPOINT_POLICY.md`, then `docs/checkpoints/INDEX.md`, then the checkpoint with the highest version. Validate its GitHub branch, PR, SHA and CI claims against live GitHub before structural changes. Never edit an existing historical checkpoint; create the next version as a new file and add it to the index.
 
-## Active Phase 3 gate (2026-09-07)
+## Active Phase 4 gate (2026-09-07)
 
-PR #38 merged with individual owner authorization. Main `ccdd13492dd8348ea8b59b94c6521fc3b760c790`, exact certified tree `b5db656db7fb98df86b2a447c5561dab59ae6760`. Phase2 CI34113530309 and34113530243 SUCCESS (884tests).
+PR #40 merged with individual owner authorization. Main `c45c5702b9bf7ad941113b8b076d593ce1ab7490`, exact certified tree `f0bd11f7e7023fa579e07262c47a6396ce715dab`. Phase3 CI34115975383 and34115975346 SUCCESS (926 tests).
 
-Issue #39 / branch `hielya/atomic-handover-terminal-refusal`: single atomic terminal handover (deadline + adult visual verification + PIN), irreversible age refusal and pending full-compensation intent. See `docs/contracts/ALCOHOL_DOMAIN_PHASE_3.md`. Terminal event is sole authority for final order/delivery status; use repository projections, not historical base status. Never use legacy verifyDeliveryPin as handover authorization. Dedicated issuer/pepper and workforce/clock ports are mandatory. No production adapter/HTTPV1.3 activation, no Phase4 money execution or retention job. Phase3 PR requires separate owner merge approval. C003/C004 and new screens remain blocked. Checkpoints v6.2 merge, v6.3 initial candidate and v6.4 replacement-write hardening (PR #40); preserve historical records.
+Issue #41 / branch `hielya/compensation-retention-foundation`: automatic full compensation for all three terminal age refusals; durable plan, worker lease and provider idempotency key; refund capture and/or void authorization without customer cost. Payment and accounting ports are unconfigured by default. No real money movement, Stripe, production scheduler or HTTP V1.3 activation. Retention is assessed for the whole dossier from the last accounting entry, with six calendar years, holds and reconciliation checks; missing accounting information retains data. No physical disposal or independent age-evidence TTL. See `docs/contracts/ALCOHOL_DOMAIN_PHASE_4.md`.
+
+Phase3 terminal event remains the sole final order/delivery authority; compensation processing is a separate projection. Preserve atomic handover and immutable refusal evidence. No identity photo, document number or full birth date. Phase4 PR requires separate owner merge approval. C003/C004, Phase5 and new screens remain blocked. Checkpoints v6.5 (merge) and v6.6 (candidate); prior checkpoints remain unchanged. The historical migration-era sections below do not supersede this active gate.
 
 ## Repository architecture
 

@@ -16,7 +16,7 @@ Before any relevant work, read `docs/checkpoints/HIELYA_CHECKPOINT_POLICY.md`, t
 
 ## Active Phase 6 certification (2026-09-07)
 
-PR46 merged under explicit authorization. Main `eef73aacd5820fb6b1b0076c38b6b4fe21ad54c0`, tree `4cdc0ccb9c0dfe9b367c49e667d0442294221798`; CI34133575497/34133575733 SUCCESS987tests. PR34 reconciles requirements with Phases1–5. Phase6 certifies implemented scope only; return/inspection, authenticated purchase/hotel/courier journey, real integrations and physical disposal remain documented gaps. No production/C003/C004/new screens.
+PR46 merged under explicit authorization. PR34 also merged; main `5aca80958afcafd75e91665c4556593e8bdcefaf`, tree `747c4e38525c1f1529c944fa8bec0d691dd5eb97`; CI34136321712/34136321715 SUCCESS987tests on merged candidate5778594abb7b2e2dae8e66525979312f6cc4a300. Requirements and implementation now share main. Phase6 certifies implemented scope only; return/inspection, authenticated purchase/hotel/courier journey, real integrations and physical disposal remain documented gaps. No production/C003/C004/new screens.
 
 CONSTRAINTS, KNOWN_DEBT and INTEGRATIONS are sourced references, not project-state sources. Requirements README points to local requirements/plan reconciled in PR34 and retains immutable original provenance. Historical migration-era sections below remain historical, not active status.
 

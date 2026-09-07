@@ -73,6 +73,7 @@ describe('MVP Local 36 customer authentication foundation', () => {
       '0002_mvp_local_36_catalog_read_model.sql',
       '0003_mvp_local_36_inventory_reservation_lifecycle.sql',
       '0004_mvp_local_36_customer_authentication_foundation.sql',
+      '0005_mvp_local_36_order_delivery_foundation.sql',
     ]);
   });
 

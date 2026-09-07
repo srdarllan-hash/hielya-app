@@ -57,3 +57,6 @@ Este índice rastreia os checkpoints oficiais migrados do Google Drive. Os docum
 ## Regra de continuidade
 
 Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POLICY.md) e o checkpoint de maior versão neste índice. O Google Drive permanece como arquivo histórico e local dos assets binários excluídos desta migração.
+
+| v6.0 | 2026-09-07 | PHASE_1_MERGE / PHASE_2_AUTHORIZATION | `5bbf0b0a24a01effb5d21f17f4b1352c122ad89c` | [v6.0](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.0.md) | criado no repositório |
+| v6.1 | 2026-09-07 | ALCOHOL_ORDER_DELIVERY_FOUNDATION / PHASE_2 — CI pending | `5bbf0b0a24a01effb5d21f17f4b1352c122ad89c` (base) | [v6.1](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.1.md) | criado no repositório |

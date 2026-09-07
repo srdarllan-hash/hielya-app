@@ -35,6 +35,7 @@ Este índice rastreia os checkpoints oficiais migrados do Google Drive. Os docum
 | v4.9 | 2026-09-04 | `DESIGN_SYSTEM_CODE_FIRST_DIRECTION_ANALYSIS` | `df912c101b3db5c910a8c575fb2e2e687a54f4f5` | [HIELYA_CHECKPOINT_2026-09-04_v4.9.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v4.9.md) | [original](https://docs.google.com/document/d/1iJiCYqId_dS-I-mRMZhqWKDY1YGf7liBgoOn-gre-QY/edit?usp=drivesdk) |
 | v5.0 | 2026-09-04 | `CHECKPOINT_REPOSITORY_MIGRATION_GATE` | `9ac639cf7c833d18094c6f9765b369ee2107efba` | [HIELYA_CHECKPOINT_2026-09-04_v5.0.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v5.0.md) | não aplicável — criado no repositório |
 | v5.3 | 2026-09-07 | `ISSUE_28_PREEXISTING_REGRESSION_REPAIR — CI SUCCESS / PR #30 DRAFT` | `57559e3ecfbd431e0218ba474b52774935ead36c` | [HIELYA_CHECKPOINT_2026-09-07_v5.3.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.3.md) | criado no repositório; precedentes v5.1/v5.2 em PRs pendentes |
+| v5.4 | 2026-09-07 | `ISSUE_28_RESOLUTION_MERGED_TO_MAIN` | `4d32cebcc7f68832940f6825177d5348d63f245a` | [HIELYA_CHECKPOINT_2026-09-07_v5.4.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.4.md) | criado no repositório |
 
 ## Precedentes ainda em PRs documentais
 

@@ -1,0 +1,58 @@
+{
+  "profile": "MVP_LOCAL_36_ALCOHOL_DOMAIN",
+  "contractVersion": "1.3.0",
+  "phase": 1,
+  "issue": 35,
+  "contractFile": "contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_3.yaml",
+  "runtimeContractVersion": "1.2.0",
+  "contractImplemented": true,
+  "runtimeImplemented": false,
+  "databaseMigrationsApplied": false,
+  "uiImplemented": false,
+  "productionAuthorized": false,
+  "mergeAuthorized": false,
+  "lineage": [
+    {
+      "file": "contracts/openapi/HIELYA_OPENAPI_V1_0.yaml",
+      "version": "1.0.0",
+      "sha256": "a2c027c6294b44c94cf4be21d18fbd251b0323102e3c9ba2cba912a96d810ae9",
+      "modified": false
+    },
+    {
+      "file": "contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_1.yaml",
+      "version": "1.1.0",
+      "sha256": "92e1ebcc1d817718a7f2fe9ef1ce93df60194e049d3e0349855bd4ddd24d2ec8",
+      "modified": false
+    },
+    {
+      "file": "contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_2.yaml",
+      "sha256": "f71918b043ae6d24cc1c27ace5073fafc644a92bbe736de486a83e4465898d88",
+      "modified": false
+    }
+  ],
+  "retention": {
+    "anchor": "LAST_ACCOUNTING_ENTRY",
+    "generalCommercialYears": 6,
+    "inheritsOrderDossierRetention": true,
+    "independentAgeEvidenceTtl": false
+  },
+  "phaseOwnership": {
+    "1": "Versioned contract, schema validation and migration mapping only",
+    "2": "Order/delivery foundation, SLA decisions and persistence",
+    "3": "Atomic handover and terminal refusal",
+    "4": "Full automatic compensation and retention",
+    "5": "C005 concurrent demand/alcohol UI integration",
+    "6": "Full end-to-end certification"
+  },
+  "guards": {
+    "cutoff": "deadline - MAX(45, authoritative valid end-to-end upperBoundMinutes)",
+    "simultaneousNotices": "storeStatus, demand.level and alcohol.status are independent; HIGH and UNAVAILABLE must coexist",
+    "freshness": "Re-evaluate current estimate atomically on submit; stale/changed promise =>409 reconfirmation; unavailable authoritative service =>503; no optimistic45 fallback",
+    "laterStages": "Recheck acceptance/preparation/dispatch/arrival/handover with remaining time; retain original promise, no retroactive refusal just because cutoff for new orders passed",
+    "atomicHandover": "Actual deadline AND age18+ if alcohol AND PIN, with same-person presence/actor/revision, in one transaction; no partial completion",
+    "privacy": "Only outcome, method, one server timestamp and courierId per operational linkage; no document photo/number/DOB/type or free text",
+    "hotel": "No unattended/third-party/reception handover; adult intended recipient present; no redelivery on same order",
+    "refund": "Verification refusal ->full automatic compensation incl fees, no customer cost; idempotent outbox and provider confirmation, no distributed transaction claim",
+    "retention": "Age evidence inherits order dossier retention anchored at last accounting entry, general6 years subject to legal special rules/holds; not order date"
+  }
+}

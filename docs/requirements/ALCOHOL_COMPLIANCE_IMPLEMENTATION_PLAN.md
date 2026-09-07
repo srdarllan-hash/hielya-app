@@ -1,10 +1,10 @@
 # Plano de implementação — compliance de álcool
 
-Data: 2026-09-07. Issue #33 / PR #34. **PLANO DE SEIS FASES AUTORIZADO; RELATÓRIO DE IMPACTO ANTES DA PRIMEIRA BRANCH; NENHUMA IMPLEMENTAÇÃO INICIADA.**
+Data: 2026-09-07. Issue #33 / PR #34. **PLANO AUTORIZADO; RECONCILIADO COM FASES1–5.**
 Base inspecionada: main `4d32cebcc7f68832940f6825177d5348d63f245a`; especificação anterior no HEAD `7dea7b4c52b366215cf56087306ba9a692bae474`.
-Requisitos: [especificação consolidada](./ALCOHOL_COMPLIANCE_DOMAIN_REQUIREMENTS.md). As decisões D1–D6 estão incorporadas. Os identificadores P1–P6 abaixo são propostas de futuras issues, não números GitHub existentes.
+Requisitos: [especificação consolidada](./ALCOHOL_COMPLIANCE_DOMAIN_REQUIREMENTS.md). As decisões D1–D6 estão incorporadas. Rastreabilidade: P1 Issue35/PR36; P2 Issue37/PR38; P3 Issue39/PR40; P4 Issue41/PR42; P5 Issue43/PR44; P6 Issue45/PR46. O diagnóstico original abaixo é histórico, não estado corrente.
 
-## Investigação dirigida de C-005 alcohol-cutoff
+## Investigação histórica de C-005 alcohol-cutoff — anterior à Fase1
 
 | Evidência | Cobertura atual | Gap para o domínio decidido |
 |---|---|---|
@@ -34,7 +34,7 @@ A apresentação `high-demand` inclui **45–60 min**. Sob a correção aprovada
 - Definir anúncio acessível da mudança de disponibilidade, foco e ações de recuperação; não presumir que o badge atual anuncia automaticamente uma mudança dinâmica.
 - Preservar baselines históricas. Alteração futura de aparência deve ter expectativa documentada e revisão explícita, sem regeneração cega.
 
-## Sequência proposta de issues e dependências
+## Sequência autorizada e critérios originais
 
 | Ordem / futura issue | Escopo limitado | Contrato / persistência | Critério para avançar |
 |---|---|---|---|
@@ -47,7 +47,7 @@ A apresentação `high-demand` inclui **45–60 min**. Sob a correção aprovada
 
 Dependência principal: P1 → P2 → P3 → P4 → P5 → P6. P5 só pode liberar ações reais se a guarda server-side e resolução de falhas já existirem; uma preview de apresentação não implica checkout autorizado. Cada issue segue Issue → branch → implementação → testes → PR → revisão → merge separado.
 
-**As camadas reais de pedido/pagamento/admin ainda não existem no MVP implementado.** P2–P4 estão incluídas na autorização das seis fases, sem presumir que endpoints históricos estejam operacionais. Integração de processador real, credenciais e produção não está autorizada pelo plano. Usar portas/adaptadores controlados para validação, preservando arquitetura application/persistence e sessão opaca de cliente.
+**Diagnóstico pré-Fase1:** as camadas de pedido/pagamento/admin ainda não existiam naquela revisão. Fundação de domínio e persistência foram adicionadas nas Fases2–4; integrações e jornadas reais continuam pendentes. P2–P4 estão incluídas na autorização das seis fases, sem presumir que endpoints históricos estejam operacionais. Integração de processador real, credenciais e produção não está autorizada pelo plano. Usar portas/adaptadores controlados para validação, preservando arquitetura application/persistence e sessão opaca de cliente.
 
 ## Testes e evidências exigidos na implementação futura
 
@@ -59,9 +59,11 @@ Dependência principal: P1 → P2 → P3 → P4 → P5 → P6. P5 só pode liber
 - C-005: mock de resposta operacional real, expiração com página aberta/reconexão, cenário high-demand com cutoff antecipado e coexistência dos avisos de demanda/elegibilidade e continuidade de catálogo sem álcool; testes de integração e apresentação separados.
 - Rodar toda a suíte no SHA final de cada gate exigido, além de testes específicos. Não atribuir os 835 testes históricos a regras novas nem atualizar snapshots sem causa/revisão.
 
-## Limites de autorização
+## Reconciliação e limites de certificação
 
-Plano de seis fases autorizado pelo proprietário, ainda não executado: primeiro apresentar relatório de impacto em C-005 e nos sete assets, antes de abrir branch de implementação. Nenhuma issue P1–P6 criada; permanecem Issue #33 e PR #34 documentais. Sem C-003/C-004, componentes de campo, telas de courier/checkout, mudanças de token, promoção de assets, alterações de contratos/migrations/código nesta rodada documental ou merge sem aprovação própria. Os sete assets selecionados mantêm status; sua futura conformidade inclui estas regras.
+Fases1–5 implementaram contrato V1.3, fundação SQLite, handover atômico, compensação/retention por portas e C005 integrado ao servidor. Ver [matriz de requisitos](ALCOHOL_COMPLIANCE_DOMAIN_REQUIREMENTS.md#0-reconciliação-com-contrato-e-implementação) e [certificação](../contracts/ALCOHOL_PHASE_6_CERTIFICATION.md). A coexistência HIGH+UNAVAILABLE e cutoff dinâmico estão implementados; as afirmações em tempo presente na investigação/relatório histórico abaixo descrevem apenas a base pré-Fase1.
+
+P4/P6 não encerraram retorno/inspeção, jornada autenticada checkout→hotel→courier, falhas logísticas terminais além das três recusas etárias, arquivo/descarte físico ou integrações reais. Os critérios originais continuam requisitos pendentes em [KNOWN_DEBT](../KNOWN_DEBT.md); não foram apagados nem declarados atendidos. A certificação autorizada agora cobre exclusivamente o escopo implementado, com essas exclusões explícitas. Sem C003/C004, novas telas, promoção de assets ou produção.
 
 ## Relatório de impacto pré-implementação — cutoff dinâmico
 

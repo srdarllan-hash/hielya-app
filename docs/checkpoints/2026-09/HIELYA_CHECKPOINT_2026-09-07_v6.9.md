@@ -1,0 +1,7 @@
+# HIELYA CHECKPOINT v6.9 — PHASE_5_TEST_EXPECTATION_ALIGNMENT
+
+2026-09-07 UTC. Previous:v6.8. Issue43/PR44 OPEN DRAFT NOT MERGED, branch hielya/c005-alcohol-domain-integration. Main remains2b02d459678e7fbc857214ae8260469db5e7f958. First candidate ff6e74e1e0f9a075d4412e1ea723b2bb17f248f6; tree4ec69a505c4ecb209e140a12ece58916ff2b7d35. Contract run34131692914 SUCCESS; full run34131692868 found three C005 failures (same test across viewports),54C005passes including new scenarios and visual/a11y checks. No baseline change.
+
+Root cause reported before correction: old test required unchanged API request count after profile/cart/two add clicks. Authorized Phase5 now performs one GET /store/state per add intent; evidence expected6 versus actual8 requests, exactly the two new read-only revalidations. Corrected only this test to await each state response and assert exactly those two GETs; no mutation allowed, no arbitrary wait. Product code unchanged from first candidate. A new full exact-SHA CI must certify this revision; pending at checkpoint creation, final evidence in PR44.
+
+Added v6.9 and INDEX entry; v6.7/v6.8 remain unchanged. User-requested CLAUDE routing and mandatory checkpoint rule remain intact; absent consolidated references documented in PR. Physical retention disposal and Stripe execution still required before production. No new screens/C003/C004/Phase6/deployment/merge. Await owner approval after finalCI.

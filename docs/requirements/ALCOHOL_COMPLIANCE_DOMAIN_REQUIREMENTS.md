@@ -1,11 +1,25 @@
 # ALCOHOL_COMPLIANCE_DOMAIN_REQUIREMENTS
 
 Data: 2026-09-07. Issue [#33](https://github.com/srdarllan-hash/hielya-app/issues/33).
-Status: **OWNER_DECISIONS_RECORDED / SIX_PHASE_PLAN_AUTHORIZED_PREIMPLEMENTATION_REPORT / NOT_IMPLEMENTED**.
-Revisão documental 3: cutoff dinâmico, documento com foto/data de nascimento e marco contábil incorporados; seis fases autorizadas. Relatório de impacto precede a primeira branch de implementação. PR #34 continua draft e sem merge.
-Base verificada: main `4d32cebcc7f68832940f6825177d5348d63f245a`.
+Status: **RECONCILED_WITH_PHASES_1_TO_5 / IMPLEMENTED_SCOPE_WITH_EXPLICIT_GAPS**.
+Revisão documental 4. Reconciliação solicitada pelo proprietário após merge do PR46. Este documento contém requisitos de produto; não substitui o checkpoint como fonte de estado nem declara ativação de produção.
 
-Este documento especifica requisitos para revisão. Não modifica nem substitui OpenAPI, migrations, contratos certificados ou decisões comerciais. As seis decisões do proprietário são requisitos definidos; o plano técnico de seis fases foi autorizado, condicionado à apresentação do impacto antes de abrir a primeira branch de implementação. A aprovação deste documento não ativa venda de álcool, produção ou implementação de telas.
+## 0. Reconciliação com contrato e implementação
+
+As decisões de cutoff dinâmico, NIE com foto/nascimento visíveis, retenção contábil e coexistência de estados já estavam na revisão3. Não foram descobertas regras opostas na implementação. A divergência era documental: tabelas de diagnóstico pré-implementação continuavam descritas como estado atual. As seções identificadas como históricas abaixo preservam a justificativa; a situação implementável é mapeada aqui, no contrato V1.3 e nos relatórios de fase.
+
+| Requisito | Implementação/evidência | Limite que permanece |
+|---|---|---|
+| Cutoff =22:00−MAX(45, máximo real vigente); falha de SLA bloqueia; revalidar etapas | [Fase2](../contracts/ALCOHOL_DOMAIN_PHASE_2.md), `packages/application/src/orders/index.ts`, PR36/38 | Portas reais de SLA e checkout não ativadas |
+| Prazo+idade+PIN na mesma transação, recusa etária terminal | [Fase3](../contracts/ALCOHOL_DOMAIN_PHASE_3.md), `orders/handover.ts`, PR40 | Inspeção física depende de procedimento/courier; autorização operacional e canal PIN reais pendentes |
+| DNI/passaporte ou NIE acompanhado de documento com foto e nascimento; NIE isolado duvidoso | V1.3 `refuseAgeVerification`, Fase3 | Sistema persiste atestação mínima, não inspeciona documento automaticamente; não armazena tipo/foto/número/DOB |
+| Integral automático nas três recusas etárias | [Fase4](../contracts/ALCOHOL_DOMAIN_PHASE_4.md), `orders/compensation.ts`, PR42 | Provedor não configurado mantém pendência. Fluxo operacional de falha por PIN/ausência/deadline do contrato ainda não implementado; não alegar compensação executável nesses caminhos |
+| Retenção pelo último lançamento contábil | Fase4, `orders/retention.ts` | Avaliação conservadora, seis anos calendários e impedimentos; não é eliminação nem arquivo restrito físico |
+| HIGH e álcool UNAVAILABLE simultâneos, decisão do servidor e expiração em sessão | [Fase5](../contracts/ALCOHOL_DOMAIN_PHASE_5.md), PR44 | Home bloqueia intenções; não há carrinho/checkout autenticado integrado |
+| Contrato e persistência | [OpenAPI V1.3](../../contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_3.yaml), migrations0005/0006/0007 | V1.0/V1.2 e migrations históricas preservadas; contrato não implica endpoints ativados |
+| Retorno/inspeção, jornada hotel autenticada, integrações e descarte | [KNOWN_DEBT](../KNOWN_DEBT.md), [certificação](../contracts/ALCOHOL_PHASE_6_CERTIFICATION.md) | Requisitos preservados e não implementados; fora do certificado técnico do escopo existente |
+
+Nomes preliminares de campos/endpoints nas seções históricas não competem com V1.3: sucesso pertence a `completeAtomicHandover`; `refuseAgeVerification` aceita somente recusa, não aprovação isolada. A evidência canônica de idade é resultado/método/instante/courier, com projeções de leitura. Reembolso usa estados reais do processador interno descritos na Fase4; PENDING não é dinheiro devolvido. Nenhum requisito faltante é removido para adaptar o documento ao código.
 
 ## 1. Fundamento e limites da análise
 
@@ -17,7 +31,7 @@ A [orientação da AEPD sobre verificação de idade](https://www.aepd.es/pregun
 
 Consulta das fontes em 2026-09-07. Esta é análise técnica dos requisitos indicados, não certificação jurídica integral da operação, licenciamento ou exceções locais. As restrições específicas de hotel abaixo são política de handover solicitada pelo proprietário.
 
-## 2. Estado real e gap delimitado
+## 2. Diagnóstico histórico antes da Fase1 (não é estado atual)
 
 | Evidência na main | O que já existe | O que não está implementado |
 |---|---|---|
@@ -31,7 +45,7 @@ Consulta das fontes em 2026-09-07. Esta é análise técnica dos requisitos indi
 
 **Não é correto afirmar que o estado visual de álcool fora de horário inexiste em todo o projeto.** Existe a apresentação C-005; faltam integração e enforcement. OTP/sessão opaca, declaração 18+ e PIN têm finalidades distintas; nenhum dos três comprova inspeção presencial de maioridade.
 
-## 3. Regra temporal proposta
+## 3. Regra temporal requerida
 
 Regra D1 corrigida pelo proprietário:
 
@@ -56,7 +70,7 @@ alcoholOrderCutoffAt = alcoholHandoverDeadlineAt - effectiveSlaMinutes
 
 Exemplos: 20:59 com máximo60 → potencialmente elegível; 21:00 com máximo60 → bloqueado; 21:05 com máximo45 → potencialmente elegível; 21:05 com máximo60 → bloqueado. Potencialmente elegível ainda exige todas as demais condições. Deadline de handover continua 22:00 em todos os casos.
 
-## 4. Contrato de domínio proposto
+## 4. Intenção contratual original — nomes finais no V1.3
 
 Os nomes seguintes são uma proposta para futura versão de contrato, não alterações aplicadas.
 
@@ -132,7 +146,7 @@ O reembolso aprovado explicitamente cobre falha de verificação; o valor/regime
 - Usar evento/outbox transacional para registrar recusa e obrigação de compensação; chamada externa de pagamento fora da transação, com idempotência e reprocessamento. Não alegar atomicidade distribuída com banco/processador.
 - Pedido/entrega mantêm distinção logística/financeira: DELIVERY_FAILED, RETURNING/RETURNED quando há mercadoria expedida, e cancelamento conforme estágio. Reembolso não espera aprovação manual do retorno; estoque vendável só é recomposto após recepção/inspeção. Reserva não convertida é liberada uma vez. Sem dupla reposição/captura/estorno.
 
-## 7. Gap de OpenAPI — futura evolução, sem editar contratos
+## 7. Mapeamento contratual histórico pré-Fase1 — consultar V1.3
 
 | Superfície histórica | Mudança necessária proposta |
 |---|---|
@@ -153,7 +167,7 @@ Mapeamento legado: UNDER_18 → REFUSED_MINOR; NO_DOCUMENT → REFUSED_NO_ID; IN
 
 Propor respostas de conflito de domínio com código estável para deadline, idade pendente/recusada, PIN e revisão desatualizada; distinguir 401/403 de falha comercial. A classificação exata dos HTTP status e envelopes deverá seguir o padrão da futura versão pública aprovada. Papéis de courier/admin precisam de autorização própria; possuir sessão opaca de cliente não autoriza comandos de entregador. Nunca confiar em courierId ou timestamp enviados pelo cliente.
 
-## 8. Persistência e migrations futuras
+## 8. Plano histórico de persistência — realizado parcialmente nas Fases2–4
 
 As migrations 0001–0004 existentes permanecem intactas. Não há tabela operacional completa de pedido/entrega a simplesmente acrescentar um boolean; sua fundação consta da fase P2 agora autorizada, a executar pelo fluxo de issue/branch/PR após este relatório.
 
@@ -198,7 +212,7 @@ Os seis PNGs DS e nove boards continuam REFERENCE_ONLY / VISUAL_INTENT. A promo�
 
 ## 10. Critérios de validação do futuro gate de implementação
 
-Plano apenas; nenhum teste de implementação deste domínio foi executado nesta tarefa.
+Critérios originais. A cobertura executada e as lacunas constam da matriz de certificação; esta revisão documental não altera testes.
 
 1. Cobrir as oito combinações booleanas de prazo/idade/PIN: somente todas verdadeiras permitem handover de álcool; incluir dados ausentes, ator incorreto e revisão concorrente.
 2. Limites antes/no/depois de cutoff, 22:00, 08:00 e abertura às 10:00; SLA desconhecido; atraso após aceite; data local/DST Europe/Madrid; nenhum ETA truncado ou relógio do cliente como autoridade.
@@ -220,4 +234,4 @@ Plano apenas; nenhum teste de implementação deste domínio foi executado nesta
 | D5 — Mesmo prazo do dossiê do pedido/fiscal | Incorporada; referência mercantil seis anos desde último lançamento, não teto absoluto; necessidade e exceções documentadas |
 | D6 — Única operação atômica | Incorporada; três condições conferidas juntas, nenhum sucesso parcial libera entrega |
 
-Plano sequenciado, futuras issues e critérios de aceite em [ALCOHOL_COMPLIANCE_IMPLEMENTATION_PLAN.md](./ALCOHOL_COMPLIANCE_IMPLEMENTATION_PLAN.md). Nenhuma dessas futuras issues/branches de implementação foi criada. Plano de seis fases autorizado; este relatório de impacto deve ser apresentado antes da primeira branch de implementação. C-003/C-004 e telas novas continuam bloqueadas; aprovação de merge continua separada. PR #32 e registro de assets permanecem fora das alterações deste gate.
+Plano sequenciado, futuras issues e critérios de aceite em [ALCOHOL_COMPLIANCE_IMPLEMENTATION_PLAN.md](./ALCOHOL_COMPLIANCE_IMPLEMENTATION_PLAN.md). Fases1–5 foram realizadas via PR36/38/40/42/44; os textos pré-implementação acima são históricos. O relatório de impacto abaixo orientou essas fases, sem implicar conclusão das lacunas. C-003/C-004 e telas novas continuam bloqueadas; aprovação de merge continua separada. PR #32 e registro de assets permanecem fora das alterações deste gate.

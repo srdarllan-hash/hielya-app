@@ -55,6 +55,7 @@ test.afterEach(async () => {
   expect(apiRequests.every((request) => (
     request === 'GET /api/v1/catalog/categories'
     || request === 'GET /api/v1/catalog/products'
+    || request === 'GET /api/v1/store/state'
     || /^GET \/api\/v1\/catalog\/products\/[0-9a-f-]+$/i.test(request)
   ))).toBe(true);
 });

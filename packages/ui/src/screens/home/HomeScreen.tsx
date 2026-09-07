@@ -28,6 +28,11 @@ import type {
 
 export interface HomeScreenProps {
   state?: HomeState;
+  alcoholBlocked?: boolean;
+  storeBlocked?: boolean;
+  availabilityNotices?: readonly { tone: 'warning' | 'info'; text: string }[];
+  onAddProduct?: (id: string) => void;
+  onAddPack?: (id: string) => void;
   catalogState: HomeCatalogState;
   catalog: HomeCatalogViewModel;
   isRefreshing?: boolean;
@@ -65,6 +70,11 @@ const ageLabel = (containsAlcohol: boolean, minimumAge?: number | null): string 
 
 export function HomeScreen({
   state = 'ready',
+  alcoholBlocked = false,
+  storeBlocked = false,
+  availabilityNotices = [],
+  onAddProduct,
+  onAddPack,
   catalogState,
   catalog,
   isRefreshing = false,
@@ -81,7 +91,7 @@ export function HomeScreen({
   onSelectCategory,
   onOpenProduct,
 }: HomeScreenProps) {
-  const blocked = state === 'closed' || state === 'out-of-area';
+  const blocked = storeBlocked || state === 'closed' || state === 'out-of-area';
   const filteredEmpty = catalogState === 'HOME_CATALOG_READY'
     && catalog.total === 0
     && !isRefreshing;
@@ -113,6 +123,7 @@ export function HomeScreen({
       ) : (
         <main className="hly-home" id="main-content" aria-busy={isRefreshing || undefined}>
           {notice ? <div className="hly-home__notice"><StatusBadge tone={notice.tone}>{notice.text}</StatusBadge></div> : null}
+          {availabilityNotices.map((item) => <div key={item.text} className="hly-home__notice" role="status" aria-live="polite"><StatusBadge tone={item.tone}>{item.text}</StatusBadge></div>)}
           {isRefreshing ? (
             <div className="hly-home__notice" role="status" aria-live="polite">
               <StatusBadge tone="neutral">Actualizando catálogo…</StatusBadge>
@@ -184,12 +195,12 @@ export function HomeScreen({
                       size={product.volumeLabel}
                       price={product.price}
                       image={product.image}
-                      disabled={blocked}
+                      disabled={blocked || (alcoholBlocked && product.containsAlcohol)}
                       unavailable={unavailable}
                       statusLabel={status}
                       statusTone={unavailable ? 'warning' : 'info'}
                       onOpen={onOpenProduct}
-                      onAdd={(productId) => emitHielyaUiAction('add-product', productId)}
+                      onAdd={(productId) => onAddProduct ? onAddProduct(productId) : emitHielyaUiAction('add-product', productId)}
                     />
                   );
                 })}
@@ -219,9 +230,9 @@ export function HomeScreen({
                       discount={pack.discountLabel}
                       image={pack.image}
                       unavailable={pack.availability !== 'AVAILABLE'}
-                      disabled={blocked}
+                      disabled={blocked || (alcoholBlocked && pack.containsAlcohol)}
                       onOpen={onOpenProduct}
-                      onAdd={(packId) => emitHielyaUiAction('add-pack', packId)}
+                      onAdd={(packId) => onAddPack ? onAddPack(packId) : emitHielyaUiAction('add-pack', packId)}
                     />
                   );
                 })}

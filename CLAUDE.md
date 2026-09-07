@@ -4,6 +4,22 @@
 
 Before any relevant work, read `docs/checkpoints/HIELYA_CHECKPOINT_POLICY.md`, then `docs/checkpoints/INDEX.md`, then the checkpoint with the highest version. Validate its GitHub branch, PR, SHA and CI claims against live GitHub before structural changes. Never edit an existing historical checkpoint; create the next version as a new file and add it to the index.
 
+## Document routing
+
+- Before implementing or modifying behavior, read `docs/CONSTRAINTS.md`.
+- Before estimating scope, declaring completion or planning production closure, read `docs/KNOWN_DEBT.md`.
+- Before implementing, replacing or activating an external service, read `docs/INTEGRATIONS.md`.
+- These three documents are consolidated references, not new sources of project state. Do not copy checkpoint state into them; entries should link to canonical ADR, requirement, issue, contract or checkpoint evidence whenever possible.
+- Determine current state only through `docs/checkpoints/HIELYA_CHECKPOINT_POLICY.md` → `docs/checkpoints/INDEX.md` → highest-version checkpoint → validation against live GitHub. These references never replace that sequence.
+- For decision rationale, consult `docs/decisions/`; for required behavior, consult `docs/requirements/`.
+- Validate claims against repository/GitHub evidence. Report missing references and document conflicts in the PR; never silently select a conflicting document as the winner.
+
+## Active Phase 6 certification (2026-09-07)
+
+PR46 merged under explicit authorization. Main `eef73aacd5820fb6b1b0076c38b6b4fe21ad54c0`, tree `4cdc0ccb9c0dfe9b367c49e667d0442294221798`; CI34133575497/34133575733 SUCCESS987tests. PR34 reconciles requirements with Phases1–5. Phase6 certifies implemented scope only; return/inspection, authenticated purchase/hotel/courier journey, real integrations and physical disposal remain documented gaps. No production/C003/C004/new screens.
+
+CONSTRAINTS, KNOWN_DEBT and INTEGRATIONS are sourced references, not project-state sources. Requirements README points to local requirements/plan reconciled in PR34 and retains immutable original provenance. Historical migration-era sections below remain historical, not active status.
+
 ## Repository architecture
 
 HIELYA is a pnpm monorepo running a modular TypeScript monolith:

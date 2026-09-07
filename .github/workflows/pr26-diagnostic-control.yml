@@ -53,7 +53,7 @@ jobs:
         run: pnpm exec playwright test tests/functional/home.functional.spec.ts tests/visual/home.visual.spec.ts --config playwright.config.ts --update-snapshots=none --forbid-only --workers=1
       - name: Only success 2.5 km quote visual
         if: matrix.suite == 'quote-success'
-        run: pnpm exec playwright test tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts --grep '^success 2\\.5 km /' --config playwright.c002-delivery-quote-api-alignment.config.ts --update-snapshots=none --forbid-only
+        run: pnpm exec playwright test tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts --grep 'success 2\\.5 km /' --config playwright.c002-delivery-quote-api-alignment.config.ts --update-snapshots=none --forbid-only
       - name: Verify source and baselines unchanged
         if: always()
         run: |

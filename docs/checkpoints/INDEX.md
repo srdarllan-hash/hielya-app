@@ -36,6 +36,8 @@ Este índice rastreia os checkpoints oficiais migrados do Google Drive. Os docum
 
 | v5.0 | 2026-09-04 | `CHECKPOINT_REPOSITORY_MIGRATION_GATE` | `9ac639cf7c833d18094c6f9765b369ee2107efba` | [HIELYA_CHECKPOINT_2026-09-04_v5.0.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v5.0.md) | não aplicável — criado no repositório |
 
+| v5.1 | 2026-09-04 | `CHECKPOINT_REPOSITORY_MIGRATION_MERGE_RECORD_GATE` | `e4fc9d5b9675d2d20d7a71cf45ff6f4fb985c0f0` | [HIELYA_CHECKPOINT_2026-09-04_v5.1.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v5.1.md) | não aplicável — criado no repositório |
+
 ## Documentos complementares migrados
 
 - [Política de checkpoints](./HIELYA_CHECKPOINT_POLICY.md) — [origem no Drive](https://docs.google.com/document/d/1tnI8THDiG8Mz2qkNqFMxd3QmsqcUUE2EXMifx7wuFNY/edit)

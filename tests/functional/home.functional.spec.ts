@@ -81,7 +81,7 @@ for (const state of states) {
     if (state === 'closed' || state === 'out-of-area') {
       await expect(page.getByRole('searchbox', { name: 'Busca productos' })).toBeDisabled();
       await expect(page.getByRole('button', { name: 'Cervezas', exact: true })).toBeDisabled();
-      await expect(page.getByRole('button', { name: 'Añadir Victoria Málaga al carrito' })).toBeDisabled();
+      await expect(page.getByRole('button', { name: 'Victoria Málaga no disponible', exact: true })).toBeDisabled();
     }
     if (state === 'high-demand') {
       await expect(page.getByText('45–60 min', { exact: true })).toBeVisible();

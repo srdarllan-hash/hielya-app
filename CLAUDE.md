@@ -4,6 +4,12 @@
 
 Before any relevant work, read `docs/checkpoints/HIELYA_CHECKPOINT_POLICY.md`, then `docs/checkpoints/INDEX.md`, then the checkpoint with the highest version. Validate its GitHub branch, PR, SHA and CI claims against live GitHub before structural changes. Never edit an existing historical checkpoint; create the next version as a new file and add it to the index.
 
+## Active Phase 1 gate (2026-09-07)
+
+Issue #35 / PR #36: ALCOHOL_DOMAIN_CONTRACT_ALIGNMENT. Base main `4d32cebcc7f68832940f6825177d5348d63f245a`. Contract V1.3 is defined and tested in this branch; runtime remains V1.2. See `docs/contracts/ALCOHOL_DOMAIN_V1_3_PHASE_1.md` and checkpoint v5.9 when present. Earlier current-state/migration sections below are historical context, not authority for this gate.
+
+Cutoff is server-derived: local22:00 minus MAX(45 minutes, current reliable end-to-end upper SLA), not fixed21:15. Demand and alcohol availability are independent concurrent C-005 dimensions. Implementation phases2–6 wait for individual preceding-phase review/merge; no giant combined PR. No runtime/migration/new-screen work in Phase1. PRs #32/#34 remain separate and unmerged by this task. No production or C-003/C-004 authorization.
+
 ## Repository architecture
 
 HIELYA is a pnpm monorepo running a modular TypeScript monolith:

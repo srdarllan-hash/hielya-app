@@ -1,11 +1,17 @@
 export const tokenMeta={
   "name": "HIELYA Design Tokens",
   "version": "1.2.0",
-  "status": "CONSOLIDATION_CANDIDATE",
-  "scope": "Architecture consolidation derived from frozen Design Tokens 1.1.0; preserves certified C-005 and C-001 visual contracts.",
+  "status": "APPROVED_FROZEN",
+  "scope": "Code-first Design System contract: existing tokens and certified React consumers; no authorization for new screens or missing components.",
   "supersedes": "HIELYA Design Tokens 1.1.0",
-  "changePolicy": "Candidate requires complete C-005/C-001 regression and Pre-Gate2 approval before becoming frozen.",
-  "candidateAt": "2026-07-30T22:30:00+00:00"
+  "changePolicy": "Any value change requires a new semantic version, impact analysis, full exact-head regression and explicit owner approval. Historical frozen versions remain immutable.",
+  "candidateAt": "2026-07-30T22:30:00+00:00",
+  "frozenAt": "2026-09-07T03:32:13.922340+00:00",
+  "mainShaAtPromotion": "4d32cebcc7f68832940f6825177d5348d63f245a",
+  "approvalGate": "DESIGN_TOKENS_1.2.0_PROMOTION",
+  "approvalIssue": 31,
+  "referenceWorkflowRunId": 34079006607,
+  "promotionRecord": "docs/design-system/DESIGN_TOKENS_1_2_0_PROMOTION.md"
 } as const;
 export const tokens={
   "color.background.primary": "#000000",

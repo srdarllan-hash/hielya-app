@@ -34,5 +34,31 @@
     "sourceBase": "c838cfc26176b2e748bdbd037147a7f362d5a3c2",
     "gateManifest": "qa/pre-gate2-final/PRE_GATE2_GATE_MANIFEST.json"
   },
-  "note": "Frozen source commits remain immutable. Consolidation regression creates a new architectural certification without rewriting original records."
+  "note": "Frozen source commits remain immutable. Consolidation regression creates a new architectural certification without rewriting original records.",
+  "designTokensPromotion": {
+    "version": "1.2.0",
+    "status": "APPROVED_FROZEN",
+    "gate": "DESIGN_TOKENS_1.2.0_PROMOTION",
+    "issue": 31,
+    "approvedAt": "2026-09-07T03:32:13.922340+00:00",
+    "mainShaAtPromotion": "4d32cebcc7f68832940f6825177d5348d63f245a",
+    "referenceCommitSha": "938b4590d7cdb0bebfbf02176a8faec8715f8021",
+    "referenceWorkflowRunId": 34079006607,
+    "promotionBranch": "hielya/design-tokens-1-2-0-promotion",
+    "promotionBranchValidation": "REQUIRED_BEFORE_MERGE",
+    "semanticSha256": "874aa0b958569b99a4fdd68d95897f12dd1d3b2e44956c3fe7b8ad0b9c1f59f5",
+    "record": "docs/design-system/DESIGN_TOKENS_1_2_0_PROMOTION.md",
+    "promotionValidation": {
+      "workflowRunId": 34080055741,
+      "commitSha": "4deb628524b175d7f3b54d4e87d104bc3b2582aa",
+      "treeSha": "c87c273684b93d58751400926840db78d86fe13c",
+      "conclusion": "SUCCESS",
+      "unitPassed": 312,
+      "browserPassed": 523,
+      "totalPassed": 835,
+      "failed": 0,
+      "reportedFlaky": 0,
+      "recordedAt": "2026-09-07T03:41:38.450472+00:00"
+    }
+  }
 }

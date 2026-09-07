@@ -1,10 +1,11 @@
 # ALCOHOL_COMPLIANCE_DOMAIN_REQUIREMENTS
 
 Data: 2026-09-07. Issue [#33](https://github.com/srdarllan-hash/hielya-app/issues/33).
-Status: **SPECIFICATION_PROPOSED / OWNER_REVIEW_REQUIRED / NOT_IMPLEMENTED**.
+Status: **OWNER_DECISIONS_RECORDED / IMPLEMENTATION_PLAN_PENDING_AUTHORIZATION / NOT_IMPLEMENTED**.
+Revisão documental 2: seis decisões expressas do proprietário incorporadas; PR #34 continua draft e sem merge.
 Base verificada: main `4d32cebcc7f68832940f6825177d5348d63f245a`.
 
-Este documento especifica requisitos para revisão. Não modifica nem substitui OpenAPI, migrations, contratos certificados ou decisões comerciais. Os requisitos expressamente solicitados pelo proprietário estão separados das opções que ainda exigem decisão. A aprovação deste documento não ativa venda de álcool, produção ou implementação de telas.
+Este documento especifica requisitos para revisão. Não modifica nem substitui OpenAPI, migrations, contratos certificados ou decisões comerciais. As seis decisões do proprietário são requisitos definidos; o plano técnico de execução aguarda autorização separada. A aprovação deste documento não ativa venda de álcool, produção ou implementação de telas.
 
 ## 1. Fundamento e limites da análise
 
@@ -12,7 +13,7 @@ O art. 3 do [Decreto 167/2002, BOJA](https://www.juntadeandalucia.es/boja/2002/6
 
 O [art. 26 da Lei 4/1997, texto consolidado do BOE](https://www.boe.es/buscar/act.php?id=BOE-A-1997-18301#a2-8) proíbe venda/fornecimento a menores de 18 anos e contém uma exceção de uso profissional para maiores de 16. O requisito HIELYA desta rodada é estritamente **18+**, sem implementar essa exceção. Não se apresenta a regra do produto como transcrição integral da lei.
 
-A [orientação da AEPD sobre verificação de idade](https://www.aepd.es/preguntas-frecuentes/10-menores-y-educacion/1-sistemas-de-verificacion-edad) distingue comprovar um limiar etário de conhecer identidade/idade exata. Seu contexto é a verificação online; não constitui um procedimento oficial específico para entregadores. A aplicação presencial e o conjunto mínimo de registros abaixo são requisitos deste gate, compatíveis com essa direção de minimização. A política jurídica de retenção/base legal ainda deve ser aprovada antes da implementação operacional.
+A [orientação da AEPD sobre verificação de idade](https://www.aepd.es/preguntas-frecuentes/10-menores-y-educacion/1-sistemas-de-verificacion-edad) distingue comprovar um limiar etário de conhecer identidade/idade exata. Seu contexto é a verificação online; não constitui um procedimento oficial específico para entregadores. A aplicação presencial e o conjunto mínimo de registros abaixo são requisitos deste gate, compatíveis com essa direção de minimização. A retenção segue a decisão D5 detalhada na seção 5, com distinção entre prazo mercantil, fiscal e necessidade de conservar a evidência mínima.
 
 Consulta das fontes em 2026-09-07. Esta é análise técnica dos requisitos indicados, não certificação jurídica integral da operação, licenciamento ou exceções locais. As restrições específicas de hotel abaixo são política de handover solicitada pelo proprietário.
 
@@ -32,16 +33,16 @@ Consulta das fontes em 2026-09-07. Esta é análise técnica dos requisitos indi
 
 ## 3. Regra temporal proposta
 
-Requisito solicitado: `alcoholOrderCutoff = 22:00 - maximumPromisedDeliverySla`.
+Requisito solicitado: `alcoholOrderCutoff = 22:00 - 45 minutos = 21:15` (decisão D1).
 
 - Usar a data local do serviço e a zona IANA `Europe/Madrid`; armazenar instantes UTC e expor timestamps com offset. Não fixar UTC+1/UTC+2.
 - `alcoholHandoverDeadlineAt` é 22:00 dessa data. O SLA máximo deve cobrir todo o percurso entre autorização de compra e entrega: fila, aceite, preparação, deslocamento, encontro no hotel, inspeção de idade e PIN. Um ETA apenas de viagem não atende ao requisito.
 - Na criação: permitir álcool somente com loja operacionalmente aberta, dados confiáveis, `serverNow < alcoholOrderCutoffAt` e `promisedLatestHandoverAt < alcoholHandoverDeadlineAt`.
 - A operação continua 10:00–22:00. O limite legal inferior de 08:00 não autoriza abrir às 08:00. Não criar pedidos noturnos de álcool para entrega futura nesta especificação.
 - Exatamente 22:00 é proibido. Exatamente no cutoff calculado também é recusado nesta proposta conservadora, pois a promessa máxima atingiria 22:00. SLA de 45 minutos implica cutoff 21:15; às 21:15 não aceitar uma promessa de entrega até 22:00.
-- O SLA numérico e eventual margem operacional adicional **ainda precisam de decisão**. Não deduzir SLA do raio de 4 km, de PNG ou da taxa de entrega. Se houver margem, incluí-la no máximo prometido ou explicitá-la na fórmula, sem dupla contagem.
+- O SLA máximo ponta a ponta é **45 minutos**, incluindo eventual folga interna. Nenhuma margem adicional ou promessa maior foi autorizada. Capacidade operacional insuficiente deve bloquear álcool, nunca ampliar silenciosamente o SLA/cutoff. Não deduzir SLA do raio de 4 km, de PNG ou da taxa de entrega.
 - Em aceite/replanejamento, recalcular o tempo máximo restante, sem somar novamente etapas concluídas. Conservar o prazo original auditável; não truncar o ETA para parecer elegível, nem ampliar o deadline para o dia seguinte.
-- Revalidar em checkout, criação atômica do pedido, aceite, alteração/substituição de itens, confirmação de preparo, saída, chegada e imediatamente antes do handover. Um pedido aceito cedo não recebe exceção se atrasar.
+- **Guardas obrigatórias de domínio em checkout, criação atômica do pedido, aceite, início e conclusão de preparação, despacho, chegada e handover**, além de alteração/substituição de itens. Aceite/preparação/despacho exigem janela legal vigente, estado do pedido válido e ETA máximo restante estritamente anterior a 22:00. O cutoff 21:15 bloqueia novas compras; não é o deadline de despacho de pedidos já aceitos. Esses só avançam enquanto puderem cumprir a promessa original (no máximo 45 minutos) e a entrega antes de 22:00. Um pedido aceito cedo não recebe exceção se atrasar.
 - Na entrega física, exigir `08:00 <= horaLocal < 22:00` e janela operacional aplicável. Uma autorização emitida às 21:59 não permite entrega às 22:00. O entregador deve interromper a entrega se a janela expirar entre autorização e transferência física.
 - Falha de relógio confiável, SLA ausente, indisponibilidade de rede ou dados de elegibilidade vencidos bloqueia álcool. Não aceitar relógio do cliente, backdating ou conclusão offline como prova do prazo.
 - Produtos sem álcool permanecem sujeitos às regras normais da loja, estoque, raio, mínimo e pagamento. Não fechar artificialmente a loja para representar restrição exclusiva de álcool.
@@ -72,13 +73,19 @@ Pedido sem álcool mantém `requiresAgeVerification=false` e não recebe um VERI
 
 Para álcool: **prazo respeitado AND VERIFIED_18_PLUS AND PIN confirmado**, além de estado logístico válido, entregador autorizado e encontro presencial com destinatário elegível. Uma condição não substitui outra. PIN prova posse da credencial do pedido; não é prova documental de identidade civil nem de idade.
 
-A verificação deve ocorrer na mesma tentativa e com a mesma pessoa presente no handover. Troca de destinatário, reatribuição de entregador, nova tentativa ou alteração relevante de itens invalida o reaproveitamento das provas anteriores. Não transformar uma verificação de um pedido em atributo permanente “adulto verificado” da conta.
+A verificação deve ocorrer na mesma tentativa e com a mesma pessoa presente no handover. Troca de destinatário é proibida neste pedido; não entregar a terceiro/recepção. Antes de uma recusa terminal, reatribuição de entregador ou alteração relevante de itens invalida provas anteriores. Após recusa não há nova tentativa no mesmo pedido. Não transformar uma verificação de um pedido em atributo permanente “adulto verificado” da conta.
 
-Transação final deve conferir revisão/estado/prazo/idade/PIN e concluir uma única vez, com idempotência, sem corrida entre expiração, recusa e entrega. Falhar antes de transferir fisicamente o álcool. Nunca registrar DELIVERED quando houve recusa ou apenas confirmação do PIN. O software controla autorização/registro; a correspondência com a entrega física depende também do procedimento do entregador, não apenas do timestamp do servidor.
+**D6 — comando único e atômico de conclusão:** a futura operação final recebe a confirmação presencial de maioridade e o PIN, resolve o entregador autenticado e verifica, no mesmo limite transacional, relógio/deadline, estado/revisão, ausência de recusa anterior, resultado etário e credencial PIN. Somente o conjunto válido autoriza o handover e grava a conclusão/consumo de PIN/evidência de sucesso. Não combinar aprovações parciais de chamadas independentes nem usar `delivery_pins.verified_at` antigo como autorização.
+
+Preparar os dados da inspeção na interface não conclui entrega nem grava sucesso etário final antes do comando. O age-check histórico poderá registrar **recusa terminal**; sua resposta de sucesso isolada nunca poderá liberar entrega. A proposta de compatibilidade é evoluir/versionar `POST /admin/deliveries/{deliveryId}/verify-pin` como o comando final único, preservando sua finalidade histórica de concluir entrega e ampliando seu payload/guardas; não expor uma segunda rota de conclusão concorrente.
+
+Uma falha não pode deixar DELIVERED, PIN consumido com sucesso ou verificação parcial reutilizável. Tentativas inválidas de PIN e recusa são eventos de falha próprios, persistidos de forma controlada, sem sucesso parcial. A recusa por verificação encerra a entrega e inicia compensação integral (seção 6). Reenvio técnico idempotente do mesmo comando pode retornar seu resultado anterior; não é nova tentativa física e não repete handover/reembolso.
+
+Concorrência deve ser resolvida por bloqueio/revisão e unicidade: recusa, cancelamento e conclusão não podem vencer simultaneamente. Não manter transação de banco aberta enquanto o entregador inspeciona o documento. A inspeção física precede o submit; a decisão server-side usa dados da mesma pessoa presente, no mesmo comando. A transação não torna a transferência física atômica: a autorização expira no deadline, e o entregador não transfere álcool se o horário vencer antes do ato físico. Falha de rede ou resultado incerto exige reconciliação do mesmo comando, jamais concluir offline ou presumir autorização.
 
 ### 4.2 Transições de idade
 
-PENDING → um dos quatro resultados terminais da tentativa. Recusa não é sobrescrita por VERIFIED na mesma tentativa. Nova tentativa autorizada cria novo registro PENDING, preservando a anterior. Corrigir um lançamento incorreto requer evento auditável, sem apagar histórico e sem liberação retrospectiva de handover.
+PENDING → um dos quatro resultados terminais da tentativa. Recusa não é sobrescrita por VERIFIED na mesma tentativa. Nova tentativa no mesmo pedido é proibida. Somente um novo pedido, submetido a todas as regras atuais, pode originar outra entrega; ele não herda evidências do anterior. Corrigir um lançamento incorreto requer evento auditável, sem apagar histórico e sem liberação retrospectiva de handover.
 
 `REFUSED_NO_ID`: documento não apresentado. `REFUSED_MINOR`: documento demonstra idade inferior a 18. `REFUSED_DOUBTFUL_ID`: autenticidade, legibilidade ou correspondência não permite confirmar maioridade do destinatário. Ausência do destinatário, endereço inacessível, prazo excedido e PIN incorreto são motivos logísticos próprios; não inventar uma recusa etária nesses casos.
 
@@ -86,32 +93,36 @@ PENDING → um dos quatro resultados terminais da tentativa. Recusa não é sobr
 
 O registro específico da inspeção conterá apenas **resultado, método, timestamp e courierId**, associado às chaves da tentativa. Não criar campos, anexos, logs ou analytics para fotografia de documento, número, cópia digital, data de nascimento completa, idade exata, selfie, biometria ou transcrição livre do documento. Inspeção visual presencial não significa capturar uma imagem. Não usar notas livres de recusa para contornar a minimização.
 
-Restringir leitura a entregador atribuído e suporte/admin com necessidade operacional; o cliente recebe estado/motivo adequado, não dados internos de outros atores. Não exportar esses registros para marketing/perfilamento. Retenção, descarte, acesso auditado e fundamento do tratamento precisam de definição jurídica/operacional antes da implementação; este gate não inventa prazo de conservação ou escolhe consentimento como fundamento.
+**D4 — documentos:** aceitar DNI, NIE ou passaporte conforme decisão do proprietário, com inspeção visual apenas. O entregador compara presencialmente a pessoa com o documento e verifica 18+, sem registrar número, fotografia ou nascimento. Não ampliar automaticamente a lista para carteira de motorista ou outros documentos do enum histórico.
 
-Para hotel, a entrega de álcool exige encontro entre entregador e comprador/destinatário adulto presencialmente identificado como destinatário do pedido. Lobby/recepção pode ser **ponto de encontro**, não depósito. Proibidos deixar na porta/quarto sem acompanhamento, com recepcionista para hóspede desconhecido, ou concluir com PIN repassado remotamente sem inspeção presencial do adulto que recebe. Uma autorização do hotel não dispensa idade, prazo e PIN.
+Precisão técnica: NIE é identificador, não documento suficiente por si só. Um certificado/número sem elementos para conferir pessoa e idade não pode produzir VERIFIED_18_PLUS. Na opção “NIE”, exigir suporte documental que permita a conferência; se insuficiente, usar o passaporte já aceito, sem copiar dados. Isso preserva a opção aprovada sem equiparar um número à prova de maioridade. A [orientação do Ministério do Interior sobre TIE](https://www.interior.gob.es/opencms/es/servicios-al-ciudadano/tramites-y-gestiones/extranjeria/regimen-general/tarjeta-de-identidad-de-extranjero/) distingue a situação administrativa da comprovação de identidade por passaporte/documento análogo. O manual futuro deve tornar essa distinção clara ao entregador. Ausência de documento verificável → REFUSED_NO_ID; documento apresentado mas insuficiente/duvidoso → REFUSED_DOUBTFUL_ID; menor identificado → REFUSED_MINOR.
 
-Se o adulto não comparecer, registrar impedimento logístico; não marcar idade verificada. Se comparecer mas falhar a inspeção, registrar o resultado etário apropriado. A designação de outro adulto e o prazo máximo de espera precisam de política explícita; recepção não se torna destinatário automaticamente. Mesmo uma nova designação exige nova verificação e janela válida. Não coletar cópia de documento do hóspede nem presumir acesso ao cadastro do hotel.
+**D5 — conservação vinculada ao pedido:** o registro mínimo de verificação acompanha a mesma política/data de eliminação do dossiê do pedido e seus comprovantes fiscais; não recebe TTL independente nem renovação por leitura ou login. Referência mercantil geral: **seis anos desde o último lançamento nos livros**, ressalvadas disposições especiais, conforme [Código de Comércio, art. 30](https://www.boe.es/buscar/act.php?id=BOE-A-1885-6627#a30). Não significa “até seis anos desde a compra”. A [AEAT informa prazo fiscal geral de quatro anos](https://sede.agenciatributaria.gob.es/Sede/iva/facturacion-registro/facturacion-iva/obligacion-conservar-facturas.html); ele não substitui a obrigação mercantil aplicável e pode haver regras especiais/interrupções.
 
-## 6. Recusa, pedido, estoque e dinheiro — decisões abertas
+Especificar no dossiê do pedido um `retentionUntil` derivado da obrigação aplicável e seu marco contábil, herdado pela evidência mínima. Suspensão legal de eliminação deve ser documentada no mesmo dossiê, com fundamento e revisão, sem conservação indefinida genérica. A obrigação de guardar contabilidade não prova automaticamente que todo dado pessoal do pedido seja necessário por seis anos: documentar a finalidade/necessidade da evidência mínima como prova do cumprimento da entrega; não estender por arrasto a sessão, localização detalhada ou dados não necessários.
 
-Invariantes já solicitadas: **não entregar álcool recusado; não marcar DELIVERED; preservar evidência mínima; não burlar prazo/idade/PIN**. As alternativas comerciais abaixo não foram escolhidas.
+Restringir leitura a entregador atribuído durante a operação e suporte/admin por necessidade. Encerrado o uso operacional, conservar em arquivo restrito pelo prazo do pedido. Não usar para marketing/perfilamento. Observar bloqueio e destruição quando aplicáveis segundo [LOPDGDD, art. 32](https://www.boe.es/buscar/act.php?id=BOE-A-2018-16673#a32); conservar para obrigação/defesa não significa disponibilizar para uso corrente. A futura política de dados deve documentar fundamento, acesso, descarte e tratamento de backups, sem inventar prazo exclusivo de verificação etária.
 
-| Situação | Opções para decisão do proprietário | Consequências a especificar antes de implementar |
+**D3 — hotel e destinatário:** encontro presencial obrigatório entre entregador e destinatário adulto do próprio pedido. Lobby/recepção pode ser ponto de encontro; nunca depósito. Proibidos deixar na porta/quarto, com terceiro ou recepcionista, repassar para outro destinatário ou confirmar com PIN remoto. A instrução de endereço não cria exceção. Sem adulto presente ou sem verificação possível, não entregar; registrar falha apropriada. Não permitir nova tentativa/reagendamento no mesmo pedido. Cliente poderá fazer **novo pedido**, com adulto presente na entrega, sujeito novamente a horário, SLA, estoque e demais regras. Um novo pedido não serve para entregar ao menor anteriormente recusado nem herda sua autorização.
+
+## 6. Recusa, pedido, estoque e dinheiro — decisões D2/D3
+
+**Recusa por falha de verificação: reembolso integral automático, sem custo ao cliente.** Aplicar ao pedido inteiro, inclusive misto, como interpretação operacional do reembolso integral: nenhum item é entregue parcialmente nessa ocorrência; valor total efetivamente pago, incluindo frete/cobranças, é devolvido sem multa, taxa de retorno ou abatimento de custo. Não recriar mínimo €25 sobre uma parte entregue, pois esse fluxo parcial foi removido.
+
+| Ocorrência | Resultado de domínio | Resolução |
 |---|---|---|
-| Pedido só de álcool recusado | Cancelamento/retorno; nova tentativa limitada somente quando admissível | Política de valores, espera, despesas e prazo de resolução |
-| Pedido misto | Recusar pedido inteiro; ou entregar apenas itens sem álcool mediante concordância explícita e recomposição contratual | Recalcular subtotal, descontos, mínimo €25, frete e impostos; não aplicar cobrança extra ou remover itens silenciosamente |
-| Falta de documento | Encerrar tentativa; ou permitir apresentação posterior em nova tentativa antes do deadline | Número/intervalo de tentativas, custo e quem autoriza; nenhuma entrega enquanto pendente |
-| Menor confirmado | Recusar ao destinatário menor | Não repetir tentativa para a mesma pessoa para “passar”; eventual novo destinatário adulto depende de política separada, sem apagar recusa |
-| Documento duvidoso | Recusar; suporte pode orientar procedimento, sem override remoto de maioridade | Lista de documentos aceitos/condições de inspeção e treinamento, sem reter seus dados |
-| Atraso/cutoff excedido | Retorno/cancelamento; eventual entrega em outro dia exige novo agendamento e nova avaliação autorizados | Nada é transportado para o dia seguinte automaticamente por edição do deadline |
-| Hotel sem encontro presencial | Aguardar dentro de limite a definir; ou falhar/retornar | Avisos, tempo máximo de espera, adulto designado e custos; sem entrega na recepção por padrão |
+| NO_ID / MINOR / DOUBTFUL_ID | Recusa terminal, sem entrega | Compensação integral automática; sem nova tentativa |
+| PIN não confirmado ao encerrar handover | Não entregar; falha de verificação | Mesmo princípio sem custo; limites de digitação existentes não autorizam nova visita ou override |
+| Pedido com álcool misto ou exclusivo | Pedido inteiro não entregue na recusa | Não dividir entrega/cobrança nem escolher política parcial |
+| Terceiro/recepção ou destinatário ausente | Não entregar, motivo logístico real; não inventar resultado de inspeção | Sem nova tentativa; quando impede a verificação, aplicar resolução sem custo; não atribuir menoridade a pessoa ausente |
+| Deadline excedido | Não preparar/despachar/entregar em violação; registrar motivo temporal | Não classificar como falha etária. Tratar no fluxo de falha operacional/cancelamento futuro; não criar taxa ou política comercial distinta implicitamente |
 
-Separar estado logístico e financeiro: o histórico já prevê DELIVERY_FAILED, RETURNING, RETURNED e CANCELLED. A tentativa recusada registra motivo e inicia resolução; não assumir que retorno físico e reembolso terminam juntos.
+O reembolso aprovado explicitamente cobre falha de verificação; o valor/regime de outras falhas operacionais não deve ser inferido como decisão comercial nova. A implementação deverá reutilizar a política geral de cancelamento aplicável ou trazê-la à revisão antes de ativar esses casos, mantendo sempre o bloqueio de entrega.
 
-- Pagamento ainda não capturado: cancelar/liberar autorização conforme processador; isso não é reembolso de captura.
-- Pagamento capturado: solicitar reembolso total/parcial segundo política aprovada, idempotente e rastreável; aguardar confirmação do processador. Falha/pendência do reembolso não muda a recusa para entregue.
-- Não definir automaticamente retenção de frete, multa, nova cobrança ou prazo prometido de estorno. Essas escolhas exigem revisão comercial/jurídica específica.
-- Reserva não convertida: liberar de modo idempotente quando o cancelamento assim determinar. Mercadoria já expedida só retorna ao estoque vendável após recepção/inspeção; não repor automaticamente por um clique de recusa. Usar o ciclo de reservas/movimentos existente, sem dupla liberação ou dupla reposição.
+- Pagamento não capturado: cancelar/liberar integralmente a autorização; sem captura para cobrar a falha. Pagamento capturado: iniciar automaticamente estorno integral do saldo pago ainda não devolvido. Capture parcial exige estornar o capturado e cancelar o restante autorizado.
+- “Automático” significa disparo sem solicitação ou aprovação manual; não promete crédito bancário instantâneo. Registrar PENDING/PROCESSING/REFUNDED/FAILED conforme confirmação real. Falha do processador gera reconciliação e alerta, mantendo o direito ao integral, sem custo ao cliente.
+- Usar evento/outbox transacional para registrar recusa e obrigação de compensação; chamada externa de pagamento fora da transação, com idempotência e reprocessamento. Não alegar atomicidade distribuída com banco/processador.
+- Pedido/entrega mantêm distinção logística/financeira: DELIVERY_FAILED, RETURNING/RETURNED quando há mercadoria expedida, e cancelamento conforme estágio. Reembolso não espera aprovação manual do retorno; estoque vendável só é recomposto após recepção/inspeção. Reserva não convertida é liberada uma vez. Sem dupla reposição/captura/estorno.
 
 ## 7. Gap de OpenAPI — futura evolução, sem editar contratos
 
@@ -120,17 +131,17 @@ Separar estado logístico e financeiro: o histórico já prevê DELIVERY_FAILED,
 | StoreState / catálogo | Diferenciar loja OPEN de elegibilidade de álcool; explicitar motivo (`CUTOFF`, `SLA_UNAVAILABLE`, etc.), cutoff, deadline e validade da informação. Informação pública não autoriza checkout |
 | `/delivery/quote` | Associar promessa máxima real de handover, zona temporal, validade e versão da política; distância/preço isolados não bastam |
 | `POST /orders` / CreateOrderInput | Servidor calcula containsAlcohol/requiresAgeVerification, verifica janela e snapshot/revisão. `ageDeclarationsAccepted` não vira verificação presencial |
-| Aceite/preparo: `/admin/orders/{orderId}/start-picking`, `/confirm-items`, `/mark-ready` | Definir onde ocorre aceite formal; verificar viabilidade novamente em cada transição e substituição. Não criar endpoint de aceite se a transição existente atender ao contrato aprovado |
+| Aceite/preparo: `/admin/orders/{orderId}/start-picking`, `/confirm-items`, `/mark-ready` | Mapear aceite formal e conferir guardas antes de aceite, início/fim do preparo e despacho, incluindo substituições. Usar comandos existentes que correspondam a essas transições, sem deixar fase sem guarda |
 | `/admin/deliveries/{deliveryId}/start` e `/arrive` | Reavaliar prazo restante; chegada não equivale a handover |
-| `/admin/deliveries/{deliveryId}/age-check` | Evoluir `AgeCheckInput` histórico APPROVED/FAILED para resultados precisos; atribuição de ator e timestamp pelo servidor; vincular tentativa, presença e revisão |
-| `/admin/deliveries/{deliveryId}/verify-pin` | Histórico promete concluir entrega. Se mantido como comando final, deve validar idade/prazo/presença e consumir PIN/concluir atomicamente, preservando semântica documentada |
+| `/admin/deliveries/{deliveryId}/age-check` | Versionar resultado de recusa; ator/tempo do servidor e pedido vinculados. Sucesso etário não pode virar autorização parcial reutilizável: sucesso final pertence ao comando atômico D6 |
+| `/admin/deliveries/{deliveryId}/verify-pin` | Comando final único proposto: payload de PIN + declaração de inspeção presencial; avaliar prazo/idade/PIN simultaneamente e gravar conclusão apenas se todas válidas. Versionar quebra de payload explicitamente |
 | `/admin/deliveries/{deliveryId}/fail` | Reutilizar para recusa; já possui UNDER_18, NO_DOCUMENT, INVALID_DOCUMENT e ALCOHOL_DEADLINE_EXCEEDED. Definir mapeamento, idempotência e estado resultante; impedir dados de documento em notes |
-| `/admin/refunds` e leitura de refund | Reutilizar modelo histórico para resolução financeira; separar cancelamento de autorização e estorno de captura; limites/razões/estados definidos por política escolhida |
+| `/admin/refunds` e leitura de refund | Reutilizar modelo histórico para resolução financeira; separar cancelamento de autorização e estorno de captura; reembolso integral automático D2 e estados reais de confirmação, sem taxa ao cliente |
 | Leitura de pedido/entrega | Expor estado e resolução ao cliente; detalhe de verificação restrito por papel, sem dados desnecessários |
 
 Mapeamento legado: UNDER_18 → REFUSED_MINOR; NO_DOCUMENT → REFUSED_NO_ID; INVALID_DOCUMENT/IDENTITY_MISMATCH → REFUSED_DOUBTFUL_ID somente quando efetivamente impedem a confirmação na inspeção. APPROVED legado não pode ser migrado automaticamente para VERIFIED_18_PLUS sem evidência de método, ator e instante. OTHER/UNSAFE_RECIPIENT não provam menoridade.
 
-**Não é necessário inventar endpoint exclusivo de recusa:** age-check e fail já existem no contrato histórico. Uma separação futura de `/verify-pin` (apenas credencial) e `/handover` (conclusão) é alternativa arquitetural, não decisão tomada: mudaria a promessa do endpoint histórico e exigiria versionamento explícito. Preferir avaliar a extensão segura da transição final existente antes de duplicar comandos.
+**Não criar endpoint paralelo de conclusão/recusa por padrão.** Evoluir os comandos históricos em nova versão aprovada. D6 encerra a alternativa de validar cada condição em chamadas capazes de completar parcialmente a entrega: somente a operação final atômica autoriza handover. No contrato futuro, documentar que age-check isolado não permite completar entrega e que fail é terminal, sem endpoint de retry do mesmo pedido.
 
 Propor respostas de conflito de domínio com código estável para deadline, idade pendente/recusada, PIN e revisão desatualizada; distinguir 401/403 de falha comercial. A classificação exata dos HTTP status e envelopes deverá seguir o padrão da futura versão pública aprovada. Papéis de courier/admin precisam de autorização própria; possuir sessão opaca de cliente não autoriza comandos de entregador. Nunca confiar em courierId ou timestamp enviados pelo cliente.
 
@@ -138,11 +149,11 @@ Propor respostas de conflito de domínio com código estável para deadline, ida
 
 As migrations 0001–0004 existentes permanecem intactas. Não há tabela operacional completa de pedido/entrega a simplesmente acrescentar um boolean; sua fundação deverá ser autorizada em gate próprio.
 
-Proposta de esquema futuro: pedido e itens com snapshot de álcool/revisão; entrega e tentativas com estados/motivos; política temporal/versionamento e promessa; registro mínimo de inspeção; associação de PIN à tentativa e consumo; eventos idempotentes de recusa, retorno e resolução financeira. Chaves estrangeiras, unicidade de comandos e transições condicionais devem impedir atores/entregas cruzados e conclusão duplicada.
+Proposta de esquema futuro: pedido e itens com snapshot de álcool/revisão; entrega e tentativas com estados/motivos; política temporal/versionamento e promessa; registro mínimo de inspeção; associação de PIN à tentativa única e consumo atômico; eventos idempotentes/outbox de recusa, retorno e compensação integral; referência à retenção do dossiê do pedido. Chaves estrangeiras, unicidade de comandos e transições condicionais devem impedir atores/entregas cruzados e conclusão duplicada.
 
 Checks: requiresAgeVerification coerente com conteúdo; VERIFIED exige método/ator/instante; PENDING não contém prova bem-sucedida; recusa não satisfaz handover; prazo obrigatório para álcool. Validar agregação dos itens e condições de estado na camada de aplicação/transação, não apenas em CHECK isolado. Timestamp de PIN existente não é base para backfill de idade. Dados antigos sem evidência permanecem não verificados; nunca inventar verificações históricas.
 
-Criar migration aditiva numerada segundo o estado real na futura branch; não reservar número agora nem editar snapshots congelados. Definir rollback operacional, concorrência, reprocessamento e conservação antes da execução. Não criar tabela com documento/foto/DOB.
+Criar migration aditiva numerada segundo o estado real na futura branch; não reservar número agora nem editar snapshots congelados. Definir rollback operacional, concorrência e reprocessamento técnico sem reabrir tentativa física; implementar retenção herdada D5 antes da execução. Não criar tabela com documento/foto/DOB.
 
 ## 9. UI e cobertura dos 96 assets
 
@@ -183,22 +194,22 @@ Plano apenas; nenhum teste de implementação deste domínio foi executado nesta
 
 1. Cobrir as oito combinações booleanas de prazo/idade/PIN: somente todas verdadeiras permitem handover de álcool; incluir dados ausentes, ator incorreto e revisão concorrente.
 2. Limites antes/no/depois de cutoff, 22:00, 08:00 e abertura às 10:00; SLA desconhecido; atraso após aceite; data local/DST Europe/Madrid; nenhum ETA truncado ou relógio do cliente como autoridade.
-3. Sem álcool, com álcool, packs e substituições nos dois sentidos; pedido misto e preço/mínimo/reembolso conforme política aprovada.
-4. Cada recusa etária e logística; novo destinatário/tentativa/courier não herda provas; PIN certo com idade pendente continua bloqueado, idade válida com PIN errado idem.
+3. Sem álcool, com álcool, packs e substituições nos dois sentidos; pedido misto recusado integralmente por falha de verificação, estorno automático inclusive frete e saldo de captura parcial.
+4. Cada recusa etária e logística; terceiro e segunda tentativa no mesmo pedido são recusados; novo pedido não herda provas; PIN certo com idade pendente continua bloqueado, idade válida com PIN errado idem.
 5. Hotel com adulto presente e ausência/recepção/remoto; nenhum bypass por nota de endereço, código de quarto ou PIN compartilhado.
 6. Idempotência/concorrência entre entregar/recusar/cancelar; consumo de PIN, reserva, retorno e reembolso exatamente uma vez; falha do processador não produz estado financeiro fictício.
 7. Contrato e persistência recusam dados de documento indevidos; logs/analytics não os capturam; autorização por papel e minimização da resposta pública.
 8. Regressões de catálogo, localização, reserva, autenticação e UI afetada; suíte completa no SHA futuro, sem trocar baselines para esconder mudança de comportamento.
 
-## 11. Decisões necessárias para fechar esta especificação
+## 11. Decisões incorporadas e plano para autorização
 
-| Decisão | O que falta aprovar |
+| Decisão do proprietário | Estado documental |
 |---|---|
-| D1 — SLA | Máximo ponta a ponta, eventual margem e autoridade que o calcula; confirmar fronteira estrita do cutoff |
-| D2 — Recusa e valores | Pedido inteiro versus parte sem álcool; frete/descontos/mínimo e valor/devolução por motivo |
-| D3 — Nova tentativa/hotel | Espera máxima, limites, destinatário adulto alternativo, reagendamento e responsabilidade por custos |
-| D4 — Inspeção | Documentos aceitos, procedimento para dúvida, treinamento e regras sem override |
-| D5 — Dados | Retenção, base legal e acesso/eliminação do registro mínimo |
-| D6 — Interface de domínio | Confirmar extensão de age-check/fail/verify-pin ou versionamento com comando separado de handover; definir transição formal de aceite |
+| D1 — SLA 45 minutos / cutoff 21:15 | Incorporada; prazo efetivo de entrega anterior a 22:00; guardas em aceite/preparo/despacho |
+| D2 — Integral automático, custo zero por falha de verificação | Incorporada; cancelamento de autorização versus estorno de captura separados |
+| D3 — Sem nova tentativa/terceiro/recepção | Incorporada; somente novo pedido, sem herdar prova anterior |
+| D4 — DNI/NIE/passaporte, inspeção visual | Incorporada; NIE isolado não comprova idade; nenhuma captura de documento |
+| D5 — Mesmo prazo do dossiê do pedido/fiscal | Incorporada; referência mercantil seis anos desde último lançamento, não teto absoluto; necessidade e exceções documentadas |
+| D6 — Única operação atômica | Incorporada; três condições conferidas juntas, nenhum sucesso parcial libera entrega |
 
-Próximo passo: revisão pelo proprietário dessas decisões e da especificação. Implementação exige nova autorização; não iniciar C-003/C-004 ou contratos de componentes antes dessa revisão. PR #32 permanece separado; este gate não o mergeia nem altera valores/status de tokens.
+Plano sequenciado, futuras issues e critérios de aceite em [ALCOHOL_COMPLIANCE_IMPLEMENTATION_PLAN.md](./ALCOHOL_COMPLIANCE_IMPLEMENTATION_PLAN.md). Nenhuma dessas futuras issues/branches de implementação foi criada. Autorização de código, contratos e UI continua pendente; C-003/C-004 não iniciadas. PR #32 e registro de assets permanecem fora das alterações deste gate.

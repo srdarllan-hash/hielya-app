@@ -51,7 +51,9 @@ test('network uncertainty preserves digits, explicit retry maps unavailable, new
   await expect(page.getByRole('button',{name:'Reintentar'})).toBeFocused();
   expect(await page.getByRole('textbox').evaluateAll(els => els.every(el => (el as HTMLInputElement).value.length === 1))).toBe(true);
   expect(verifies).toBe(1); await page.getByRole('button',{name:'Reintentar'}).click();
-  await expect(page.getByRole('alert')).toHaveText('Este código no está disponible. Solicita otro cuando puedas.');
+  const otpAlert = page.locator('[data-screen-id="C-004"]').getByRole('alert');
+  await expect(otpAlert).toHaveCount(1);
+  await expect(otpAlert).toHaveText('Este código no está disponible. Solicita otro cuando puedas.');
   await expect(page.getByRole('button',{name:'Reenviar código'})).toBeEnabled({timeout:6000});
   expect(requests).toBe(0); await page.getByRole('button',{name:'Reenviar código'}).click();
   await expect(page.getByRole('textbox',{name:'Dígito 1 de 6'})).toBeFocused(); expect(requests).toBe(1);

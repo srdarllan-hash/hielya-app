@@ -1,0 +1,230 @@
+{
+  "issue": 28,
+  "pr": 30,
+  "status": "REGRESSION_REFERENCE_ALIGNMENT_REVIEWED",
+  "scope": "Existing certified behavior only; no product/design approval or token promotion",
+  "date": "2026-09-07",
+  "reviewMethod": "Inspected all 21 C-005 actual images across the three projects; matched visible changes to certified commit 9e216a8; reused 3 passing loading images. C-002 uses exact previously reviewed blobs.",
+  "sourceMain": "54998abe407ca2694b3c35e1fd02f846f3e81eb3",
+  "catalogImplementation": "9e216a8612c20c71cc020a21fea8723bbc1daa0c",
+  "catalogCertification": "274d72db6babbf2605d7fecc9946adb28fbd6593",
+  "prequoteRatification": "01afcd0891b2b1da6c5bb595b9387300e3a4366f",
+  "sourceRun": 34077414469,
+  "sourceHead": "3836b911e26f7b6ef9a5000fe65ca94dff0a10eb",
+  "foundationArtifact": 10002664497,
+  "foundationArtifactSha256": "35720c2e5a747f33447f17a88f5baf4d28e192bc750d39674259d6d469c67696",
+  "automaticSnapshotUpdates": false,
+  "historicalC005PngsPreserved": 24,
+  "entries": [
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-ready-mobile-360-linux.png",
+      "sha256": "36598f66c8dda363d40f96690110decc627507207611bd15e06a2bcd5048579b",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-ready-mobile-360-linux.png",
+      "previousSha256": "66654d8c936b06e4c442012ba2b7cb27118953116278df6b4feaf3acf55f49f3",
+      "source": "test-results/visual-home.visual-C-005-presentation-ready-visual-baseline-mobile-360/C-005-ready-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-ready-mobile-390-linux.png",
+      "sha256": "425cc04d7b7c85108f852da5ec5dbc0fbdf9bc6d6b01fdf608a07b28623e7f8b",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-ready-mobile-390-linux.png",
+      "previousSha256": "8632b9ce53797bafad1afeb0531d0272c7c16ef8e36f69cb0fd0c9f5fe0cba97",
+      "source": "test-results/visual-home.visual-C-005-presentation-ready-visual-baseline-mobile-390/C-005-ready-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-ready-hires-1170-linux.png",
+      "sha256": "e64a2c6bd27bd801a49ad567fac6de5cdbf37513686e4da66cd1e6fd2dd0a3e3",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-ready-hires-1170-linux.png",
+      "previousSha256": "feda08f1360020e8e70fcd118c096e6fdad27b997a8d0c2d5f6d74fc5fe579f7",
+      "source": "test-results/visual-home.visual-C-005-presentation-ready-visual-baseline-hires-1170/C-005-ready-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-loading-mobile-360-linux.png",
+      "sha256": "d0d7358ab31d3b75875375abe3734899c3f1b12e79984e8bc557d836842a34b2",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-loading-mobile-360-linux.png",
+      "previousSha256": "d0d7358ab31d3b75875375abe3734899c3f1b12e79984e8bc557d836842a34b2",
+      "source": "existing frozen reference",
+      "reason": "unchanged loading presentation"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-loading-mobile-390-linux.png",
+      "sha256": "9778eada7bc8910489c27868a97c2e5729c19c5a4b67e958ce0dfa0e0c583164",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-loading-mobile-390-linux.png",
+      "previousSha256": "9778eada7bc8910489c27868a97c2e5729c19c5a4b67e958ce0dfa0e0c583164",
+      "source": "existing frozen reference",
+      "reason": "unchanged loading presentation"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-loading-hires-1170-linux.png",
+      "sha256": "d1c244dd24a3f64faa7138a4b01c3ddd175265b68447bd02cf0c7e31fb8dd9f5",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-loading-hires-1170-linux.png",
+      "previousSha256": "d1c244dd24a3f64faa7138a4b01c3ddd175265b68447bd02cf0c7e31fb8dd9f5",
+      "source": "existing frozen reference",
+      "reason": "unchanged loading presentation"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-closed-mobile-360-linux.png",
+      "sha256": "4cb91823520716cd71801c8403de59fb94863da22c43c2f13d3c3d3f02da07be",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-closed-mobile-360-linux.png",
+      "previousSha256": "75ae0ab4cc50f3c0979e7f9e7e6f0655d472a20d6525add8f961edd0eebc2727",
+      "source": "test-results/visual-home.visual-C-005-presentation-closed-visual-baseline-mobile-360/C-005-closed-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-closed-mobile-390-linux.png",
+      "sha256": "fafdf961d6d95170a837294a6878c5742a57e271df73dd73062d04b38d10181d",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-closed-mobile-390-linux.png",
+      "previousSha256": "cdbd0046d35107c982378c9320cfe0013f88d40147185d20a0d0aeb9acecfe00",
+      "source": "test-results/visual-home.visual-C-005-presentation-closed-visual-baseline-mobile-390/C-005-closed-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-closed-hires-1170-linux.png",
+      "sha256": "cc0b8737fc440b1534c01ffe61f934fcf31c150dfa1b0871b075ed35f2714f7b",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-closed-hires-1170-linux.png",
+      "previousSha256": "454da75bd5c68356ab26e55d34b12ad4e9f0c7aecf3bb948e9be67c4518d4c26",
+      "source": "test-results/visual-home.visual-C-005-presentation-closed-visual-baseline-hires-1170/C-005-closed-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-high-demand-mobile-360-linux.png",
+      "sha256": "cd6975c1cd1dfe2255a821a16204f5ad31a82001741dfc72ba8ee290d8567d9e",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-high-demand-mobile-360-linux.png",
+      "previousSha256": "d0ae95898ecb5d9b9e25e9302e550e760ab6be93e4c08700a6d6e4a1df40470d",
+      "source": "test-results/visual-home.visual-C-005-p-feae1-high-demand-visual-baseline-mobile-360/C-005-high-demand-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-high-demand-mobile-390-linux.png",
+      "sha256": "eb61c1ea519c019f6b79e4341cf4e2457d26cfc99d52aa413b0bb370a0b5e017",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-high-demand-mobile-390-linux.png",
+      "previousSha256": "8b74f711edb63f6e2b71f0dad57e93c8286ea421faf3a0f091e3d4aa68853abd",
+      "source": "test-results/visual-home.visual-C-005-p-feae1-high-demand-visual-baseline-mobile-390/C-005-high-demand-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-high-demand-hires-1170-linux.png",
+      "sha256": "c2961a2606f85a6dcc6676a7746e778291f8fde1528963fba2aabb703f6fbb37",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-high-demand-hires-1170-linux.png",
+      "previousSha256": "9d03bb070a10cbbd4bec0278455945c2d1df3aa9f548dca105a2facf1cc34839",
+      "source": "test-results/visual-home.visual-C-005-p-feae1-high-demand-visual-baseline-hires-1170/C-005-high-demand-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-error-mobile-360-linux.png",
+      "sha256": "6c3ecc7bd65dbc00ffebb9c30374d5df6e3ac0125e414faa5d0439dd9fe4b7b0",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-error-mobile-360-linux.png",
+      "previousSha256": "744267eeff69a7c980117a534bec0e2e10fea7c5f3978ed1067a900055b6562b",
+      "source": "test-results/visual-home.visual-C-005-presentation-error-visual-baseline-mobile-360/C-005-error-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-error-mobile-390-linux.png",
+      "sha256": "85900e01b2e6c5e8f7c07fc0ec311bf2713b734184b8ccbf45256c4a5e1d1758",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-error-mobile-390-linux.png",
+      "previousSha256": "6d447c8efbbb747e8ea33a148ecdbdfca8d9eba153003efe944374b4ce114527",
+      "source": "test-results/visual-home.visual-C-005-presentation-error-visual-baseline-mobile-390/C-005-error-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-error-hires-1170-linux.png",
+      "sha256": "073677cfd563a556dd248046b3ad2d44d1360988b8bdc5f54002f0d87a7e0ef1",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-error-hires-1170-linux.png",
+      "previousSha256": "033c9fb592b2556bfcfd958fd50f40e79ccfecb203849dd64aff3c1cd4c82b3c",
+      "source": "test-results/visual-home.visual-C-005-presentation-error-visual-baseline-hires-1170/C-005-error-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-empty-cart-mobile-360-linux.png",
+      "sha256": "b39d151b74541fad3ef833c4fc2bb394d1b276201e3f5004b98d054d37f9cea2",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-empty-cart-mobile-360-linux.png",
+      "previousSha256": "385a5bbf7ebe14bfff1f428ec5a08473dd888e6aa2523130a026fea651ec328b",
+      "source": "test-results/visual-home.visual-C-005-p-da4d3--empty-cart-visual-baseline-mobile-360/C-005-empty-cart-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-empty-cart-mobile-390-linux.png",
+      "sha256": "622ae6628013a1543ed8d9351cd423ec2dc81f6ccbbd2c9e96536de352533a34",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-empty-cart-mobile-390-linux.png",
+      "previousSha256": "3454a53900aba73c96283df06288163015a8e22567ca8a60dddf1edd657db9ef",
+      "source": "test-results/visual-home.visual-C-005-p-da4d3--empty-cart-visual-baseline-mobile-390/C-005-empty-cart-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-empty-cart-hires-1170-linux.png",
+      "sha256": "6a04d53a060e01b09d3d1c93705df74301f7549263f7541172d7314ab0cfee45",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-empty-cart-hires-1170-linux.png",
+      "previousSha256": "2687814775bdb4f97114c949ad749278da2b8f613867f7766a752c68b2533d9e",
+      "source": "test-results/visual-home.visual-C-005-p-da4d3--empty-cart-visual-baseline-hires-1170/C-005-empty-cart-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-alcohol-cutoff-mobile-360-linux.png",
+      "sha256": "c81bd55697494f59fe804bf90b7ca679c33d34145cdd812f9502b3de28a7a52b",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-alcohol-cutoff-mobile-360-linux.png",
+      "previousSha256": "6829cfbe7c0c7a089657e8a9f94667eb34a86b7a27a618205d1734a9386f172d",
+      "source": "test-results/visual-home.visual-C-005-p-7b22a-ohol-cutoff-visual-baseline-mobile-360/C-005-alcohol-cutoff-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-alcohol-cutoff-mobile-390-linux.png",
+      "sha256": "bfed34b742616273fd9df7b70b78d6d6caccb6e8e5f16ea75c86263bf9111c13",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-alcohol-cutoff-mobile-390-linux.png",
+      "previousSha256": "039dacf9a21c61a0219c5e39770e139e50861fd8ce2bc201d064d363a2804862",
+      "source": "test-results/visual-home.visual-C-005-p-7b22a-ohol-cutoff-visual-baseline-mobile-390/C-005-alcohol-cutoff-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-alcohol-cutoff-hires-1170-linux.png",
+      "sha256": "52a034681a50c72f03f337611217ceef449f7341c57c02725940b53848444d5a",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-alcohol-cutoff-hires-1170-linux.png",
+      "previousSha256": "fc4659b6d433ca921ce712cd69b865372041cae66327f1f16213bd6f5babee93",
+      "source": "test-results/visual-home.visual-C-005-p-7b22a-ohol-cutoff-visual-baseline-hires-1170/C-005-alcohol-cutoff-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-out-of-area-mobile-360-linux.png",
+      "sha256": "0377f3b0e40ee9f476ce7ede4fadd7334850dba5be50e8b0f9e467dda619f1a5",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-out-of-area-mobile-360-linux.png",
+      "previousSha256": "08e7ec85d619b4a9f3f64dccb0d814834edd00c09759ece5e65130057529a2bf",
+      "source": "test-results/visual-home.visual-C-005-p-c1c94-out-of-area-visual-baseline-mobile-360/C-005-out-of-area-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-out-of-area-mobile-390-linux.png",
+      "sha256": "8056f3c312d0364d6d2fa3f7c7618d2b9f0bf6275efa03705fae4b4042e71039",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-out-of-area-mobile-390-linux.png",
+      "previousSha256": "59467d30d25975d9a867f711fc1ca980269bf0bcc4f2a9ad47e9dfc12bf07cf8",
+      "source": "test-results/visual-home.visual-C-005-p-c1c94-out-of-area-visual-baseline-mobile-390/C-005-out-of-area-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/home.visual.spec.ts-snapshots/C-005-PRESENTATION-CATALOG-V1-out-of-area-hires-1170-linux.png",
+      "sha256": "f426a9a2039aa5e287225d6dae7e38626fd0baeac6a25f687cf912f94fca057c",
+      "previousPath": "tests/visual/home.visual.spec.ts-snapshots/C-005-out-of-area-hires-1170-linux.png",
+      "previousSha256": "7da0e67da88bbd0d6d0c39943b53a8316e255588b6282cac20639a38165bf103",
+      "source": "test-results/visual-home.visual-C-005-p-c1c94-out-of-area-visual-baseline-hires-1170/C-005-out-of-area-actual.png",
+      "reason": "certified 9e216a8 catalog presentation: search/section labels, age/availability data, catalog error copy"
+    },
+    {
+      "path": "tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-success-2-5km-350c-mobile-360-linux.png",
+      "sha256": "36da034f496fc13e0e2e5818503f87815463e22b1e69d40349681c2a9b46006f",
+      "source": "tests/visual/c002-prequote-continuation-contract.visual.spec.ts-snapshots/C-002-PREQUOTE-CONTINUATION-CONTRACT-V1-success-enabled-mobile-360-linux.png",
+      "reason": "PR #11 ratified continuation without quoteId; actual in control byte-identical to reviewed prequote reference"
+    },
+    {
+      "path": "tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-success-2-5km-350c-mobile-390-linux.png",
+      "sha256": "c8d19011233c87beb572a3f2c3c95fb6a2a5911f715b755079ad84da7c710cc3",
+      "source": "tests/visual/c002-prequote-continuation-contract.visual.spec.ts-snapshots/C-002-PREQUOTE-CONTINUATION-CONTRACT-V1-success-enabled-mobile-390-linux.png",
+      "reason": "PR #11 ratified continuation without quoteId; actual in control byte-identical to reviewed prequote reference"
+    },
+    {
+      "path": "tests/visual/c002-delivery-quote-api-alignment.visual.spec.ts-snapshots/C-002-DELIVERY-QUOTE-API-ALIGNMENT-V1-success-2-5km-350c-hires-1170-linux.png",
+      "sha256": "cf0481f0a18f229fd8712967b43b0f645b27583973a701f62c4b9b1025ae530c",
+      "source": "tests/visual/c002-prequote-continuation-contract.visual.spec.ts-snapshots/C-002-PREQUOTE-CONTINUATION-CONTRACT-V1-success-enabled-hires-1170-linux.png",
+      "reason": "PR #11 ratified continuation without quoteId; actual in control byte-identical to reviewed prequote reference"
+    }
+  ]
+}

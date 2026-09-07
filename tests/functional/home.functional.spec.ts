@@ -13,12 +13,18 @@ for (const state of ['READY', 'EMPTY', 'ERROR'] as const) {
     });
     await installSyntheticCatalogRoutes(page, state === 'EMPTY'
       ? { categories: [], products: [] }
-      // A successful HTTP response with an invalid schema exercises controlled ERROR
-      // without accepting/suppressing any browser console errors.
-      : state === 'ERROR' ? { categories: { invalid: true } } : {});
-    const responses = Promise.all(['categories', 'products'].map((resource) =>
-      page.waitForResponse((response) => new URL(response.url()).pathname === `/api/v1/catalog/${resource}`),
-    ));
+      : {});
+    const categoryResponse = page.waitForResponse((response) => new URL(response.url()).pathname === '/api/v1/catalog/categories');
+    const productResponse = page.waitForResponse((response) => new URL(response.url()).pathname === '/api/v1/catalog/products');
+    if (state === 'ERROR') {
+      await page.route(/\/api\/v1\/catalog\/products(?:\?.*)?$/, async (route) => {
+        // Finish the valid sibling before rejecting the schema. The runtime correctly
+        // aborts outstanding siblings on error; awaiting an aborted response would race.
+        await (await categoryResponse).finished();
+        await route.fulfill({ json: { invalid: true } });
+      });
+    }
+    const responses = Promise.all([categoryResponse, productResponse]);
     await page.goto('/');
     await Promise.all((await responses).map((response) => response.finished()));
     await expect(page.locator('.hly-app-shell')).toHaveAttribute('data-home-catalog-state', `HOME_CATALOG_${state}`);
@@ -62,6 +68,24 @@ for (const state of states) {
     await openHomePresentation(page, state);
     await expect(page.locator('.hly-app-shell')).toHaveAttribute('data-screen-state', state);
     expect(await page.locator('.hly-app-shell').getAttribute('data-home-state')).toBeNull();
+    const notices = {
+      closed: 'Tienda cerrada · Volvemos mañana a las 10:00',
+      'high-demand': 'Alta demanda · La estimación actual es de 45–60 min',
+      'alcohol-cutoff': 'Alcohol no disponible: la entrega debe finalizar antes de las 22:00',
+      'out-of-area': 'Esta dirección está fuera del área actual de 4 km',
+      'empty-cart': 'Tu carrito está vacío. Añade productos para continuar.',
+    };
+    if (state in notices) {
+      await expect(page.getByText(notices[state as keyof typeof notices], { exact: true })).toBeVisible();
+    }
+    if (state === 'closed' || state === 'out-of-area') {
+      await expect(page.getByRole('searchbox', { name: 'Busca productos' })).toBeDisabled();
+      await expect(page.getByRole('button', { name: 'Cervezas', exact: true })).toBeDisabled();
+      await expect(page.getByRole('button', { name: 'Añadir Victoria Málaga al carrito' })).toBeDisabled();
+    }
+    if (state === 'high-demand') {
+      await expect(page.getByText('45–60 min', { exact: true })).toBeVisible();
+    }
     expect(errors).toEqual([]);
   });
 }

@@ -13,7 +13,8 @@ for (const state of states) {
       await document.fonts.ready;
     });
 
-    await expect(page).toHaveScreenshot(`C-005-${state}.png`, {
+    // Preserve pre-integration PNGs; this namespace records the certified catalog presentation.
+    await expect(page).toHaveScreenshot(`C-005-PRESENTATION-CATALOG-V1-${state}.png`, {
       animations: 'disabled',
       fullPage: false,
     });

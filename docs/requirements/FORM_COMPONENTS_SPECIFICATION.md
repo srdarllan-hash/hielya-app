@@ -171,3 +171,7 @@ O proprietário autorizou publicação pública dos documentos e merge do PR #49
 Em falha de rede: preservar código, mostrar erro de conexão e oferecer retry explícito. O componente NÃO promete recuperação. Se o retry receber OTP_UNAVAILABLE, exibir exatamente “Este código no está disponible. Solicita otro cuando puedas.” e orientar a solicitar novo código quando o cooldown permitir. A aplicação mantém autoridade sobre cooldown/reenvio; não executar reenvio automático nem contornar restrições do servidor.
 
 Mitigação provisória a especificar no backend: limpeza/expiração de sessões ACTIVE nunca utilizadas; não tratar falta de ACK como prova de não uso. Nenhuma rotina de limpeza, recuperação, mudança de contrato ou implementação de componente é realizada neste PR.
+
+## 12. Ratificação complementar — ação Reintentar
+
+Button canônico, variante secondary, tamanho md, largura automática. Ação de recuperação dentro da mensagem de erro; não competir com a ação principal de verificação. Decisão expressa do proprietário na implementação da Issue #51.

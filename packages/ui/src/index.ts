@@ -31,3 +31,6 @@ export * from './screens/location/LocationScreen';
 export * from './screens/location/location.types';
 
 export * from './domain/mvp-local';
+export { Input, type InputProps } from './components/Input';
+export { PhoneInput, type PhoneInputProps, type PhoneValue } from './components/PhoneInput';
+export { OtpInput, type OtpInputProps, type OtpPositions, type OtpValue, type OtpStatus } from './components/OtpInput';

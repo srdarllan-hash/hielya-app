@@ -15,8 +15,9 @@ name: Claude Code
 # `author_association` gate below is a defence-in-depth check in addition to the
 # action's own actor-permission verification.
 #
-# Authentication is exclusively the pre-existing repository secret
-# CLAUDE_CODE_OAUTH_TOKEN, referenced only as ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}.
+# Authentication uses the repository secret ANTHROPIC_API_KEY, referenced only
+# as ${{ secrets.ANTHROPIC_API_KEY }}. The previous CLAUDE_CODE_OAUTH_TOKEN path
+# returned HTTP 401 both locally and in GitHub Actions and is not used here.
 
 on:
   issue_comment:
@@ -65,7 +66,7 @@ jobs:
         id: claude
         uses: anthropics/claude-code-action@v1.0.217
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           trigger_phrase: "@claude"
           # Disable label-based triggering for the pilot.
           label_trigger: ""

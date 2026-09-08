@@ -1,0 +1,72 @@
+name: Claude Code
+
+# Official Claude Code GitHub Actions integration for HIELYA.
+#
+# Pilot scope (intentionally minimal):
+#   - Runs ONLY on explicit "@claude" mentions in issue comments and PR review
+#     comments created by a user who already has write-level association with
+#     this repository (OWNER / MEMBER / COLLABORATOR).
+#   - Does NOT run on `issues`, `pull_request_review`, `pull_request`, `push`,
+#     labels, or any automatic per-PR execution.
+#   - No auto-merge. `main` remains protected by the "Protect main — HIELYA"
+#     ruleset; this workflow never writes to `main`.
+#
+# The repository is PUBLIC. Third-party issue/PR content is untrusted; the
+# `author_association` gate below is a defence-in-depth check in addition to the
+# action's own actor-permission verification.
+#
+# Authentication is exclusively the pre-existing repository secret
+# CLAUDE_CODE_OAUTH_TOKEN, referenced only as ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}.
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+concurrency:
+  group: claude-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+# Minimum permissions required for the mention-driven assistant. No other scope.
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: read
+  id-token: write
+
+jobs:
+  claude:
+    # Explicit "@claude" mention AND a trusted repository association.
+    if: >
+      contains(github.event.comment.body, '@claude') &&
+      (
+        github.event.comment.author_association == 'OWNER' ||
+        github.event.comment.author_association == 'MEMBER' ||
+        github.event.comment.author_association == 'COLLABORATOR'
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Claude Code
+        uses: anthropics/claude-code-action@v1.0.217
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          trigger_phrase: "@claude"
+          # Disable label-based triggering for the pilot.
+          label_trigger: ""
+          # Do not allow bots or non-write users to invoke Claude.
+          allowed_bots: ""

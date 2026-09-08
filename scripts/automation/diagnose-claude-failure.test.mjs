@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, readFileSync, symlinkSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -132,7 +132,7 @@ test('analyzeParsed: only whitelisted keys are ever present', () => {
   // Explicit HTTP context so extractHttpCodes() recognises the code without
   // loosening the parser (it deliberately ignores bare 4xx/5xx numbers).
   const out = analyzeParsed(resultMsg({ is_error: true, result: 'authentication_error: HTTP status 401', session_id: 'sess_secret', uuid: 'u' }));
-  assert.deepEqual(Object.keys(out).sort(), ['diagnosis_status', 'error_category', 'http_status_codes', 'is_error'].sort());
+  assert.deepEqual(Object.keys(out).sort(), ['diagnosis_status', 'error_category', 'http_status_codes', 'is_error', 'evidence_source', 'evidence_kind'].sort());
 });
 
 // --------------------------------------------------------------------------
@@ -205,7 +205,8 @@ function runCli(dir, file) {
   const sumFile = join(dir, 'gh_summary');
   writeFileSync(outFile, '');
   writeFileSync(sumFile, '');
-  const stdout = execFileSync(process.execPath, [SCRIPT], {
+  const original = readFileSync(file);
+  const execution = spawnSync(process.execPath, [SCRIPT], {
     env: {
       ...process.env,
       CLAUDE_EXECUTION_FILE: file,
@@ -216,7 +217,10 @@ function runCli(dir, file) {
     },
     encoding: 'utf8',
   });
-  return { stdout, output: readFileSync(outFile, 'utf8'), summary: readFileSync(sumFile, 'utf8') };
+  assert.equal(execution.status, 0);
+  assert.equal(execution.stderr, '');
+  assert.deepEqual(readFileSync(file), original, 'diagnosis must not modify its input');
+  return { stdout: execution.stdout, output: readFileSync(outFile, 'utf8'), summary: readFileSync(sumFile, 'utf8') };
 }
 
 test('CLI: credentials in the execution file never reach any output channel', (t) => {
@@ -237,7 +241,7 @@ test('CLI: credentials in the execution file never reach any output channel', (t
   }
   // Only whitelisted keys.
   const keys = stdout.trim().split('\n').map((l) => l.split('=')[0]).sort();
-  assert.deepEqual(keys, ['diagnosis_status', 'error_category', 'http_status_codes', 'is_error'].sort());
+  assert.deepEqual(keys, ['diagnosis_status', 'error_category', 'http_status_codes', 'is_error', 'error_type', 'evidence_source', 'evidence_kind'].sort());
   assert.match(stdout, /error_category=AUTHENTICATION/);
   assert.match(stdout, /diagnosis_status=OK/);
   assert.match(stdout, /is_error=true/);
@@ -283,4 +287,138 @@ test('CATEGORIES is the closed set from the task spec', () => {
     'AUTHENTICATION', 'PERMISSION', 'RATE_LIMIT', 'MODEL_OR_REQUEST',
     'SERVICE_UNAVAILABLE', 'SDK_OR_CONFIGURATION', 'UNKNOWN',
   ]);
+});
+
+
+// Phase 4A: regression and disclosure boundaries. Fixtures are synthetic only.
+test('system error envelope is classified without a terminal result', () => {
+  const out = analyzeParsed([{ type: 'system', subtype: 'error', error: {
+    type: 'permission_error', message: 'access denied', status: 403,
+  } }]);
+  assert.equal(out.diagnosis_status, 'RESULT_NOT_FOUND');
+  assert.equal(out.error_category, 'PERMISSION');
+  assert.equal(out.error_type, 'permission_error');
+  assert.equal(out.evidence_source, 'SYSTEM');
+  assert.deepEqual(out.http_status_codes, [403]);
+});
+
+test('regression: subtype success never masks a preceding assistant API error', () => {
+  const out = analyzeParsed([
+    { type: 'assistant', error: 'authentication_failed', message: { content: [
+      { type: 'text', text: 'API Error: HTTP status 401 authentication_error' },
+    ] } },
+    { type: 'result', subtype: 'success', is_error: true },
+  ]);
+  assert.equal(out.error_category, 'AUTHENTICATION');
+  assert.deepEqual(out.http_status_codes, [401]);
+  assert.equal(out.evidence_source, 'ASSISTANT');
+  assert.equal(out.evidence_kind, 'INFERRED');
+});
+
+test('assistant error text without its own marker is read when terminal result fails', () => {
+  const out = analyzeParsed({ messages: [
+    { type: 'assistant', message: { content: [{ type: 'text', text: 'overloaded_error' }] } },
+    { type: 'result', subtype: 'success', is_error: true },
+  ] });
+  assert.equal(out.error_category, 'SERVICE_UNAVAILABLE');
+});
+
+test('normal assistant text and tool payloads are not diagnosed as errors', () => {
+  const out = analyzeParsed([
+    { type: 'assistant', message: { content: [{ type: 'text', text: 'authentication_error status 401' }] } },
+    { type: 'tool', error: { type: 'permission_error', status: 403 } },
+    { type: 'result', subtype: 'success', is_error: false },
+  ]);
+  assert.equal(out.error_category, 'UNKNOWN');
+  assert.ok(!('http_status_codes' in out));
+});
+
+for (const [status, category] of [[401, 'AUTHENTICATION'], [403, 'PERMISSION'], [429, 'RATE_LIMIT'], [500, 'SERVICE_UNAVAILABLE']]) {
+  test(`structured HTTP ${status} is extracted without textual HTTP context`, () => {
+    const out = analyzeParsed(resultMsg({ is_error: true, error: { status, message: 'failure' } }));
+    assert.deepEqual(out.http_status_codes, [status]);
+    assert.equal(out.error_category, category);
+  });
+}
+
+test('structured status aliases in known envelopes; reject strings and unrelated numbers', () => {
+  const out = analyzeParsed(resultMsg({ is_error: true, status: '401', code: 403, errors: [
+    { status_code: 429 }, { statusCode: 500 }, { http_status: 503 },
+    { status: 200 }, { status: 500.1 }, { body: { status: 401 } },
+  ] }));
+  assert.deepEqual(out.http_status_codes, [429, 500, 503]);
+});
+
+test('assistant nested error envelope and unknown error type remain bounded', () => {
+  const out = analyzeParsed([{ type: 'assistant', error: 'unknown', message: {
+    error: { type: 'rate_limit_error', status: 429 },
+  } }]);
+  assert.equal(out.error_type, 'rate_limit_error');
+  assert.deepEqual(out.http_status_codes, [429]);
+  assert.equal(out.evidence_source, 'ASSISTANT');
+});
+
+test('subtype is metadata only even when it contains a recognized error signature', () => {
+  const out = analyzeParsed([{ type: 'result', subtype: 'authentication_error HTTP 401', is_error: true }]);
+  assert.equal(out.error_category, 'UNKNOWN');
+  assert.ok(!('http_status_codes' in out));
+  assert.equal(out.message_code, 'UNCLASSIFIED_ERROR — original message withheld');
+});
+
+test('unknown payload never activates whole-document stringify or classification', () => {
+  const out = analyzeParsed({ payload: { message: 'authentication_error status 401', secret: FAKE_APIKEY } });
+  assert.equal(out.diagnosis_status, 'RESULT_NOT_FOUND');
+  assert.equal(out.error_category, 'UNKNOWN');
+  assert.ok(!('http_status_codes' in out));
+  // An accidental serialization would throw. There is no fallback traversal.
+  assert.doesNotThrow(() => analyzeParsed({ toJSON() { throw new Error('must not serialize'); } }));
+});
+
+test('unknown failures cannot disclose metadata or text through any CLI channel', (t) => {
+  const dir = tempDir(t);
+  const secret = 'SYNTHETIC_PRIVATE_MARKER_4A';
+  const file = writeExec(dir, [
+    { type: 'system', subtype: 'init', model: secret },
+    { type: 'assistant', is_error: true, error: { type: secret, message: secret }, message: {
+      content: [{ type: 'text', text: secret }, { type: 'tool_use', input: { status: 401, secret } }],
+    } },
+    { type: 'result', subtype: 'success', is_error: true, result: secret,
+      headers: { Authorization: FAKE_BEARER }, cookie: secret, request_id: secret,
+      body: { key: FAKE_APIKEY }, stack: secret, boundary: secret, phase: secret,
+      evidence_source: secret, selected_model: secret, message_code: secret },
+  ]);
+  for (const channel of Object.values(runCli(dir, file))) {
+    for (const forbidden of [secret, FAKE_BEARER, FAKE_APIKEY, 'headers=', 'selected_model=', 'stack=']) {
+      assert.ok(!channel.includes(forbidden));
+    }
+    assert.match(channel, /message_code=UNCLASSIFIED_ERROR — original message withheld/);
+    const allowed = ['diagnosis_status', 'is_error', 'error_category', 'evidence_source', 'message_code'];
+    assert.ok(channel.trim().split('\n').every((line) => allowed.includes(line.split('=')[0])));
+  }
+});
+
+test('formatter independently rejects injected values, statuses and extra keys', () => {
+  const poison = 'SECRET_SYNTHETIC\ninjected=secret';
+  const lines = formatLines({
+    diagnosis_status: poison, error_category: poison, is_error: poison,
+    http_status_codes: [poison, 401, 401, 200, 500.1, null],
+    error_type: poison, evidence_source: poison, evidence_kind: poison,
+    message_code: poison, selected_model: poison, headers: poison,
+  });
+  assert.deepEqual(lines, [
+    'diagnosis_status=DIAGNOSTIC_ERROR', 'http_status_codes=401', 'error_category=UNKNOWN',
+  ]);
+});
+
+test('bounded text input cannot classify a signature beyond the existing character limit', () => {
+  const out = analyzeParsed(resultMsg({ is_error: true, result: 'x'.repeat(200_000) + 'authentication_error HTTP 401' }));
+  assert.equal(out.error_category, 'UNKNOWN');
+  assert.ok(!('http_status_codes' in out));
+});
+
+
+test('legacy error type signatures still classify without reflecting unknown types', () => {
+  const out = analyzeParsed(resultMsg({ is_error: true, error: { type: 'error_during_execution' } }));
+  assert.equal(out.error_category, 'SDK_OR_CONFIGURATION');
+  assert.ok(!('error_type' in out));
 });

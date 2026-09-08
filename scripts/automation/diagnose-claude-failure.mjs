@@ -22,6 +22,12 @@
 //   is_error         : true | false            (only when a boolean is found)
 //   http_status_codes: comma-separated ints in [400,599]  (only when found)
 //   error_category   : one of CATEGORIES (fixed strings)
+//   error_type       : a recognized provider error type, when unambiguous
+//   evidence_source  : RESULT | SYSTEM | ASSISTANT | MULTIPLE
+//   evidence_kind    : INFERRED (category classification, not root-cause proof)
+//   message_code     : fixed UNCLASSIFIED_ERROR notice for unknown signatures
+// Every emitted value is revalidated by formatLines. Boundary, phase and model
+// are intentionally omitted: this minimal parser cannot attest those facts.
 //
 // Any message needed to classify the error is inspected in memory only and then
 // discarded. Absence of evidence yields UNKNOWN. The script always exits 0 (it
@@ -122,77 +128,106 @@ export function extractHttpCodes(text) {
   return [...found].sort((a, b) => a - b);
 }
 
-/** Pull only the error-bearing substrings out of the parsed execution document. */
-function collectErrorText(doc) {
-  const parts = [];
-  const pushString = (value) => {
-    if (typeof value === 'string' && value.length > 0) parts.push(value);
-  };
-  const visitResult = (node) => {
-    if (!node || typeof node !== 'object') return;
-    pushString(node.result);
-    pushString(node.error);
-    pushString(node.message);
-    pushString(node.subtype);
-    if (node.error && typeof node.error === 'object') {
-      pushString(node.error.message);
-      pushString(node.error.type);
-    }
-    if (Array.isArray(node.errors)) {
-      for (const entry of node.errors) {
-        if (typeof entry === 'string') pushString(entry);
-        else if (entry && typeof entry === 'object') {
-          pushString(entry.message);
-          pushString(entry.type);
-        }
-      }
-    }
-  };
+// Closed values only: no SDK strings are reflected into the diagnostic output.
+const ERROR_TYPES = Object.freeze([
+  'authentication_error', 'permission_error', 'rate_limit_error',
+  'overloaded_error', 'api_error', 'invalid_request_error', 'not_found_error',
+]);
+const SOURCES = Object.freeze(['RESULT', 'SYSTEM', 'ASSISTANT', 'MULTIPLE']);
+const UNKNOWN_MESSAGE = 'UNCLASSIFIED_ERROR — original message withheld';
+const isRecord = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+const isHttpStatus = (value) => Number.isInteger(value) && value >= 400 && value <= 599;
 
+/** Read known error envelopes only. Never walk arbitrary payloads or stringify them. */
+function collectErrorEvidence(doc) {
+  const parts = [];
+  const codes = new Set();
+  const types = new Set();
+  const sources = new Set();
+  let remaining = MAX_CLASSIFY_CHARS;
+  const pushString = (value, source) => {
+    if (typeof value !== 'string' || value.length === 0 || remaining === 0) return;
+    const part = value.slice(0, remaining);
+    parts.push(part);
+    remaining -= part.length;
+    sources.add(source);
+  };
+  // Explicit envelope depth; headers, body, request IDs, tools and arbitrary
+  // nested objects are never traversed. All text stays inside this function.
+  const visitError = (node, source, depth = 0) => {
+    if (typeof node === 'string') { pushString(node, source); return; }
+    if (!isRecord(node) || depth > 2) return;
+    for (const key of ['status', 'status_code', 'statusCode', 'http_status']) {
+      if (isHttpStatus(node[key])) { codes.add(node[key]); sources.add(source); }
+    }
+    if (ERROR_TYPES.includes(node.type)) {
+      types.add(node.type);
+    }
+    // Preserve classification of legacy error.type strings, without reflecting
+    // unknown types in output. Outer event discriminators are metadata only.
+    if (depth > 0 || ERROR_TYPES.includes(node.type)) pushString(node.type, source);
+    pushString(node.message, source);
+    pushString(node.result, source);
+    // subtype is metadata, not evidence text (including subtype:"success").
+    if (node.error !== undefined) visitError(node.error, source, depth + 1);
+    if (Array.isArray(node.errors)) {
+      for (const entry of node.errors) visitError(entry, source, depth + 1);
+    }
+  };
   const messages = Array.isArray(doc) ? doc : Array.isArray(doc?.messages) ? doc.messages : [];
+  // An SDK assistant API error may precede the terminal error result and have
+  // no separate error marker. Do not scan normal assistant conversation unless
+  // the terminal result is an error, or that assistant event marks an error.
+  const lastResult = messages.findLast((msg) => isRecord(msg) && msg.type === 'result');
   let resultSeen = false;
   let isError;
   for (const msg of messages) {
-    if (!msg || typeof msg !== 'object') continue;
+    if (!isRecord(msg)) continue;
     if (msg.type === 'result') {
       resultSeen = true;
       if (typeof msg.is_error === 'boolean') isError = msg.is_error;
-      visitResult(msg);
+      visitError(msg, 'RESULT');
     } else if (msg.type === 'system' && (msg.subtype === 'error' || msg.error)) {
-      visitResult(msg);
+      visitError(msg, 'SYSTEM');
+    } else if (msg.type === 'assistant' &&
+      (msg.is_error === true || msg.error || lastResult?.is_error === true)) {
+      visitError(msg, 'ASSISTANT');
+      if (isRecord(msg.message)) {
+        visitError(msg.message, 'ASSISTANT');
+        if (Array.isArray(msg.message.content)) {
+          for (const block of msg.message.content) {
+            if (isRecord(block) && block.type === 'text') pushString(block.text, 'ASSISTANT');
+          }
+        }
+      }
     }
   }
-
-  // Fall back to a bounded stringify only when no targeted field was found.
-  let text = parts.join('\n');
-  if (text.length === 0 && (Array.isArray(doc) || doc)) {
-    try {
-      text = JSON.stringify(doc).slice(0, MAX_CLASSIFY_CHARS);
-    } catch {
-      text = '';
-    }
-  }
-  return { text, resultSeen, isError };
+  return { text: parts.join('\n'), codes, types, sources, resultSeen, isError };
 }
 
 /** Analyse an already-parsed execution document. Pure; no I/O, no logging. */
 export function analyzeParsed(doc) {
-  const { text, resultSeen, isError } = collectErrorText(doc);
+  const { text, codes, types, sources, resultSeen, isError } = collectErrorEvidence(doc);
   const out = { diagnosis_status: resultSeen ? 'OK' : 'RESULT_NOT_FOUND' };
   if (typeof isError === 'boolean') out.is_error = isError;
+  for (const code of extractHttpCodes(text)) codes.add(code);
+  const sortedCodes = [...codes].sort((a, b) => a - b);
+  if (sortedCodes.length > 0) out.http_status_codes = sortedCodes;
 
-  const codes = extractHttpCodes(text);
-  if (codes.length > 0) out.http_status_codes = codes;
-
-  // Keyword match wins; fall back to an HTTP-code-derived category; else UNKNOWN.
+  // Preserve existing keyword precedence; categories are heuristic inference,
+  // never a claim of a confirmed provider root cause.
   let category = classify(text);
   if (category === 'UNKNOWN') {
-    for (const code of codes) {
+    for (const code of sortedCodes) {
       const mapped = categoryFromCode(code);
       if (mapped) { category = mapped; break; }
     }
   }
   out.error_category = category;
+  if (types.size === 1) out.error_type = [...types][0];
+  if (sources.size > 0) out.evidence_source = sources.size === 1 ? [...sources][0] : 'MULTIPLE';
+  if (category !== 'UNKNOWN') out.evidence_kind = 'INFERRED';
+  else out.message_code = UNKNOWN_MESSAGE;
   return out;
 }
 
@@ -250,13 +285,19 @@ export function runDiagnosis({ executionFile, runnerTemp, maxBytes = DEFAULT_MAX
 
 /** Serialise the whitelisted result to stable `key=value` lines. */
 export function formatLines(result) {
-  const lines = [`diagnosis_status=${result.diagnosis_status}`];
+  const statuses = ['OK', 'EXECUTION_FILE_MISSING', 'EXECUTION_FILE_INVALID', 'RESULT_NOT_FOUND', 'DIAGNOSTIC_ERROR'];
+  const status = statuses.includes(result.diagnosis_status) ? result.diagnosis_status : 'DIAGNOSTIC_ERROR';
+  const lines = [`diagnosis_status=${status}`];
   if (typeof result.is_error === 'boolean') lines.push(`is_error=${result.is_error}`);
-  if (Array.isArray(result.http_status_codes) && result.http_status_codes.length > 0) {
-    lines.push(`http_status_codes=${result.http_status_codes.join(',')}`);
-  }
+  const codes = Array.isArray(result.http_status_codes)
+    ? [...new Set(result.http_status_codes.filter(isHttpStatus))].sort((a, b) => a - b) : [];
+  if (codes.length > 0) lines.push(`http_status_codes=${codes.join(',')}`);
   const category = CATEGORIES.includes(result.error_category) ? result.error_category : 'UNKNOWN';
   lines.push(`error_category=${category}`);
+  if (ERROR_TYPES.includes(result.error_type)) lines.push(`error_type=${result.error_type}`);
+  if (SOURCES.includes(result.evidence_source)) lines.push(`evidence_source=${result.evidence_source}`);
+  if (category !== 'UNKNOWN' && result.evidence_kind === 'INFERRED') lines.push('evidence_kind=INFERRED');
+  if (result.message_code === UNKNOWN_MESSAGE) lines.push(`message_code=${UNKNOWN_MESSAGE}`);
   return lines;
 }
 

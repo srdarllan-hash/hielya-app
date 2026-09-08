@@ -113,3 +113,5 @@ Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POL
 | v8.9 | 2026-09-08 | CLAUDE_CODE_GITHUB_ACTIONS_PILOT_PREPARATION — branch/PR draft, não ativado em main; v8.6–v8.7 reservadas por PRs #57/#58 | `c3a1e53c8638d476721e0d5b1442f36b0326a861` (base) | [v8.9](./2026-09/HIELYA_CHECKPOINT_2026-09-08_v8.9.md) | criado no repositório |
 
 | v9.0 | 2026-09-08 | CLAUDE_ACTION_ISSUE_62_FILTERED_FAILURE_DIAGNOSIS — branch/PR draft; diagnóstico filtrado, sem merge e sem novo teste | `9522dcb1dd0580f0d5e620b2f75a5ad14c40f212` (base) | [v9.0](./2026-09/HIELYA_CHECKPOINT_2026-09-08_v9.0.md) | criado no repositório |
+
+| v9.1 | 2026-09-08 | PHASE_4A_SANITIZED_DIAGNOSIS_CANDIDATE — Issue #66; CI pending | `0e9200e37a146e0ebf9a2e4d6dbbf2f07d96801e` (base) | [v9.1](./2026-09/HIELYA_CHECKPOINT_2026-09-08_v9.1.md) | criado no repositório |

@@ -115,3 +115,5 @@ Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POL
 | v9.0 | 2026-09-08 | CLAUDE_ACTION_ISSUE_62_FILTERED_FAILURE_DIAGNOSIS — branch/PR draft; diagnóstico filtrado, sem merge e sem novo teste | `9522dcb1dd0580f0d5e620b2f75a5ad14c40f212` (base) | [v9.0](./2026-09/HIELYA_CHECKPOINT_2026-09-08_v9.0.md) | criado no repositório |
 
 | v9.1 | 2026-09-08 | PHASE_4A_SANITIZED_DIAGNOSIS_CANDIDATE — Issue #66; CI pending | `0e9200e37a146e0ebf9a2e4d6dbbf2f07d96801e` (base) | [v9.1](./2026-09/HIELYA_CHECKPOINT_2026-09-08_v9.1.md) | criado no repositório |
+
+| v9.2 | 2026-09-08 | PHASE_4A_2_DIFFERENTIAL_PREPARATION — Issue #68; no dispatch authorized | `329f2915b6e752e276e005309de27329b5551dd0` (base) | [v9.2](./2026-09/HIELYA_CHECKPOINT_2026-09-08_v9.2.md) | criado no repositório |

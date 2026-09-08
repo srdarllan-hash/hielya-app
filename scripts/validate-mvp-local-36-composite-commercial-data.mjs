@@ -4,6 +4,8 @@ import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 
+import { parseScopeMode, validateScopeMode } from './historical-validator-mode.mjs';
+
 import { HOME_CATALOG_API_INTEGRATION_CHANGED_FILES } from './mvp-local-36-home-catalog-api-integration-changed-files.mjs';
 
 export const CERTIFIED_BASE_SHA = '4ca838d4937555f50b3f5e11fddece5e042e1ee9';
@@ -277,7 +279,8 @@ const validateNoCredentials = (sources) => {
   assert(!sources.some((source) => credentialPattern.test(source)), 'A credential pattern was found');
 };
 
-const validateScope = () => {
+const validateScope = (scopeMode) => {
+  if (scopeMode === 'regression') return [];
   if (process.env.GITHUB_ACTIONS !== 'true') return [];
   const files = execFileSync('git', ['diff', '--name-only', `${CERTIFIED_BASE_SHA}..HEAD`], { encoding: 'utf8' })
     .trim()
@@ -288,7 +291,8 @@ const validateScope = () => {
   return files;
 };
 
-export const validateCompositeCommercialData = () => {
+export const validateCompositeCommercialData = ({ scopeMode = 'historical' } = {}) => {
+  validateScopeMode(scopeMode);
   const artifact = readFileSync(ARTIFACT_PATH);
   const actualSha256 = sha256(artifact);
   assert(actualSha256 === ARTIFACT_SHA256, `Composite artifact hash mismatch: ${actualSha256}`);
@@ -334,7 +338,7 @@ export const validateCompositeCommercialData = () => {
   const adr = readFileSync(ADR_PATH, 'utf8');
   validateAdr(adr);
   validateNoCredentials([result.source, adr]);
-  const changedFiles = validateScope();
+  const changedFiles = validateScope(scopeMode);
 
   return {
     actualSha256,
@@ -343,11 +347,13 @@ export const validateCompositeCommercialData = () => {
     prices: document.composites.map((composite) => composite.salePriceCents),
     limits: document.composites.map((composite) => composite.maxPerOrder),
     changedFiles,
+    scopeMode,
   };
 };
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const report = validateCompositeCommercialData();
+  const report = validateCompositeCommercialData({ scopeMode: parseScopeMode(process.argv.slice(2)) });
+  console.log(`SCOPE_MODE=${report.scopeMode}`);
   console.log(`CANONICAL_COMPOSITE_SHA256=${report.actualSha256}`);
   console.log(`COMPOSITE_COUNT=${report.compositeCount}`);
   console.log(`COMPOSITE_SKUS=${report.compositeSkus.join(',')}`);

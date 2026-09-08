@@ -1,0 +1,11 @@
+{
+  "issue": 43,
+  "phase": 5,
+  "authorizedAdditionalRoutes": [{"method":"GET","path":"/store/state","file":"apps/ui-lab/app/api/v1/store/state/route.ts"}],
+  "contract": "contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_3.yaml",
+  "runtimeCoverage": "PARTIAL: public availability plus C005 purchase-intent guard; no authenticated cart/order HTTP activation",
+  "responseFreshnessHeader": "x-hielya-refresh-after-ms: server lease capped at 15000ms and earlier cutoff/estimate expiry; cache-control no-store",
+  "productionAuthorized": false,
+  "realSlaAdapter": "NOT_CONFIGURED; development-only authoritative input file with expiring estimate",
+  "historicalProfiles": "Preserved as historical snapshots; this profile authorizes only the additional Phase5 route"
+}

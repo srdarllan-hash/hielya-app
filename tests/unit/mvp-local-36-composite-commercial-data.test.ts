@@ -128,7 +128,7 @@ describe('MVP Local 36 owner-approved composite commercial data', () => {
     const artifact = readFileSync(artifactPath);
     const actualSha256 = createHash('sha256').update(artifact).digest('hex');
     const adr = readFileSync(adrPath, 'utf8');
-    const output = execFileSync(process.execPath, ['scripts/validate-mvp-local-36-composite-commercial-data.mjs'], { encoding: 'utf8' });
+    const output = execFileSync(process.execPath, ['scripts/validate-mvp-local-36-composite-commercial-data.mjs', '--scope=regression'], { encoding: 'utf8' });
 
     expect(actualSha256).toBe(expectedSha256);
     expect(adr).toContain(expectedSha256);

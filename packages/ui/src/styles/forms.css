@@ -1,0 +1,28 @@
+/* Ratified PR #49. All visual dimensions/colors/type come from frozen 1.2.0 tokens. */
+.hly-field { width: 100%; min-width: var(--hly-space-0); font-family: var(--hly-font-family-ui); color: var(--hly-color-text-primary); }
+.hly-field__label { display: block; margin-bottom: var(--hly-space-12); font-size: var(--hly-font-size-body-small); line-height: var(--hly-font-line-height-body-small); font-weight: var(--hly-font-weight-medium); }
+.hly-field__box { display: flex; align-items: center; gap: var(--hly-space-8); min-height: var(--hly-touch-recommended); padding: var(--hly-space-12) var(--hly-space-16); border: var(--hly-border-width-hairline) solid var(--hly-color-border-strong); border-radius: var(--hly-radius-medium); background: var(--hly-color-background-primary); box-sizing: border-box; }
+.hly-field__box:focus-within { outline: var(--hly-dimension-2) solid var(--hly-color-border-focus); outline-offset: var(--hly-dimension-2); }
+.hly-field__control { box-sizing: border-box; min-width: var(--hly-space-0); width: 100%; padding: var(--hly-space-0); border: none; border-radius: var(--hly-radius-none); color: var(--hly-color-text-primary); background: var(--hly-color-background-primary); font-family: var(--hly-font-family-ui); font-size: var(--hly-font-size-body-small); line-height: var(--hly-font-line-height-body-small); font-weight: var(--hly-font-weight-regular); }
+.hly-field__box > .hly-field__control:focus { outline: none; }
+.hly-field__control::placeholder { color: var(--hly-color-text-secondary); opacity: var(--hly-opacity-full); }
+.hly-field__adornment { flex-shrink: 0; color: var(--hly-color-text-secondary); font-size: var(--hly-font-size-body-small); line-height: var(--hly-font-line-height-body-small); }
+.hly-field__feedback { min-height: var(--hly-font-line-height-caption); margin-top: var(--hly-space-12); color: var(--hly-color-text-secondary); font-size: var(--hly-font-size-caption); line-height: var(--hly-font-line-height-caption); }
+.hly-field__feedback p { margin: var(--hly-space-0); overflow-wrap: anywhere; }
+.hly-field__error { color: var(--hly-color-semantic-danger-text); }
+.hly-field__success { color: var(--hly-color-semantic-success-text); }
+.hly-field[data-invalid] .hly-field__box, .hly-otp[data-invalid] .hly-otp__cell { border-color: var(--hly-color-semantic-danger-fill); }
+.hly-field[data-disabled] .hly-field__box, .hly-field[data-disabled] .hly-field__control, .hly-otp .hly-otp__cell:disabled { background: var(--hly-color-background-surface); color: var(--hly-color-text-disabled); border-color: var(--hly-color-border-subtle); }
+.hly-field[data-disabled] .hly-field__control::placeholder { color: var(--hly-color-text-disabled); }
+.hly-otp__cells { display: flex; flex-wrap: wrap; gap: var(--hly-space-8); }
+.hly-otp__triplet { display: flex; gap: var(--hly-space-8); }
+.hly-otp__cell { width: var(--hly-dimension-48); height: var(--hly-space-56); border: var(--hly-border-width-hairline) solid var(--hly-color-border-strong); border-radius: var(--hly-radius-medium); font-size: var(--hly-font-size-title); line-height: var(--hly-font-line-height-title); font-weight: var(--hly-font-weight-semibold); text-align: center; }
+.hly-otp__cell:focus, .hly-otp__summary:focus { outline: var(--hly-dimension-2) solid var(--hly-color-border-focus); outline-offset: var(--hly-dimension-2); }
+.hly-otp__retry { margin-top: var(--hly-space-12); }
+@media (forced-colors: active) {
+  .hly-field__control, .hly-field__box { forced-color-adjust: auto; }
+}
+
+.hly-field__control:autofill { -webkit-text-fill-color: var(--hly-color-text-primary); box-shadow: inset var(--hly-space-0) var(--hly-space-0) var(--hly-space-0) var(--hly-dimension-600) var(--hly-color-background-primary); }
+.hly-field[data-disabled] .hly-field__control:autofill { -webkit-text-fill-color: var(--hly-color-text-disabled); box-shadow: inset var(--hly-space-0) var(--hly-space-0) var(--hly-space-0) var(--hly-dimension-600) var(--hly-color-background-surface); }
+@media (forced-colors: active) { .hly-field__control:autofill { -webkit-text-fill-color: currentColor; box-shadow: none; } }

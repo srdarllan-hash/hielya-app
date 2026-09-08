@@ -4,7 +4,7 @@
 .hly-button--primary{background:var(--hly-color-brand-gold-bright);color:var(--hly-color-brand-on-gold)}
 .hly-button--secondary{border-color:var(--hly-color-brand-gold-bright);background:transparent;color:var(--hly-color-brand-gold-bright)}
 .hly-button--ghost{border-color:var(--hly-color-border-strong);background:var(--hly-color-background-surface);color:var(--hly-color-text-primary)}
-.hly-button--danger{background:var(--hly-color-semantic-danger-fill);color:var(--hly-color-text-primary)}
+.hly-button--danger{background:var(--hly-color-semantic-danger-background);color:var(--hly-color-text-primary)}
 .hly-button:disabled{opacity:var(--hly-opacity-disabled)}
 .hly-button__spinner{width:var(--hly-icon-medium);height:var(--hly-icon-medium);border:var(--hly-border-width-strong) solid currentColor;border-right-color:transparent;border-radius:var(--hly-radius-pill);animation:hly-button-spin var(--hly-motion-duration-slow) linear infinite}
 @keyframes hly-button-spin{to{transform:rotate(1turn)}}

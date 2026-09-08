@@ -1,0 +1,42 @@
+name: Authentication UI Validation
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: auth-flow-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  auth-flow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: 'true'
+      STORYBOOK_DISABLE_TELEMETRY: '1'
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm build-storybook
+      - run: pnpm exec playwright install --with-deps chromium webkit
+      - name: Auth flow and screen accessibility with synthetic inputs only
+        run: pnpm exec playwright test --config playwright.auth-flow.config.ts --workers=2
+      - run: git diff --exit-code
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: auth-flow-${{ github.event.pull_request.head.sha }}
+          path: playwright-report/auth-flow/
+          if-no-files-found: warn

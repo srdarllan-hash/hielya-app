@@ -1,0 +1,111 @@
+# Índice de checkpoints HIELYA
+
+Este índice rastreia os checkpoints oficiais migrados do Google Drive. Os documentos históricos abaixo foram exportados integralmente; correções ou decisões posteriores devem ser registradas em um novo checkpoint, nunca por alteração retroativa.
+
+| Versão | Data | Gate / estado certificado | SHA de referência | Documento no repositório | Origem no Drive |
+|---|---|---|---|---|---|
+| v2.1 | 2026-08-05 | `MVP_LOCAL_36_OPENAPI_V1_1_CONTRACT_GATE` | `4ca838d4937555f50b3f5e11fddece5e042e1ee9` | [HIELYA_CHECKPOINT_2026-08-05_v2.1.md](./2026-08/HIELYA_CHECKPOINT_2026-08-05_v2.1.md) | [original](https://docs.google.com/document/d/1gsOvS_BCYlyF0w2h33zc9YWjB2N20W3X1svhYed468s/edit?usp=drivesdk) |
+| v2.2 | 2026-08-05 | `MVP_LOCAL_36_OPENAPI_V1_1_GATE` | `4ca838d4937555f50b3f5e11fddece5e042e1ee9` | [HIELYA_CHECKPOINT_2026-08-05_v2.2.md](./2026-08/HIELYA_CHECKPOINT_2026-08-05_v2.2.md) | [original](https://docs.google.com/document/d/1wVBH-gcYK9lCoALN3ZpW7TWhIfLHXPmQEOF_FLVjpOo/edit?usp=drivesdk) |
+| v2.3 | 2026-08-05 | `PERSISTENT_CATALOG_READ_MODEL_COMPLETION_AND_API_HOST_ARCHITECTURE_GATE (BLOCKED)` | `4ca838d4937555f50b3f5e11fddece5e042e1ee9` | [HIELYA_CHECKPOINT_2026-08-05_v2.3.md](./2026-08/HIELYA_CHECKPOINT_2026-08-05_v2.3.md) | [original](https://docs.google.com/document/d/1Uw2M0QiUMKHqfrndS6GKqYv5DQAUAbK6jminUfMMZXY/edit?usp=drivesdk) |
+| v2.4 | 2026-08-05 | `PERSISTENT_CATALOG_READ_MODEL_AND_API_HOST_ARCHITECTURE_GATE (BLOCKED)` | `4ca838d4937555f50b3f5e11fddece5e042e1ee9` | [HIELYA_CHECKPOINT_2026-08-05_v2.4.md](./2026-08/HIELYA_CHECKPOINT_2026-08-05_v2.4.md) | [original](https://docs.google.com/document/d/1_4zm6Gl0XULRxqXVLEd5VwwhmSa_4NAggf2IklZs0YU/edit?usp=drivesdk) |
+| v2.5 | 2026-08-05 | `COMPOSITE_COMMERCIAL_DATA_FREEZE_GATE (AUTHORIZED_NOT_STARTED)` | `4ca838d4937555f50b3f5e11fddece5e042e1ee9` | [HIELYA_CHECKPOINT_2026-08-05_v2.5.md](./2026-08/HIELYA_CHECKPOINT_2026-08-05_v2.5.md) | [original](https://docs.google.com/document/d/1toSWlElpU9k57QZ203kQvWqXjKIp300fk3bKOS2KERc/edit?usp=drivesdk) |
+| v2.6 | 2026-08-05 | `COMPOSITE_COMMERCIAL_DATA_FREEZE_GATE_CERTIFIED` | `5c9c1e632102ba902fb8858eb2ae8b5e118d2497` | [HIELYA_CHECKPOINT_2026-08-05_v2.6.md](./2026-08/HIELYA_CHECKPOINT_2026-08-05_v2.6.md) | [original](https://docs.google.com/document/d/1b5KBepJSw4dGgQUEaDro7CoSiPvnSOqPpjxp_7f46Ag/edit?usp=drivesdk) |
+| v2.7 | 2026-08-06 | `HOME_CATALOG_API_INTEGRATION_GATE_CERTIFIED` | `274d72db6babbf2605d7fecc9946adb28fbd6593` | [HIELYA_CHECKPOINT_2026-08-06_v2.7.md](./2026-08/HIELYA_CHECKPOINT_2026-08-06_v2.7.md) | [original](https://docs.google.com/document/d/1en_ZjbUOG2AwJfLXkKIi8HLziUf7yaValJbPBofIBgs/edit?usp=drivesdk) |
+| v2.8 | 2026-08-06 | `PRODUCT_DETAIL_PUBLIC_API_INTEGRATION_GATE_CERTIFIED` | `1470e294404084119308812b049d94601926ce55` | [HIELYA_CHECKPOINT_2026-08-06_v2.8.md](./2026-08/HIELYA_CHECKPOINT_2026-08-06_v2.8.md) | [original](https://docs.google.com/document/d/1EFw-PR8mdj15YieZ5qVBniRI9cz0LFrDjlpvhGr7jcs/edit?usp=drivesdk) |
+| v2.9 | 2026-08-09 | `C002_DELIVERY_QUOTE_API_ALIGNMENT_GATE_CERTIFIED` | `60d556e5ae088f2bf98101dcf37cbf854bcc2eff` | [HIELYA_CHECKPOINT_2026-08-09_v2.9.md](./2026-08/HIELYA_CHECKPOINT_2026-08-09_v2.9.md) | [original](https://docs.google.com/document/d/1KoA_Vg6TZ31cbc5EUpsIXZU7Sjx4v43qkACF0tTyhss/edit?usp=drivesdk) |
+| v3.0 | 2026-08-09 | `C002_PREQUOTE_CONTINUATION_CONTRACT_GATE_TECHNICALLY_VALIDATED` | `01afcd0891b2b1da6c5bb595b9387300e3a4366f` | [HIELYA_CHECKPOINT_2026-08-09_v3.0.md](./2026-08/HIELYA_CHECKPOINT_2026-08-09_v3.0.md) | [original](https://docs.google.com/document/d/1O9ys1r4DSCvIfcrQBIs-ZuG2Quk-P291J1oNecTquU4/edit?usp=drivesdk) |
+| v3.1 | 2026-08-09 | `INVENTORY_RESERVATION_INVARIANTS_AND_LIFECYCLE_FOUNDATION_GATE_CERTIFIED` | `970b6ae295ff205d214afe6fe4f24ff073fcde27` | [HIELYA_CHECKPOINT_2026-08-09_v3.1.md](./2026-08/HIELYA_CHECKPOINT_2026-08-09_v3.1.md) | [original](https://docs.google.com/document/d/1-0TFr9GTBA7kBCm5ok4NpFcjGzJRuWqgx4kaY_11gTI/edit?usp=drivesdk) |
+| v3.2 | 2026-08-10 | `CUSTOMER_AUTHENTICATION_FOUNDATION_GATE_CERTIFIED` | `68d5f5422a9dff560b301c17fe1bce466ac7281a` | [HIELYA_CHECKPOINT_2026-08-10_v3.2.md](./2026-08/HIELYA_CHECKPOINT_2026-08-10_v3.2.md) | [original](https://docs.google.com/document/d/1i0nGKW9CWQhZeglO5yAsJ3TyrhyO8uJQppZ8yvPlITE/edit?usp=drivesdk) |
+| v3.3 | 2026-08-10 | `CUSTOMER_AUTHENTICATION_PUBLIC_CONTRACT_V1_2_AND_HTTP_TRANSPORT_GATE_CERTIFIED` | `ef2ec10508aec07ac41f4b4d1079644b229b4214` | [HIELYA_CHECKPOINT_2026-08-10_v3.3.md](./2026-08/HIELYA_CHECKPOINT_2026-08-10_v3.3.md) | [original](https://docs.google.com/document/d/1-eQWqxYOPxCmnsHNiYw8HKWsCJYMlLUykWYIGuOaCIM/edit?usp=drivesdk) |
+| v3.4 | 2026-08-12 | `CUSTOMER_AUTHENTICATION_PUBLIC_CONTRACT_V1_2_AND_HTTP_TRANSPORT_GATE_CERTIFIED` | `ef2ec10508aec07ac41f4b4d1079644b229b4214` | [HIELYA_CHECKPOINT_2026-08-12_v3.4.md](./2026-08/HIELYA_CHECKPOINT_2026-08-12_v3.4.md) | [original](https://docs.google.com/document/d/19h0CjqZvZ3DNjSZvsMv86e7kFPQqnHnNEEWe4Y8hHLM/edit?usp=drivesdk) |
+| v3.5 | 2026-08-13 | `CUSTOMER_AUTHENTICATION_PUBLIC_CONTRACT_V1_2_AND_HTTP_TRANSPORT_GATE_CERTIFIED` | `ef2ec10508aec07ac41f4b4d1079644b229b4214` | [HIELYA_CHECKPOINT_2026-08-13_v3.5.md](./2026-08/HIELYA_CHECKPOINT_2026-08-13_v3.5.md) | [original](https://docs.google.com/document/d/1F85gKcOat1T1wXfo9LYWQLVoTjR3LG1c4Dp_egpGTuM/edit?usp=drivesdk) |
+| v3.6 | 2026-08-15 | `CUSTOMER_AUTHENTICATION_PUBLIC_CONTRACT_V1_2_AND_HTTP_TRANSPORT_GATE_CERTIFIED` | `ef2ec10508aec07ac41f4b4d1079644b229b4214` | [HIELYA_CHECKPOINT_2026-08-15_v3.6.md](./2026-08/HIELYA_CHECKPOINT_2026-08-15_v3.6.md) | [original](https://docs.google.com/document/d/1LnbuWf79C2uH9-_OtcAX8iei8w5w0S_B07hBIcHraSc/edit?usp=drivesdk) |
+| v3.7 | 2026-08-22 | `CUSTOMER_AUTHENTICATION_PUBLIC_CONTRACT_V1_2_AND_HTTP_TRANSPORT_GATE_CERTIFIED` | `ef2ec10508aec07ac41f4b4d1079644b229b4214` | [HIELYA_CHECKPOINT_2026-08-22_v3.7.md](./2026-08/HIELYA_CHECKPOINT_2026-08-22_v3.7.md) | [original](https://docs.google.com/document/d/1Cmokd75w5Pdbowq783qpB6tfbyqeNu6IlZURKWriJNg/edit?usp=drivesdk) |
+| v3.8 | 2026-08-22 | `VISUAL_ASSET_GOVERNANCE_AND_C003_C004_READINESS` | `ef2ec10508aec07ac41f4b4d1079644b229b4214` | [HIELYA_CHECKPOINT_2026-08-22_v3.8.md](./2026-08/HIELYA_CHECKPOINT_2026-08-22_v3.8.md) | [original](https://docs.google.com/document/d/1cjr9ewRrJBaXqmi8fUAFXuSp8CYEJkQVjgNvzHZ2SuA/edit?usp=drivesdk) |
+| v3.9 | 2026-09-04 | `C002_PREQUOTE_CONTINUATION_CONTRACT_GATE_RATIFIED_AND_REVALIDATED` | `01afcd0891b2b1da6c5bb595b9387300e3a4366f` | [HIELYA_CHECKPOINT_2026-09-04_v3.9.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v3.9.md) | [original](https://docs.google.com/document/d/1Rv0A5KfK-Dt-ZqpZyi6qVXbb2VkTjbGZLI4RyQVGn3A/edit?usp=drivesdk) |
+| v4.0 | 2026-09-04 | `DEPENDENCY_SECURITY_AND_REACT_STRICT_MODE_COMPATIBILITY_GATE` | `81cb538f5d78b5d73196919d43086b2cee5dcd67` | [HIELYA_CHECKPOINT_2026-09-04_v4.0.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v4.0.md) | [original](https://docs.google.com/document/d/1cAqK29qwrrD3EVNxXmyIhCZK-au7PaafrRboGUravGY/edit?usp=drivesdk) |
+| v4.1 | 2026-09-04 | `OPAQUE_SESSION_OTP_HTTP_TRANSPORT_FINAL_REVALIDATION` | `81cb538f5d78b5d73196919d43086b2cee5dcd67` | [HIELYA_CHECKPOINT_2026-09-04_v4.1.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v4.1.md) | [original](https://docs.google.com/document/d/1i7SSZzd5F2SxHNlRC4zfnqyfM2w2htFuKdUp37rDez4/edit?usp=drivesdk) |
+| v4.2 | 2026-09-04 | `CERTIFIED_STACK_INTEGRATION_TO_MAIN_GATE` | `df912c101b3db5c910a8c575fb2e2e687a54f4f5` | [HIELYA_CHECKPOINT_2026-09-04_v4.2.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v4.2.md) | [original](https://docs.google.com/document/d/1pCrolEu3jOTNdWTXoIiG7J_1fEWWh1cYUCp6qRmlRS4/edit?usp=drivesdk) |
+| v4.3 | 2026-09-04 | `POST_INTEGRATION_STATE_CORRECTION` | `df912c101b3db5c910a8c575fb2e2e687a54f4f5` | [HIELYA_CHECKPOINT_2026-09-04_v4.3.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v4.3.md) | [original](https://docs.google.com/document/d/1ax-OYBvSq5MI3WzC4XnAqPVb3RQdNGK6_4Vzd1xYfjM/edit?usp=drivesdk) |
+| v4.4 | 2026-09-04 | `ASSET_CANONICAL_STATUS_RESOLUTION_GATE` | `df912c101b3db5c910a8c575fb2e2e687a54f4f5` | [HIELYA_CHECKPOINT_2026-09-04_v4.4.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v4.4.md) | [original](https://docs.google.com/document/d/1O-C_hxmDl36hXUGB8p0U96aisr6G7NsnQAHyUM9gpcU/edit?usp=drivesdk) |
+| v4.5 | 2026-09-04 | `ASSET_CANONICAL_REMAPPING_GATE` | `df912c101b3db5c910a8c575fb2e2e687a54f4f5` | [HIELYA_CHECKPOINT_2026-09-04_v4.5.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v4.5.md) | [original](https://docs.google.com/document/d/1HnPWrX7F0bH5xRnICKNElO4GNV5W3DdVZiKnoV02cTI/edit?usp=drivesdk) |
+| v4.6 | 2026-09-04 | `ASSET_OPERATIONAL_DATA_AUDIT_AND_STORE_CLOSED_DECISION` | `df912c101b3db5c910a8c575fb2e2e687a54f4f5` | [HIELYA_CHECKPOINT_2026-09-04_v4.6.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v4.6.md) | [original](https://docs.google.com/document/d/1k2WjiVV2pecDXqBLhWETuCNBNiiawIhcvfDkH_OtNfA/edit?usp=drivesdk) |
+| v4.7 | 2026-09-04 | `ASSET_SELECTION_AND_DESIGN_SYSTEM_APPROVAL_PREPARATION` | `df912c101b3db5c910a8c575fb2e2e687a54f4f5` | [HIELYA_CHECKPOINT_2026-09-04_v4.7.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v4.7.md) | [original](https://docs.google.com/document/d/1S1h6rpWj3GNLlBcpknPq7CivU7bM5ODBjv_-CbdsGzE/edit?usp=drivesdk) |
+| v4.8 | 2026-09-04 | `DESIGN_SYSTEM_PARTIAL_APPROVAL_GATE_VALIDATED_NOT_APPROVED` | `df912c101b3db5c910a8c575fb2e2e687a54f4f5` | [HIELYA_CHECKPOINT_2026-09-04_v4.8.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v4.8.md) | [original](https://docs.google.com/document/d/1aOFSwv9VEvld4zlSYniBI_xfmquaLvPFmiz8zQw7rjc/edit?usp=drivesdk) |
+| v4.9 | 2026-09-04 | `DESIGN_SYSTEM_CODE_FIRST_DIRECTION_ANALYSIS` | `df912c101b3db5c910a8c575fb2e2e687a54f4f5` | [HIELYA_CHECKPOINT_2026-09-04_v4.9.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v4.9.md) | [original](https://docs.google.com/document/d/1iJiCYqId_dS-I-mRMZhqWKDY1YGf7liBgoOn-gre-QY/edit?usp=drivesdk) |
+| v5.0 | 2026-09-04 | `CHECKPOINT_REPOSITORY_MIGRATION_GATE` | `9ac639cf7c833d18094c6f9765b369ee2107efba` | [HIELYA_CHECKPOINT_2026-09-04_v5.0.md](./2026-09/HIELYA_CHECKPOINT_2026-09-04_v5.0.md) | não aplicável — criado no repositório |
+| v5.3 | 2026-09-07 | `ISSUE_28_PREEXISTING_REGRESSION_REPAIR — CI SUCCESS / PR #30 DRAFT` | `57559e3ecfbd431e0218ba474b52774935ead36c` | [HIELYA_CHECKPOINT_2026-09-07_v5.3.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.3.md) | criado no repositório; precedentes v5.1/v5.2 em PRs pendentes |
+| v5.4 | 2026-09-07 | `ISSUE_28_RESOLUTION_MERGED_TO_MAIN` | `4d32cebcc7f68832940f6825177d5348d63f245a` | [HIELYA_CHECKPOINT_2026-09-07_v5.4.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.4.md) | criado no repositório |
+| v5.4 | 2026-09-07 | `Precedente documental em PR #32, não incorporado nesta branch` | `27bb14c47e3513143c1b103655334da1bedab119` | [v5.4](https://github.com/srdarllan-hash/hielya-app/blob/27bb14c47e3513143c1b103655334da1bedab119/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.4.md) | criado no repositório |
+| v5.5 | 2026-09-07 | `Precedente documental em PR #32, não incorporado nesta branch` | `27bb14c47e3513143c1b103655334da1bedab119` | [v5.5](https://github.com/srdarllan-hash/hielya-app/blob/27bb14c47e3513143c1b103655334da1bedab119/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.5.md) | criado no repositório |
+| v5.6 | 2026-09-07 | `Precedente documental em PR #34, não incorporado nesta branch` | `b96b2907f132d006072b216030353b5352441049` | [v5.6](https://github.com/srdarllan-hash/hielya-app/blob/b96b2907f132d006072b216030353b5352441049/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.6.md) | criado no repositório |
+| v5.7 | 2026-09-07 | `Precedente documental em PR #34, não incorporado nesta branch` | `b96b2907f132d006072b216030353b5352441049` | [v5.7](https://github.com/srdarllan-hash/hielya-app/blob/b96b2907f132d006072b216030353b5352441049/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.7.md) | criado no repositório |
+| v5.8 | 2026-09-07 | `Precedente documental em PR #34, não incorporado nesta branch` | `b96b2907f132d006072b216030353b5352441049` | [v5.8](https://github.com/srdarllan-hash/hielya-app/blob/b96b2907f132d006072b216030353b5352441049/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.8.md) | criado no repositório |
+| v5.9 | 2026-09-07 | `ALCOHOL_DOMAIN_CONTRACT_ALIGNMENT / PHASE_1 — PR #36 DRAFT` | `22066a991816b73a0f886062b3a9cecd69573858` (primeiro candidato) | [HIELYA_CHECKPOINT_2026-09-07_v5.9.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.9.md) | criado no repositório |
+
+| v5.4 | 2026-09-07 | `ISSUE_28_RESOLUTION_MERGED_TO_MAIN — documento pendente no PR #32` | `4d32cebcc7f68832940f6825177d5348d63f245a` | [v5.4 no PR #32](https://github.com/srdarllan-hash/hielya-app/blob/27bb14c47e3513143c1b103655334da1bedab119/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.4.md) | criado no repositório |
+| v5.5 | 2026-09-07 | `DESIGN_TOKENS_1.2.0_PROMOTION — OPEN/DRAFT PR #32` | `27bb14c47e3513143c1b103655334da1bedab119` | [v5.5 no PR #32](https://github.com/srdarllan-hash/hielya-app/blob/27bb14c47e3513143c1b103655334da1bedab119/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.5.md) | criado no repositório |
+| v5.6 | 2026-09-07 | `ALCOHOL_COMPLIANCE_DOMAIN_REQUIREMENTS — SPECIFICATION_PROPOSED / PR #34 DRAFT` | `b390a66472519d319a0adc4b5722dbd2084312df` | [HIELYA_CHECKPOINT_2026-09-07_v5.6.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.6.md) | criado no repositório |
+| v5.7 | 2026-09-07 | `ALCOHOL_COMPLIANCE_DOMAIN_REQUIREMENTS — OWNER_DECISIONS_RECORDED / PLAN_PENDING_AUTHORIZATION` | `7dea7b4c52b366215cf56087306ba9a692bae474` (base revisada) | [HIELYA_CHECKPOINT_2026-09-07_v5.7.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.7.md) | criado no repositório / PR #34 |
+| v5.8 | 2026-09-07 | `DYNAMIC_CUTOFF_DECISION_AND_PREIMPLEMENTATION_IMPACT — SIX_PHASE_PLAN_AUTHORIZED` | `df09f7538a79f15cb3dfd5d8538117b5c4e64244` (base revisada) | [HIELYA_CHECKPOINT_2026-09-07_v5.8.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.8.md) | criado no repositório / PR #34 |
+
+## Precedentes ainda em PRs documentais
+
+- [v5.1 — commit c155ff23](https://github.com/srdarllan-hash/hielya-app/blob/c155ff234255a02b9847b0c5f1c6e011ee01a9b7/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-04_v5.1.md): PR #24 OPEN / DRAFT.
+- [v5.2 — commit 936bd786](https://github.com/srdarllan-hash/hielya-app/blob/936bd786323afa4bed743b4efaf999ec662bdac2/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.2.md): PR #29 OPEN / DRAFT.
+- O v5.3 preserva essas versões e registra que sua incorporação à main ainda está pendente; nenhum conteúdo histórico foi sobrescrito.
+
+## Documentos complementares migrados
+
+- [Política de checkpoints](./HIELYA_CHECKPOINT_POLICY.md) — [origem no Drive](https://docs.google.com/document/d/1tnI8THDiG8Mz2qkNqFMxd3QmsqcUUE2EXMifx7wuFNY/edit)
+- [Recomendações estratégicas de 2026-08-05](./HIELYA_RECOMENDACOES_ESTRATEGICAS_2026-08-05.md) — [origem no Drive](https://docs.google.com/document/d/1bvoYP-t7WEi9tJvt5DUZ66T2wSXxGmfmORJyB8J1PUU/edit)
+- [Curadoria dos 96 assets](./HIELYA_CURADORIA_96_ASSETS_2026-09-04.md) — [origem no Drive](https://docs.google.com/document/d/1yhdE6tStjgQ9RSjl2G8qcUcn6T42Zp-RWoqHLqQU314/edit)
+
+## Regra de continuidade
+
+Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POLICY.md) e o checkpoint de maior versão neste índice. O Google Drive permanece como arquivo histórico e local dos assets binários excluídos desta migração.
+
+| v6.0 | 2026-09-07 | PHASE_1_MERGE / PHASE_2_AUTHORIZATION | `5bbf0b0a24a01effb5d21f17f4b1352c122ad89c` | [v6.0](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.0.md) | criado no repositório |
+| v6.1 | 2026-09-07 | ALCOHOL_ORDER_DELIVERY_FOUNDATION / PHASE_2 — CI pending | `5bbf0b0a24a01effb5d21f17f4b1352c122ad89c` (base) | [v6.1](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.1.md) | criado no repositório |
+| v6.2 | 2026-09-07 | PHASE_2_MERGE / PHASE_3_AUTHORIZATION | `ccdd13492dd8348ea8b59b94c6521fc3b760c790` | [v6.2](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.2.md) | criado no repositório |
+| v6.3 | 2026-09-07 | ATOMIC_HANDOVER_TERMINAL_REFUSAL / PHASE_3 — CI pending | `ccdd13492dd8348ea8b59b94c6521fc3b760c790` (base) | [v6.3](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.3.md) | criado no repositório |
+| v6.4 | 2026-09-07 | PHASE_3_HARDENING — PR40 CI pending | `4412b459c84c8149e540bb6ffe83e768ca5db482` (primeiro candidato) | [v6.4](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.4.md) | criado no repositório |
+| v6.5 | 2026-09-07 | PHASE_3_MERGE / PHASE_4_AUTHORIZATION | `c45c5702b9bf7ad941113b8b076d593ce1ab7490` | [v6.5](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.5.md) | criado no repositório |
+
+| v6.6 | 2026-09-07 | PHASE_4_COMPENSATION_RETENTION — CI pending | `c45c5702b9bf7ad941113b8b076d593ce1ab7490` (base) | [v6.6](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.6.md) | criado no repositório |
+
+| v6.7 | 2026-09-07 | PHASE_4_MERGE / PHASE_5_AUTHORIZATION | `2b02d459678e7fbc857214ae8260469db5e7f958` | [v6.7](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.7.md) | criado no repositório |
+
+| v6.8 | 2026-09-07 | PHASE_5_C005_ALCOHOL_INTEGRATION — CI pending | `2b02d459678e7fbc857214ae8260469db5e7f958` (base) | [v6.8](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.8.md) | criado no repositório |
+
+| v6.9 | 2026-09-07 | PHASE_5_TEST_EXPECTATION_ALIGNMENT — CI pending | `ff6e74e1e0f9a075d4412e1ea723b2bb17f248f6` (first candidate) | [v6.9](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v6.9.md) | criado no repositório |
+
+| v7.0 | 2026-09-07 | PHASE5_MERGE / PHASE6_AUTHORIZATION | `2853b28fcc638e6974fb190f1e5562400c14421a` | [v7.0](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.0.md) | criado no repositório |
+
+| v7.1 | 2026-09-07 | PHASE6_CERTIFICATION_WITH_GAPS — CI pending | `2853b28fcc638e6974fb190f1e5562400c14421a` (base) | [v7.1](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.1.md) | criado no repositório |
+
+| v7.2 | 2026-09-07 | PR46_MERGED / PR34_RECONCILIATION | `eef73aacd5820fb6b1b0076c38b6b4fe21ad54c0` | [v7.2](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.2.md) | criado no repositório |
+
+| v7.5 | 2026-09-07 | TOKENS_PROMOTION_MERGE_PREPARATION | `5aca80958afcafd75e91665c4556593e8bdcefaf` | [v7.5](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.5.md) | criado no repositório |
+
+| v7.4 | 2026-09-07 | FORM_COMPONENTS_SPECIFICATION — decisions pending; predecessor v7.3 in PR47 | `5aca80958afcafd75e91665c4556593e8bdcefaf` | [v7.4](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.4.md) | criado no repositório |
+
+| v7.6 | 2026-09-07 | TOKENS32_MERGED / FORM_SPEC_OWNER_DECISIONS | `37dc523013ac13088fffdd70d8d8c6be7292a612` | [v7.6](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.6.md) | criado no repositório |
+
+| v7.7 | 2026-09-07 | FORM_SPECIFICATION_RATIFICATION | `37dc523013ac13088fffdd70d8d8c6be7292a612` | [v7.7](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.7.md) | criado no repositório |
+
+| v7.8 | 2026-09-07 | FORM_DECISIONS_CLOSED / OTP_RETRY_BACKEND_BLOCKER | `37dc523013ac13088fffdd70d8d8c6be7292a612` | [v7.8](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.8.md) | criado no repositório |
+
+| v7.9 | 2026-09-07 | OTP_RECOVERY_OPTIONS_FOR_OWNER_DECISION | `3bb27c3f289f06983640170338abbc5dad43f0ec` (base) | [v7.9](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v7.9.md) | criado no repositório |
+
+| v8.0 | 2026-09-07 | FORM_SPEC_CLOSED / OTP_DEBT_DEFERRED | `b69bcf93ce452e781cc6404691b1877780cba90b` (base remota) | [v8.0](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v8.0.md) | criado no repositório |
+
+| v8.1 | 2026-09-07 | FORM_COMPONENTS_IMPLEMENTATION_CANDIDATE — Issue #51 | `9a6fb1451473652cfcb07b62cffe433e049871b4` (base) | [v8.1](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v8.1.md) | criado no repositório |
+
+| v8.3 | 2026-09-07 | PR52_MERGED / C003_C004_AUTHORIZED — clarification pending, Issue #53; Drive v8.2 noncanonical | `10410dded46dfc08e4247835d1ba957f48b3d953` | [v8.3](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v8.3.md) | criado no repositório |
+
+| v8.4 | 2026-09-07 | C003_C004_IMPLEMENTATION_CANDIDATE — Issue #53, CI pending | `126fd8a8ea2ccbf9f25256f034e1201137bd8284` (base) | [v8.4](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v8.4.md) | criado no repositório |
+
+| v8.5 | 2026-09-07 | PR54_MERGED_TO_MAIN — C003/C004, CI green | `fa47cd8271db00e0dec7ec92007de6a289a6ae8f` | [v8.5](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v8.5.md) | criado no repositório |
+
+| v8.8 | 2026-09-08 | AUTOMATION_PROTOCOL_V1_FOUNDATION_CANDIDATE — Issue #59; not activated | `c3a1e53c8638d476721e0d5b1442f36b0326a861` (base) | [v8.8](./2026-09/HIELYA_CHECKPOINT_2026-09-08_v8.8.md) | criado no repositório |

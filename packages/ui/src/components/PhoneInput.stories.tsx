@@ -1,0 +1,17 @@
+import React from 'react';
+import type { Meta, StoryObj } from '@storybook/react';
+import { PhoneInput } from './PhoneInput';
+import { Button } from './Button';
+const meta = { title: 'Foundation/PhoneInput', component: PhoneInput, tags: ['autodocs'], args: { label: 'Número de teléfono' }, decorators: [(Story) => <div className="hly-story-frame"><Story /></div>] } satisfies Meta<typeof PhoneInput>;
+export default meta;
+type Story = StoryObj<typeof meta>;
+export const Empty: Story = {};
+export const Typing: Story = { args: { defaultValue: '612' } };
+export const Valid: Story = { args: { defaultValue: '612345678' } };
+export const Invalid: Story = { args: { defaultValue: '612', error: 'Introduce un número válido de 9 dígitos.', errorSource: 'submit' } };
+export const Disabled: Story = { args: { disabled: true } };
+export const ReadOnly: Story = { args: { readOnly: true, defaultValue: '612345678' } };
+export const Loading: Story = { args: { loading: true, defaultValue: '612345678' } };
+export const Focus: Story = { args: { autoFocus: true } };
+export const Autofill: Story = { args: { name: 'phone' } };
+export const Validation: Story = { render: (args) => <form onSubmit={(event) => event.preventDefault()}><PhoneInput {...args} required /><Button type="submit">Continuar</Button></form> };

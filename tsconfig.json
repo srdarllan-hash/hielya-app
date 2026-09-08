@@ -47,6 +47,9 @@
       ],
       "@hielya/location/*": [
         "packages/location/src/*"
+      ],
+      "@hielya/application/client-auth": [
+        "packages/application/src/client-auth/index.ts"
       ]
     }
   },

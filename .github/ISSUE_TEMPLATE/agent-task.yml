@@ -1,0 +1,52 @@
+name: HIELYA agent task
+description: Define a bounded task before owner authorization; this form does not launch an agent.
+title: '[HLY] '
+body:
+  - type: markdown
+    attributes:
+      value: 'Follow docs/automation/AGENT_PROTOCOL.md. A submitted form or label is not authorization. Never include secrets.'
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective and canonical requirements
+      description: State the goal and link the applicable requirement/ADR.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Allowed paths, forbidden paths and exclusions
+      description: No whole-repository allowlist. Preserve production/commercial blocks and migration 0001.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance and required checks
+      description: Observable criteria, mandatory check identities, sensitive-path review and negative tests.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Base SHA, branch and checkpoint provenance
+      description: Identify the immutable base and distinguish merged state from candidate PRs.
+    validations:
+      required: true
+  - type: textarea
+    id: authorization
+    attributes:
+      label: Authorization evidence and contract digest
+      description: Leave PENDING until independently verified; the agent must not impersonate human approval.
+      value: PENDING
+    validations:
+      required: true
+  - type: checkboxes
+    id: limits
+    attributes:
+      label: Mandatory limits
+      options:
+        - label: No automatic merge, deploy, production activation or secrets in this issue.
+          required: true
+        - label: One writer; maximum two automatic correction rounds; stop on scope conflict.
+          required: true

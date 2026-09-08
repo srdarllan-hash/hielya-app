@@ -15,3 +15,11 @@ Referência de lacunas e critérios de encerramento, não snapshot de projeto. C
 | Recuperação OTP após sucesso com resposta perdida — prioridade média, não bloqueia MVP nem Input/PhoneInput/OtpInput/C-004; resolver antes de escala | Recuperação adiada por decisão do proprietário. A/B descartadas por retenção recuperável de token, contrária à minimização; C ou D preferidas para avaliação futura, sem escolha final. Mitigação provisória a especificar: rotina de limpeza/expiração de sessões ACTIVE nunca utilizadas (órfãs), com critério confiável de não uso, prazo, revogação e retenção; não implementada | [Issue #50](https://github.com/srdarllan-hash/hielya-app/issues/50), [decisão e opções](requirements/OTP_VERIFY_RECOVERY_OPTIONS.md), [spec](requirements/FORM_COMPONENTS_SPECIFICATION.md#9-investigação-real-retry-após-resposta-perdida) |
 
 Restrições de C003/C004 e produção: [CONSTRAINTS](CONSTRAINTS.md). Serviços: [INTEGRATIONS](INTEGRATIONS.md). Estes documentos não encerram pendências por simples declaração.
+
+## Automação — critérios adicionais de encerramento
+
+| Pendência | Critério de encerramento | Evidência |
+|---|---|---|
+| Ativação Work ↔ Claude Code e proteção efetiva de main | Proteções server-side, identidades separadas, aprovação humana verificável, credenciais fora do repositório, controlador/ledger persistente, limites e piloto ponta a ponta; documentação ou schema válido não ativam a integração | [Issue #59](https://github.com/srdarllan-hash/hielya-app/issues/59), [protocolo](automation/AGENT_PROTOCOL.md), [ativação](automation/ACTIVATION.md) |
+| Enforcement do guardrail de histórico | Integrar o script testado a workflow confiável e check obrigatório; impedir substituição do validador pelo PR. Testes locais não encerram a dívida de CI acima | [guard](../scripts/automation/check-immutable-history.mjs), [ativação](automation/ACTIVATION.md) |
+| Ativação comercial real em produção requer Gate próprio | Aprovação específica e validação das integrações/restrições aplicáveis; preservar migration 0001 e CHECK (commercially_active = 0). Autorização de dev/test ou de automação não abre este Gate | [CONSTRAINTS](CONSTRAINTS.md), [INTEGRATIONS](INTEGRATIONS.md), [protocolo](automation/AGENT_PROTOCOL.md) |

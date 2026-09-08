@@ -109,3 +109,5 @@ Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POL
 | v8.5 | 2026-09-07 | PR54_MERGED_TO_MAIN — C003/C004, CI green | `fa47cd8271db00e0dec7ec92007de6a289a6ae8f` | [v8.5](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v8.5.md) | criado no repositório |
 
 | v8.6 | 2026-09-08 | CART_RUNTIME_IMPLEMENTATION_CANDIDATE — Issue #56, CI pending | `c3a1e53c8638d476721e0d5b1442f36b0326a861` (base) | [v8.6](./2026-09/HIELYA_CHECKPOINT_2026-09-08_v8.6.md) | criado no repositório |
+
+| v8.7 | 2026-09-08 | AUTH_HYDRATION_INVESTIGATION — PR58 diagnóstico, PR57 sem merge | `65bcf82d53935f11dbd1e8b3a2c0284bd9cdbe5d` (candidato investigado) | [v8.7](./2026-09/HIELYA_CHECKPOINT_2026-09-08_v8.7.md) | criado no repositório |

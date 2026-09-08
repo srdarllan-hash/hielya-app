@@ -4,6 +4,7 @@ Referência de lacunas e critérios de encerramento, não snapshot de projeto. C
 
 | Pendência | Critério de encerramento | Evidência |
 |---|---|---|
+| C003: input preenchido antes da hidratação pode divergir do estado React e manter Continuar desabilitado — defeito pré-existente reproduzido | Tratar interação pré-hidratação sem perda silenciosa; teste determinístico com JS atrasado e controle hidratado. Não encerrar por rerun verde. Comportamento de correção ainda não escolhido | [Investigação e evidência A/B](qa/AUTH_HYDRATION_INVESTIGATION.md), [PR58](https://github.com/srdarllan-hash/hielya-app/pull/58) |
 | Ativação comercial REAL em produção permanece bloqueada | Gate comercial próprio antes de produção; autorização da Issue56 permite somente projeção explícita dev/test, preservando CHECK de0001 e falha em NODE_ENV=production | [ADR dev/test](decisions/ADR-CART-DEV-TEST-PROJECTION.md), [Issue #56](https://github.com/srdarllan-hash/hielya-app/issues/56) |
 | Limpeza de carrinhos anônimos sem acesso e recibos de comandos | Definir retenção e descarte antes de escala; perda do ID em reload não apaga o registro server-side. Não criar TTL comercial ou exclusão implícita neste escopo | [Escopo do carrinho](requirements/CART_RUNTIME_SCOPE.md) |
 | Recomendações no carrinho — fora deste escopo | Especificar seleção e ordenação antes de reintroduzir “Completa tu pedido”. Omissão aprovada pelo proprietário | [Issue #56](https://github.com/srdarllan-hash/hielya-app/issues/56), [escopo do carrinho](requirements/CART_RUNTIME_SCOPE.md) |

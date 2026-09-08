@@ -129,7 +129,9 @@ test('analyzeParsed: is_error omitted when not boolean', () => {
 });
 
 test('analyzeParsed: only whitelisted keys are ever present', () => {
-  const out = analyzeParsed(resultMsg({ is_error: true, result: 'authentication_error 401', session_id: 'sess_secret', uuid: 'u' }));
+  // Explicit HTTP context so extractHttpCodes() recognises the code without
+  // loosening the parser (it deliberately ignores bare 4xx/5xx numbers).
+  const out = analyzeParsed(resultMsg({ is_error: true, result: 'authentication_error: HTTP status 401', session_id: 'sess_secret', uuid: 'u' }));
   assert.deepEqual(Object.keys(out).sort(), ['diagnosis_status', 'error_category', 'http_status_codes', 'is_error'].sort());
 });
 

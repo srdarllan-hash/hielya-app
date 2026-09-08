@@ -8,7 +8,7 @@ const AUTH_ADR_PATH = 'docs/decisions/ADR-MVP-LOCAL-36-OPAQUE-CUSTOMER-SESSION-V
 const PROFILE_PATH = 'docs/architecture/MVP_LOCAL_36_API_HOST_PROFILE.json';
 
 interface AuthorizedRouteHandler {
-  method: 'GET' | 'POST';
+  method: 'GET' | 'POST' | 'PATCH';
   path: string;
   file: string;
 }
@@ -67,7 +67,18 @@ const AUTH_ROUTE_HANDLERS: AuthorizedRouteHandler[] = [
 
 // Issue43 activates exactly the existing V1.3 public store-state contract.
 const PHASE5_ROUTE_HANDLERS: AuthorizedRouteHandler[] = [{method:'GET',path:'/store/state',file:'apps/ui-lab/app/api/v1/store/state/route.ts'}];
-const AUTHORIZED_ROUTE_HANDLERS = [...FROZEN_PUBLIC_ROUTE_HANDLERS, ...AUTH_ROUTE_HANDLERS, ...PHASE5_ROUTE_HANDLERS];
+// Issue56: owner-authorized cart/address/claim/validation/reservation runtime, no orders/payment.
+const CART_ROUTE_HANDLERS: AuthorizedRouteHandler[] = [
+  { method: 'POST', path: '/carts', file: 'apps/ui-lab/app/api/v1/carts/route.ts' },
+  { method: 'GET', path: '/carts/{cartId}', file: 'apps/ui-lab/app/api/v1/carts/[cartId]/route.ts' },
+  { method: 'POST', path: '/carts/{cartId}/claim', file: 'apps/ui-lab/app/api/v1/carts/[cartId]/claim/route.ts' },
+  { method: 'POST', path: '/carts/{cartId}/items', file: 'apps/ui-lab/app/api/v1/carts/[cartId]/items/route.ts' },
+  { method: 'PATCH', path: '/carts/{cartId}/items/{itemId}', file: 'apps/ui-lab/app/api/v1/carts/[cartId]/items/[itemId]/route.ts' },
+  { method: 'POST', path: '/carts/{cartId}/validate', file: 'apps/ui-lab/app/api/v1/carts/[cartId]/validate/route.ts' },
+  { method: 'POST', path: '/addresses', file: 'apps/ui-lab/app/api/v1/addresses/route.ts' },
+  { method: 'POST', path: '/checkout/reservations', file: 'apps/ui-lab/app/api/v1/checkout/reservations/route.ts' },
+];
+const AUTHORIZED_ROUTE_HANDLERS = [...FROZEN_PUBLIC_ROUTE_HANDLERS, ...AUTH_ROUTE_HANDLERS, ...PHASE5_ROUTE_HANDLERS, ...CART_ROUTE_HANDLERS];
 const normalizePath = (path: string): string => path.replaceAll('\\', '/');
 
 const sourceFiles = (root: string): string[] => {
@@ -148,7 +159,7 @@ describe('MVP Local 36 API host architecture Gate', () => {
     expect(publicApiAdr).toContain('HTTP 400');
   });
 
-  it('keeps the package boundaries and creates only the four frozen, two auth and one Phase5 store-state Route Handlers', () => {
+  it('keeps the package boundaries and creates only the frozen public/auth/store and Issue56 cart Route Handlers', () => {
     const application = combinedSource('packages/application');
     const persistence = combinedSource('packages/persistence');
     const ui = combinedSource('packages/ui');
@@ -166,6 +177,7 @@ describe('MVP Local 36 API host architecture Gate', () => {
       expect(source).toMatch(/export\s+const\s+runtime\s*=\s*['"]nodejs['"]/);
       expect(source).toMatch(new RegExp(`export\\s+(?:async\\s+)?(?:function|const)\\s+${route.method}\\b`));
       expect(source).not.toMatch(/node:sqlite|DatabaseSync|Stripe|google(?:maps)?/i);
+      if (route.method === 'PATCH') expect(source).toContain('export const DELETE');
     }
   });
 });

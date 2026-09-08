@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { useOptionalCart } from '../cart/CartProvider';
 import { useRouter } from 'next/navigation';
 import { createAuthFlow } from '@hielya/application/client-auth';
 import { PhoneLoginScreen, OtpVerificationScreen, type OtpPositions, type OtpVerificationScreenProps } from '@hielya/ui';
@@ -17,6 +18,8 @@ function OtpEntry(props: Omit<OtpVerificationScreenProps, 'value' | 'onChange'>)
 /** TEMPORARY PURCHASE INTEGRATION: /login is explicit; checkout will supply the real entry/continuation. */
 export function AuthRuntime() {
   const router = useRouter();
+  const cart = useOptionalCart();
+  const [destination] = useState(() => cart?.loginDestination() ?? "/");
   const sessions = useAuthSessionPort();
   const authenticated = useIsAuthenticated();
   const machine = useMemo(() => createAuthFlow(createOtpClient(), sessions), [sessions]);
@@ -26,13 +29,13 @@ export function AuthRuntime() {
     return () => { clearInterval(timer); machine.cancel(); };
   }, [machine]);
   useEffect(() => {
-    if (state.screen === 'success' || authenticated) router.replace('/');
-  }, [state.screen, authenticated, router]);
+    if (state.screen === 'success' || authenticated) { router.replace(destination); }
+  }, [state.screen, authenticated, router, destination]);
   const error = state.requestError ? requestCopy[state.requestError] : undefined;
   if (state.screen === 'phone') return <PhoneLoginScreen value={state.nationalDigits} loading={state.requesting}
     error={state.requestError === 'phone' ? undefined : error} phoneError={state.requestError === 'phone' ? error : undefined} cooldownSeconds={state.resendSeconds} cooldownBlocked={state.resendBlocked}
     onChange={value => machine.setPhone(value.nationalDigits)} onSubmit={() => void machine.request()}
-    onSkip={() => { machine.cancel(); router.replace('/'); }} />;
+    onSkip={() => { machine.cancel(); router.replace(destination); }} />;
   return <OtpEntry key={state.challengeVersion}
     maskedPhone={state.maskedPhone} status={state.verification} requesting={state.requesting} requestError={error}
     expiresSeconds={state.expiresSeconds} resendSeconds={state.resendSeconds} resendBlocked={state.resendBlocked}

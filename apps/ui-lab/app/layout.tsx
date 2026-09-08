@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { CartProvider } from '../src/client/cart/CartProvider';
 import { AuthProvider } from '../src/client/auth/AuthProvider';
 import '@fontsource/poppins/400.css';
 import '@fontsource/poppins/500.css';
@@ -22,5 +23,5 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="es"><body><AuthProvider>{children}</AuthProvider></body></html>;
+  return <html lang="es"><body><AuthProvider><CartProvider>{children}</CartProvider></AuthProvider></body></html>;
 }

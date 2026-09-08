@@ -37,3 +37,4 @@ export { OtpInput, type OtpInputProps, type OtpPositions, type OtpValue, type Ot
 
 export { PhoneLoginScreen, type PhoneLoginScreenProps } from './screens/auth/PhoneLoginScreen';
 export { OtpVerificationScreen, type OtpVerificationScreenProps } from './screens/auth/OtpVerificationScreen';
+export { CartScreen, type CartScreenProps } from './screens/cart/CartScreen';

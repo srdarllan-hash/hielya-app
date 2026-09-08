@@ -15,7 +15,7 @@ try {
   }
   browser = await webkit.launch();
   for (const mode of ['natural', 'held-javascript', 'hydrated-control']) {
-    const repetitions = mode === 'natural' ? 30 : 5;
+    const repetitions = mode === 'natural' ? 12 : 5;
     for (let iteration = 0; iteration < repetitions; iteration++) {
       const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
       const page = await context.newPage();
@@ -50,9 +50,15 @@ try {
         recovered = await state();
       }
       const beforeSubmit = requests;
-      await page.getByRole('button', { name: 'Continuar', exact: true }).click({ timeout: 3000 });
-      await page.getByRole('textbox', { name: 'Dígito 1 de 6' }).waitFor({ timeout: 3000 });
-      results.push({ mode, iteration, hydratedBefore, afterFill, settled, recovered, beforeSubmit, requests });
+      let submitted = false;
+      try {
+        await page.getByRole('button', { name: 'Continuar', exact: true }).click({ timeout: 1500 });
+        await page.getByRole('textbox', { name: 'Dígito 1 de 6' }).waitFor({ timeout: 1500 });
+        submitted = true;
+      } catch {}
+      const row = { mode, iteration, hydratedBefore, afterFill, settled, recovered, beforeSubmit, requests, submitted };
+      results.push(row); console.log(JSON.stringify({ sample: row }));
+      writeFileSync('auth-diagnostic-results.json', JSON.stringify({ revision: process.env.DIAGNOSTIC_REVISION, results }, null, 2));
       await context.close();
     }
   }

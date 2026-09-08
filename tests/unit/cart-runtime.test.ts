@@ -91,6 +91,12 @@ describe('cart runtime', () => {
   it.each(['2030-01-01T19:59:59.999Z','2030-01-01T20:00:00.000Z'])('server guards additions at cutoff %s', time => { const f = setup(); f.setUpper(60); f.setTime(time); if (time.endsWith('59.999Z')) expect(f.make(f.alcohol).items).toHaveLength(1); else expect(() => f.make(f.alcohol)).toThrow('ALCOHOL_CUTOFF'); });
   it('rechecks stock after validation before reservation and denies foreign addresses', async () => { const f = setup(); const cart = f.make(); expect((await f.service.validate(cart.id,f.customer,f.address.id)).valid).toBe(true); f.db.adjustInventory(f.unit.sku,-100,'STOCK_CHANGED'); expect((await f.reserve(cart)).violations).toContain('OUT_OF_STOCK'); await expect(f.service.validate(cart.id,randomUUID(),f.address.id)).rejects.toThrow('NOT_FOUND'); });
 
+  it('an explicit request while already reserved consumes its key without extending the deadline', async () => {
+    const f = setup(); const first = await f.reserve(f.make()); const key = randomUUID(); const replay = await f.reserve(first.cart, key);
+    expect(replay.cart.reservation).toEqual(first.cart.reservation);
+    f.setTime(first.cart.reservation!.expiresAt); const after = await f.reserve(first.cart, key);
+    expect(after.cart.reservation?.status).toBe('EXPIRED'); expect(f.db.db.prepare('SELECT COUNT(*) AS n FROM inventory_reservations').get()).toEqual({ n: 1 });
+  });
   it('session revoked while routing is in flight cannot create a reservation', async () => {
     const f = setup(); const cart = f.make(); let allowed = true;
     f.ports.roadDistance = async () => { allowed = false; return 1; };

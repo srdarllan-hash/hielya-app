@@ -1,28 +1,31 @@
 import { expect, test, type Page } from '@playwright/test';
 import type { CartView } from '../../packages/application/src/cart';
 import AxeBuilder from '@axe-core/playwright';
+import { installSyntheticCatalogRoutes, syntheticProducts } from '../integration/home-catalog-api-integration.fixtures';
 const stories = ['ready','empty','loading','below-minimum','address-pending','network-error','stock-error','outside-area','closed','alcohol-unavailable','high-demand-and-alcohol-unavailable','reserved','expired'];
 for (const state of stories) test(`${state}: accessible cart at mobile width`, async ({ page }) => {
-  await page.goto(`http://127.0.0.1:6006/iframe.html?id=screens-cart--${state}&viewMode=story`);
+  await page.goto(`http://127.0.0.1:6006/iframe.html?id=screens-cart--${state}&viewMode=story&globals=a11y.manual:!true`);
   await expect(page.getByRole('heading', { name: 'Mi carrito' })).toBeVisible();
   expect((await new AxeBuilder({ page }).include('main').analyze()).violations).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await expect(page.getByText(/WELCOME10|Cupón aplicado|Completa tu pedido/)).toHaveCount(0);
 });
-const product = { id: '00000000-0000-4000-8000-000000000002', sku: 'TEST', name: 'Producto de prueba', categoryId: 'test', salePriceCents: 2500, currency: 'EUR', availability: 'AVAILABLE', isPack: false, iceIncluded: false, maxPerOrder: 10, containsAlcohol: false } as const;
+const product = syntheticProducts[0];
 async function mock(page: Page) {
   const cart: CartView = { id: '00000000-0000-4000-8000-000000000001', revision: 1, status: 'ACTIVE', items: [] as {id:string; product: typeof product; quantity:number;unitPriceCents:number;lineTotalCents:number}[], productSubtotalCents: 0, deliveryFeeCents: null, totalCents: null, minimumReached: false, amountMissingForMinimumCents: 2500, reservation: null, availability: { storeStatus: 'OPEN', demand: { level: 'NORMAL', estimate: null }, alcohol: { status: 'AVAILABLE', reason: 'ELIGIBLE', snapshot: null } }, serverNow: new Date().toISOString(), refreshAfterMs: 15000 };
-  await page.route('**/api/v1/catalog/categories', r => r.fulfill({ json: [] }));
-  await page.route('**/api/v1/catalog/products?*', r => r.fulfill({ json: { items: [], page: 1, pageSize: 20, total: 0 } }));
-  await page.route('**/api/v1/store/state', r => r.fulfill({ json: cart.availability }));
+  await installSyntheticCatalogRoutes(page);
   await page.route('**/api/v1/carts**', async r => {
     const path = new URL(r.request().url()).pathname;
     if (path.endsWith('/items')) { cart.items = [{ id: 'line', product, quantity: 1, unitPriceCents: 2500, lineTotalCents: 2500 }]; cart.productSubtotalCents = 2500; cart.minimumReached = true; cart.amountMissingForMinimumCents = 0; cart.revision++; }
     if (path.endsWith('/items/line')) { cart.reservation = null; cart.status = 'ACTIVE'; const q = r.request().postDataJSON().quantity; cart.items = q === 0 ? [] : cart.items.map(i => ({ ...i, quantity: q })); cart.revision++; }
     await r.fulfill({ json: cart });
   });
-  await page.goto('/cart');
-  await page.evaluate(id => window.dispatchEvent(new CustomEvent('hielya:ui-action', { detail: { action: 'add-product', value: id } })), product.id);
+  await page.goto('/');
+  const added = page.waitForResponse(r => new URL(r.url()).pathname.endsWith('/items'));
+  await page.getByRole('button', { name: `Añadir ${product.name} al carrito`, exact: true }).click();
+  await (await added).finished();
+  await page.getByRole('button', { name: 'Abrir carrito' }).click();
+  await expect(page).toHaveURL(/\/cart$/);
   await expect(page.getByRole('heading', { name: product.name })).toBeVisible();
   return cart;
 }

@@ -1,7 +1,7 @@
 'use client';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Snackbar } from '@hielya/ui';
+import { Snackbar } from '../../../../../packages/ui/src/components/Snackbar';
 import type { CartView, CartValidation } from '../../../../../packages/application/src/cart';
 import type { LocationResult } from '@hielya/location';
 import { useAuthSessionPort } from '../auth/AuthProvider';

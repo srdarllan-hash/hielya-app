@@ -139,8 +139,9 @@ export class CartService {
         const receipt = tx.receipt(`reserve:${id}`, reserveKey);
         if (receipt) { if (receipt.fingerprint !== JSON.stringify({ addressId, revision })) return cartFail('IDEMPOTENCY_CONFLICT'); return { valid: violations.length === 0, violations, cart: view }; }
         if (cart.revision !== revision) return cartFail('STALE_REVISION');
-        if (!violations.length && view.reservation?.status !== 'ACTIVE') {
+        if (!violations.length) {
           this.once(tx, `reserve:${id}`, reserveKey, { addressId, revision }, () => {
+            if (view.reservation?.status === 'ACTIVE') return view.reservation.id;
             if (tx.settings().inventoryReservationTtlSeconds !== 600) return cartFail('SERVICE_UNAVAILABLE');
             const reservation = tx.reserve(this.ports.id(), view.items.map(i => ({ productSku: i.product.sku, quantity: i.quantity })), now);
             cart.reservationId = reservation.id; cart.addressId = addressId; cart.revision++; tx.save(cart); return reservation.id;

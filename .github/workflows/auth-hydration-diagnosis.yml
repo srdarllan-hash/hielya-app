@@ -1,0 +1,53 @@
+name: Auth hydration diagnosis
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/auth-hydration-diagnosis.yml'
+      - 'scripts/auth-hydration-diagnosis.mjs'
+permissions:
+  contents: read
+jobs:
+  compare:
+    strategy:
+      fail-fast: false
+      matrix:
+        revision:
+          - c3a1e53c8638d476721e0d5b1442f36b0326a861
+          - 65bcf82d53935f11dbd1e8b3a2c0284bd9cdbe5d
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      NEXT_TELEMETRY_DISABLED: '1'
+      DIAGNOSTIC_REVISION: ${{ matrix.revision }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: diagnostic
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.revision }}
+          path: runtime
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: pnpm install --frozen-lockfile
+        working-directory: runtime
+      - run: pnpm build
+        working-directory: runtime
+      - run: pnpm exec playwright install --with-deps webkit
+        working-directory: runtime
+      - run: cp diagnostic/scripts/auth-hydration-diagnosis.mjs runtime/auth-diagnostic.mjs
+      - run: node auth-diagnostic.mjs
+        working-directory: runtime
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: auth-diagnosis-${{ matrix.revision }}
+          path: runtime/auth-diagnostic-results.json

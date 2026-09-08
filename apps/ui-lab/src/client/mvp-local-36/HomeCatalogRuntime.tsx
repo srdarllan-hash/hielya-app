@@ -21,6 +21,7 @@ import {
   mapPublicProductPage,
 } from './home-catalog-mapper';
 
+import { useOptionalCart } from '../cart/CartProvider';
 import { useStoreAvailability, type AvailabilityClient } from './store-availability';
 
 const FIRST_PAGE = 1;
@@ -303,12 +304,14 @@ export function HomeCatalogRuntime({
     };
   }, [machine]);
 
+  const runtimeCart = useOptionalCart();
   const openProduct = (productId: string) => {
     if (onOpenProduct) {
       onOpenProduct(productId);
       return;
     }
-    globalThis.location.assign(`/products/${encodeURIComponent(productId)}`);
+    if (runtimeCart) runtimeCart.navigate(`/products/${encodeURIComponent(productId)}`);
+    else globalThis.location.assign(`/products/${encodeURIComponent(productId)}`);
   };
 
   const add = async (id: string, kind: 'add-product' | 'add-pack') => {
@@ -326,7 +329,7 @@ export function HomeCatalogRuntime({
       catalogState={snapshot.catalogState}
       catalog={snapshot.catalog}
       isRefreshing={snapshot.isRefreshing}
-      cartCount={0}
+      cartCount={runtimeCart?.cart?.items.reduce((n, i) => n + i.quantity, 0) ?? 0}
       selectedCategoryId={snapshot.selectedCategoryId}
       searchValue={snapshot.searchValue}
       errorMessage={snapshot.errorMessage}

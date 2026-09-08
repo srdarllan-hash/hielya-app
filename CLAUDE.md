@@ -14,6 +14,10 @@ Before any relevant work, read `docs/checkpoints/HIELYA_CHECKPOINT_POLICY.md`, t
 - For decision rationale, consult `docs/decisions/`; for required behavior, consult `docs/requirements/`.
 - Validate claims against repository/GitHub evidence. Report missing references and document conflicts in the PR; never silently select a conflicting document as the winner.
 
+## Cart runtime authorization update
+
+Issue #56 authorizes the cart, minimal persisted address, validate and checkout/reservations in dev/test only. See docs/requirements/CART_RUNTIME_SCOPE.md and docs/decisions/ADR-CART-DEV-TEST-PROJECTION.md. Explicit HIELYA_DEV_TEST_CATALOG=1 requires NODE_ENV=development/test on every projection read. Migration0001 and its commercial activation CHECK remain intact. Real commercial activation and production still require their own Gate. No orders/payment. Historical cart blocking statements below are superseded only for this owner-authorized slice. Merge still requires separate approval.
+
 ## C-003/C-004 authorization update
 
 The owner authorized C-003/C-004 in Issue #53 after PR #52 merge. Follow checkpoint v8.4 and docs/requirements/C003_C004_APPLICATION_FLOW.md for the candidate scope: temporary /login, memory-only session, public catalog, no production/real SMS/checkout. Historical screen/component blocking statements below are superseded by that authorization and PR #52. Persistent secure storage awaits a formal ADR. Future PR merge still requires separate owner approval.

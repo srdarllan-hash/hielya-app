@@ -1,3 +1,4 @@
+import { runtimeCatalogAdapter } from '../../../../../packages/persistence/src/dev-test-catalog';
 import { existsSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 
@@ -34,7 +35,7 @@ class RuntimeReadOnlyPersistence {
   }
 
   catalog(): MvpCatalogReadAdapter {
-    this.catalogAdapter ??= new MvpCatalogReadAdapter(this.database());
+    this.catalogAdapter ??= runtimeCatalogAdapter(this.database());
     return this.catalogAdapter;
   }
 

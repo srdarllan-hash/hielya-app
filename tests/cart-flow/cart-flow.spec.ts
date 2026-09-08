@@ -36,13 +36,18 @@ test('anonymous cart survives Ahora no and is lost after reload without browser 
   expect(await page.evaluate(() => ({local: localStorage.length,session: sessionStorage.length,cookie:document.cookie}))).toEqual({local:0,session:0,cookie:''});
   await page.reload(); await expect(page.getByText('Tu carrito está vacío. Añade productos para continuar.')).toBeVisible();
 });
+async function authenticateFromCart(page: Page) {
+  await page.route('**/auth/otp/request', r => r.fulfill({status:202,json:{challengeId:'11111111-1111-4111-8111-111111111111',expiresInSeconds:300,resendAfterSeconds:60}}));
+  await page.route('**/auth/otp/verify', r => r.fulfill({json:{sessionToken:'x'.repeat(43),expiresInSeconds:600,customer:{id:'22222222-2222-4222-8222-222222222222',phoneE164:'+34600000001',phoneVerifiedAt:new Date().toISOString(),status:'ACTIVE'}}}));
+  await page.getByRole('button',{name:'Continuar',exact:true}).click(); await page.getByRole('textbox',{name:'Número de teléfono'}).fill('600000001'); await page.getByRole('button',{name:'Continuar',exact:true}).click();
+  await page.getByRole('textbox',{name:'Dígito 1 de 6'}).evaluate(el => { const data=new DataTransfer(); data.setData('text','123456'); el.dispatchEvent(new ClipboardEvent('paste',{clipboardData:data,bubbles:true,cancelable:true})); });
+  await expect(page).toHaveURL(/\/cart$/);
+  await expect(page.getByRole('button', { name: 'Continuar', exact: true })).toBeEnabled();
+}
 test('cart login returns to cart and claims with authenticated principal', async ({page}) => {
   await mock(page); let claims = 0;
   await page.route('**/claim', async r => { expect(r.request().headers().authorization).toBeTruthy(); claims++; await r.fallback(); });
-  await page.route('**/auth/otp/request', r => r.fulfill({status:202,json:{challengeId:'synthetic',expiresInSeconds:300,resendAfterSeconds:60}}));
-  await page.route('**/auth/otp/verify', r => r.fulfill({json:{sessionToken:'synthetic-session',expiresInSeconds:600,customer:{id:'synthetic-customer',phoneE164:'+34600000001',phoneVerifiedAt:new Date().toISOString(),status:'ACTIVE'}}}));
-  await page.getByRole('button',{name:'Continuar',exact:true}).click(); await page.getByRole('textbox',{name:'Número de teléfono'}).fill('600000001'); await page.getByRole('button',{name:'Continuar',exact:true}).click();
-  await page.getByRole('textbox',{name:'Dígito 1 de 6'}).evaluate(el => { const data=new DataTransfer(); data.setData('text','123456'); el.dispatchEvent(new ClipboardEvent('paste',{clipboardData:data,bubbles:true,cancelable:true})); });
+  await authenticateFromCart(page);
   await expect(page).toHaveURL(/\/cart$/); await expect.poll(()=>claims).toBe(1); await expect(page.getByRole('heading',{name:product.name})).toBeVisible();
 });
 
@@ -59,4 +64,50 @@ test('server expiration preserves items; active editing cancels without automati
   await page.clock.fastForward(15001); await expect(page.getByText('Productos reservados')).toBeVisible();
   await page.getByRole('button',{name:`Añadir ${product.name}`}).click();
   await expect(page.getByText('Productos reservados')).toHaveCount(0); expect(cart.reservation).toBeNull(); expect(cart.items[0].quantity).toBe(2); expect(reserveRequests).toBe(0);
+});
+
+
+test('authenticated address flows through validate to reservation, without order or payment', async ({ page }) => {
+  const cart = await mock(page);
+  await authenticateFromCart(page);
+  const addressId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+  const writes: string[] = [];
+  await page.route('**/api/v1/delivery/quote', r => r.fulfill({ json: { withinArea: true, routeDistanceKm: 2.5, feeCents: 350 } }));
+  await page.route('**/api/v1/addresses', async r => {
+    expect(r.request().headers().authorization).toBeTruthy();
+    expect(r.request().headers()['idempotency-key']).toBeTruthy();
+    expect(r.request().postDataJSON()).toMatchObject({ latitude: 36.5384, longitude: -4.6239, kind: 'residential' });
+    expect(Object.keys(r.request().postDataJSON()).sort()).toEqual(['formatted','kind','latitude','longitude']);
+    writes.push('address'); await r.fulfill({ status: 201, json: { id: addressId } });
+  });
+  await page.route('**/validate', async r => {
+    expect(r.request().headers().authorization).toBeTruthy();
+    expect(r.request().postDataJSON()).toEqual({ addressId });
+    cart.deliveryFeeCents = 350; cart.totalCents = 2850;
+    writes.push('validate'); await r.fulfill({ json: { valid: true, violations: [], cart } });
+  });
+  await page.route('**/api/v1/checkout/reservations', async r => {
+    expect(r.request().headers().authorization).toBeTruthy();
+    expect(r.request().headers()['idempotency-key']).toBeTruthy();
+    expect(r.request().postDataJSON()).toEqual({ cartId: cart.id, addressId, revision: cart.revision });
+    cart.reservation = { id: 'synthetic-reservation', status: 'ACTIVE', expiresAt: new Date(Date.now() + 600000).toISOString() };
+    cart.status = 'RESERVED'; cart.serverNow = new Date().toISOString(); cart.revision++;
+    writes.push('reserve'); await r.fulfill({ status: 201, json: { valid: true, violations: [], cart } });
+  });
+  const forbidden: string[] = [];
+  page.on('request', r => { if (/\/api\/v1\/(orders|payments)(?:\/|$)/.test(new URL(r.url()).pathname)) forbidden.push(r.method()); });
+  await page.getByRole('button', { name: 'Continuar', exact: true }).click();
+  await expect(page).toHaveURL(/\/cart\/address$/);
+  await page.getByRole('button', { name: 'Introducir dirección' }).click();
+  await page.getByRole('combobox', { name: 'Dirección de entrega' }).fill('Paseo');
+  await page.getByRole('button', { name: 'Buscar dirección' }).click();
+  await page.getByText('Paseo Marítimo Rey de España, 65').click();
+  await page.getByRole('button', { name: 'Confirmar dirección' }).click();
+  await page.getByRole('button', { name: 'Continuar', exact: true }).click();
+  await expect(page).toHaveURL(/\/cart$/);
+  await page.getByRole('button', { name: 'Continuar', exact: true }).click();
+  await expect(page.getByText('Productos reservados')).toBeVisible();
+  await expect(page.getByRole('timer')).toBeVisible();
+  expect(writes).toEqual(['address', 'validate', 'reserve']);
+  expect(forbidden).toEqual([]);
 });

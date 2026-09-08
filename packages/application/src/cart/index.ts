@@ -50,7 +50,7 @@ export class CartService {
   }
   private view(tx: CartTransaction, cart: CartRecord, now: string, address: CartAddress | null = null, distance?: number): CartView {
     const settings = tx.settings();
-    const items = cart.items.map(item => { const product = tx.product(item.productId); if (!product) return cartFail('PRODUCT_UNAVAILABLE'); return { ...item, product, unitPriceCents: product.salePriceCents, lineTotalCents: product.salePriceCents * item.quantity }; });
+    const items = cart.items.map(item => { const product = tx.product(item.productId); if (!product) return cartFail('PRODUCT_UNAVAILABLE'); return { id: item.id, quantity: item.quantity, product, unitPriceCents: product.salePriceCents, lineTotalCents: product.salePriceCents * item.quantity }; });
     const subtotal = items.reduce((n, i) => n + i.lineTotalCents, 0);
     if (!Number.isSafeInteger(subtotal)) return cartFail('INVALID_INPUT');
     const reservation = cart.reservationId ? tx.reservation(cart.reservationId, now) ?? null : null;

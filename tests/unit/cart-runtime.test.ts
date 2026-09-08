@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -103,6 +103,19 @@ describe('cart runtime', () => {
     const handle = createCartHttpHandler(() => ({ service: f.service, customer: () => allowed ? f.customer : null }));
     const result = await handle(new Request('http://local/api/v1/checkout/reservations', { method: 'POST', headers: { authorization: 'Bearer synthetic', 'idempotency-key': randomUUID() }, body: JSON.stringify({ cartId: cart.id, addressId: f.address.id, revision: cart.revision }) }));
     expect(result.status).toBe(401); expect(f.db.db.prepare('SELECT COUNT(*) AS n FROM inventory_reservations').get()).toEqual({ n: 0 });
+  });
+  it('HTTP cart responses match the dedicated public field contract without persistence fields', async () => {
+    const f = setup(); const cart = f.make();
+    const contract = JSON.parse(readFileSync('contracts/openapi/HIELYA_OPENAPI_CART_RUNTIME_V1_4.yaml', 'utf8'));
+    const schema = contract.components.schemas.CartView;
+    const handle = createCartHttpHandler(() => ({ service: f.service, customer: () => f.customer }));
+    const response = await handle(new Request(`http://local/api/v1/carts/${cart.id}`, { headers: { authorization: 'Bearer synthetic' } }));
+    expect(response.status).toBe(200); expect(response.headers.get('cache-control')).toBe('no-store');
+    const body = await response.json();
+    expect(Object.keys(body).sort()).toEqual(Object.keys(schema.properties).sort());
+    expect(Object.keys(body.items[0]).sort()).toEqual(Object.keys(schema.properties.items.items.properties).sort());
+    expect(body.items[0].product.id).toBe(f.unit.id);
+    expect(body).not.toHaveProperty('customerId'); expect(body).not.toHaveProperty('addressId');
   });
   it('HTTP denies validation without a session and rejects client prices', async () => { const f = setup(); const handle = createCartHttpHandler(() => ({ service: f.service, customer: () => null })); expect((await handle(new Request('http://local/api/v1/checkout/reservations', { method: 'POST', body: JSON.stringify({ cartId: randomUUID(), addressId: randomUUID(), revision: 1 }) }))).status).toBe(401); expect((await handle(new Request('http://local/api/v1/carts', { method: 'POST', body: '{"price":1}' }))).status).toBe(400); });
 });

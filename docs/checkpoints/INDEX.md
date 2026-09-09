@@ -119,3 +119,5 @@ Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POL
 | v9.2 | 2026-09-08 | PHASE_4A_2_DIFFERENTIAL_PREPARATION — Issue #68; no dispatch authorized | `329f2915b6e752e276e005309de27329b5551dd0` (base) | [v9.2](./2026-09/HIELYA_CHECKPOINT_2026-09-08_v9.2.md) | criado no repositório |
 
 | v9.3 | 2026-09-09 | CLAUDE_DIAGNOSTIC_CLOSEOUT — Issue #70; API/CLI/Action PASS, temporary workflow removal candidate | `f82f89293da54a2dd4e6de7d631e1809f4ffa63a` (base) | [v9.3](./2026-09/HIELYA_CHECKPOINT_2026-09-09_v9.3.md) | criado no repositório |
+
+| v9.4 | 2026-09-09 | CODEX_PROOF_BUDGET_PREPARATION — Issue #72; offline module only, runtime unverified | `5eed7ca5f8583dea94803e7494214bf9371c44ec` (base) | [v9.4](./2026-09/HIELYA_CHECKPOINT_2026-09-09_v9.4.md) | criado no repositório |

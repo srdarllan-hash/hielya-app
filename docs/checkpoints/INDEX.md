@@ -55,6 +55,8 @@ Este índice rastreia os checkpoints oficiais migrados do Google Drive. Os docum
 - [v5.2 — commit 936bd786](https://github.com/srdarllan-hash/hielya-app/blob/936bd786323afa4bed743b4efaf999ec662bdac2/docs/checkpoints/2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.2.md): PR #29 OPEN / DRAFT.
 - O v5.3 preserva essas versões e registra que sua incorporação à main ainda está pendente; nenhum conteúdo histórico foi sobrescrito.
 
+| v5.2 | 2026-09-07 | `PR26_MERGE_AND_TECH_DEBT_RECORD — CI FAILURE aceito pelo proprietário` | `54998abe407ca2694b3c35e1fd02f846f3e81eb3` | [HIELYA_CHECKPOINT_2026-09-07_v5.2.md](./2026-09/HIELYA_CHECKPOINT_2026-09-07_v5.2.md) | criado no repositório; v5.1 preservado no PR #24 pendente |
+
 ## Documentos complementares migrados
 
 - [Política de checkpoints](./HIELYA_CHECKPOINT_POLICY.md) — [origem no Drive](https://docs.google.com/document/d/1tnI8THDiG8Mz2qkNqFMxd3QmsqcUUE2EXMifx7wuFNY/edit)

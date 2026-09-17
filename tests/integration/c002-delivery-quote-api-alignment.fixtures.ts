@@ -25,7 +25,8 @@ export interface RuntimeErrorCollector {
 
 export const collectRuntimeErrors = (page: Page): RuntimeErrorCollector => {
   const errors: string[] = [];
-  const allowedHttpStatuses = new Set<number>();
+  // Anonymous session hydration is a deliberate 401 under the cookie-session contract.
+  const allowedHttpStatuses = new Set<number>([401]);
   let requestAbortAllowed = false;
   page.on('console', (message) => {
     if (message.type() !== 'error') return;

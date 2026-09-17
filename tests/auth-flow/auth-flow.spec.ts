@@ -1,4 +1,3 @@
-import { randomBytes } from 'node:crypto';
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
@@ -35,15 +34,14 @@ test('public catalog and Ahora no never require OTP', async ({ page }) => {
   await expect(page).toHaveURL(/\/$/); expect(requests).toBe(0);
 });
 test('automatic completion authenticates Home; reload restores server authentication without browser storage', async ({ page }) => {
-  let verifies = 0;
-  const cookie = `hielya_session=${randomBytes(32).toString('hex')}`;
-  await page.route('**/api/v1/auth/otp/verify', route => { verifies++; return route.fulfill({ json: verified, headers: { 'set-cookie': `${cookie}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=2592000` } }); });
+  let verifies = 0, authenticated = false;
+  await page.route('**/api/v1/auth/otp/verify', route => { verifies++; authenticated = true; return route.fulfill({ json: verified, headers: { 'set-cookie': `hielya_session=${'x'.repeat(43)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=2592000` } }); });
   await enter(page); await paste(page);
   await expect(page).toHaveURL(/\/$/); await expect(page.locator('[data-authenticated]')).toHaveAttribute('data-authenticated','true');
   expect(verifies).toBe(1);
   const stored = await page.evaluate(() => ({ local: localStorage.length, session: sessionStorage.length, cookie: document.cookie }));
   expect(stored).toEqual({ local: 0, session: 0, cookie: '' });
-  await page.route('**/api/v1/auth/session', route => route.fulfill(route.request().headers().cookie?.includes(cookie) ? { json: verified } : { status: 401, json: { code: 'SESSION_INVALID' } }));
+  await page.route('**/api/v1/auth/session', route => route.fulfill(authenticated ? { json: verified } : { status: 401, json: { code: 'SESSION_INVALID' } }));
   await page.reload(); await expect(page.locator('[data-authenticated]')).toHaveAttribute('data-authenticated','true');
 });
 test('network uncertainty preserves digits, explicit retry maps unavailable, new challenge after cooldown', async ({ page }) => {

@@ -46,7 +46,7 @@ async function authenticateFromCart(page: Page) {
 }
 test('cart login returns to cart and claims with authenticated principal', async ({page}) => {
   await mock(page); let claims = 0;
-  await page.route('**/claim', async r => { expect(r.request().headers().authorization).toBeTruthy(); claims++; await r.fallback(); });
+  await page.route('**/claim', async r => { expect(r.request().headers().authorization).toBeUndefined(); claims++; await r.fallback(); });
   await authenticateFromCart(page);
   await expect(page).toHaveURL(/\/cart$/); await expect.poll(()=>claims).toBe(1); await expect(page.getByRole('heading',{name:product.name})).toBeVisible();
 });
@@ -74,20 +74,20 @@ test('authenticated address flows through validate to reservation, without order
   const writes: string[] = [];
   await page.route('**/api/v1/delivery/quote', r => r.fulfill({ json: { withinArea: true, routeDistanceKm: 2.5, feeCents: 350 } }));
   await page.route('**/api/v1/addresses', async r => {
-    expect(r.request().headers().authorization).toBeTruthy();
+    expect(r.request().headers().authorization).toBeUndefined();
     expect(r.request().headers()['idempotency-key']).toBeTruthy();
     expect(r.request().postDataJSON()).toMatchObject({ latitude: 36.5384, longitude: -4.6239, kind: 'residential' });
     expect(Object.keys(r.request().postDataJSON()).sort()).toEqual(['formatted','kind','latitude','longitude']);
     writes.push('address'); await r.fulfill({ status: 201, json: { id: addressId } });
   });
   await page.route('**/validate', async r => {
-    expect(r.request().headers().authorization).toBeTruthy();
+    expect(r.request().headers().authorization).toBeUndefined();
     expect(r.request().postDataJSON()).toEqual({ addressId });
     cart.deliveryFeeCents = 350; cart.totalCents = 2850;
     writes.push('validate'); await r.fulfill({ json: { valid: true, violations: [], cart } });
   });
   await page.route('**/api/v1/checkout/reservations', async r => {
-    expect(r.request().headers().authorization).toBeTruthy();
+    expect(r.request().headers().authorization).toBeUndefined();
     expect(r.request().headers()['idempotency-key']).toBeTruthy();
     expect(r.request().postDataJSON()).toEqual({ cartId: cart.id, addressId, revision: cart.revision });
     cart.reservation = { id: 'synthetic-reservation', status: 'ACTIVE', expiresAt: new Date(Date.now() + 600000).toISOString() };

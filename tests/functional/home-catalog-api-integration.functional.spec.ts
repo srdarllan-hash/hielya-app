@@ -25,6 +25,7 @@ const forbiddenPublicFields = [
 ];
 
 const allowedApiPaths = new Set([
+  'GET /api/v1/auth/session',
   'GET /api/v1/store/state',
   'GET /api/v1/catalog/categories',
   'GET /api/v1/catalog/products',

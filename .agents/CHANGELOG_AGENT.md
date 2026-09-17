@@ -15,6 +15,27 @@ Quem pediu/autorizou:
 
 ## Entradas
 
+## 2026-09-17 — Correção do deadlock de fechamento de lock (caminhos de trabalho × metadados)
+O que mudou na coordenação local: `.agents/locks/README.md` e
+`.claude/rules/agents-local-coordination.md` foram reescritos para separar **caminhos de
+trabalho** (declarados em `Caminhos de trabalho` de um lock, exclusivos da sessão dona) de
+**metadados de coordenação** (`TASKS.md`, qualquer `locks/*.lock.md`, `BLOCKERS.md`,
+`HANDOFF.md`, os três `*_REPORT.md`, `CHANGELOG_AGENT.md`), que nunca podem ser declarados como
+caminho de trabalho e são editados diretamente pelo papel autorizado numa transição documentada
+(Claude registra implementação/entrega e vai até `ready-for-review`; Codex só registra revisão em
+`CODEX_REPORT.md`; somente Work grava `stale`, `blocked` ou `released`, sempre citando evidência).
+Estados renomeados sem ambiguidade: `active`, `ready-for-review`, `stale`, `blocked`, `released`
+— todos exceto `released` preservam a proteção dos caminhos de trabalho; expiração nunca libera
+sozinha. Isso resolve o deadlock relatado pela revisão do Codex ao commit `2e2e39f` (achado 3,
+registrado em `.agents/CODEX_REPORT.md`): antes, um lock podia incluir seu próprio arquivo e
+`BLOCKERS.md` entre os caminhos protegidos, e nenhum papel — nem Work, nem o owner — tinha
+autoridade para fechá-lo. O lock `INFRA-LOCKS-HARDENING` foi fechado para `released` (evidência
+em `.agents/WORK_REPORT.md`), preservando integralmente seu conteúdo original e apenas anexando o
+histórico de transição. Criado o lock `INFRA-LOCK-DEADLOCK-FIX` para esta tarefa.
+Quem pediu/autorizou: usuário nesta sessão, após revisão (conduzida por esta mesma sessão
+exercendo o papel Codex a pedido do usuário — ver ressalva em `.agents/CODEX_REPORT.md`) apontar
+o deadlock no commit `2e2e39f`.
+
 ## 2026-09-17 — Hardening dos locks: session_id obrigatório e não liberação por expiração
 O que mudou na coordenação local: `.agents/locks/README.md` passou a exigir `Session ID` único
 por lock (oitavo campo obrigatório) e a proibir sobreposição de caminhos entre quaisquer sessões

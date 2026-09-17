@@ -37,3 +37,25 @@ Onde parar / próximo comando a rodar: nenhum comando pendente; próximo passo �
 `chore(agents): harden local task locks` já solicitado pelo usuário.
 Riscos conhecidos no momento do handoff: nenhum arquivo de código/produto tocado; sem push/merge
 realizado.
+
+## 2026-09-17T19:54:36Z — de Claude Code (session claude-20260917T195436Z-deadlock-fix) para próxima sessão
+O que foi feito: corrigido o deadlock que a revisão do Codex encontrou no commit `2e2e39f`
+(achado 3, registrado em `.agents/CODEX_REPORT.md`). `.agents/locks/README.md` e
+`.claude/rules/agents-local-coordination.md` agora separam **caminhos de trabalho** (protegidos
+por lock) de **metadados de coordenação** (`TASKS.md`, qualquer `locks/*.lock.md`, `BLOCKERS.md`,
+`HANDOFF.md`, os três `*_REPORT.md`, `CHANGELOG_AGENT.md` — nunca protegidos por lock, editáveis
+pelo papel autorizado a qualquer momento). Estados renomeados sem ambiguidade: `active`,
+`ready-for-review`, `stale`, `blocked`, `released`. O lock `INFRA-LOCKS-HARDENING` foi fechado
+para `released` (evidência em `.agents/WORK_REPORT.md`), preservando seu conteúdo original e
+apenas anexando o histórico de transição. Criado o lock `INFRA-LOCK-DEADLOCK-FIX` para esta
+própria tarefa, cobrindo somente `.agents/locks/README.md` e
+`.claude/rules/agents-local-coordination.md` como caminhos de trabalho.
+O que falta: lock `INFRA-LOCK-DEADLOCK-FIX` está `ready-for-review` — uma futura sessão de Work
+(ou uma revisão Codex real) deve confirmar e movê-lo para `released` antes de reabrir os dois
+arquivos de especificação como caminhos de trabalho de outra tarefa.
+Onde parar / próximo comando a rodar: nenhum comando pendente; próximo passo é o commit local
+`chore(agents): resolve coordination lock deadlock` já solicitado pelo usuário.
+Riscos conhecidos no momento do handoff: nenhum arquivo de código/produto tocado; sem push/merge
+realizado. A "revisão do Codex" citada nesta e em entradas anteriores foi conduzida pela própria
+sessão Claude Code exercendo esse papel a pedido do usuário, não por uma execução real do Codex
+CLI — ver a ressalva explícita em `.agents/CODEX_REPORT.md`.

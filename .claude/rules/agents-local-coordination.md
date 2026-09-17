@@ -30,9 +30,10 @@ pelo `CLAUDE.md`:
    começar, não o estado presumido pelos arquivos de coordenação.
 7. `git diff` (e `git diff --staged` se houver algo staged) — inspecionar toda alteração
    presente antes de tocar qualquer arquivo, e verificar explicitamente se alguma alteração
-   pertence a um owner/lock diferente do agente atual (ver `.agents/locks/README.md` e o campo
-   "Owner"/"Lock" em `.agents/TASKS.md`). Se houver alteração de outro owner sem lock expirado e
-   documentado como tal, parar e não editar nada — reportar o conflito em vez de sobrescrever.
+   pertence a uma sessão/lock diferente da sessão atual (ver `.agents/locks/README.md` e os
+   campos "Owner"/"Lock" em `.agents/TASKS.md`). Se houver alteração de outra sessão cujo lock
+   não esteja `Estado: liberado` com evidência de término registrada (expiração sozinha não
+   conta), parar e não editar nada — reportar o conflito em vez de sobrescrever.
 
 Ao concluir ou pausar um trecho relevante de trabalho multiagente, registrar:
 
@@ -56,6 +57,14 @@ Ao concluir ou pausar um trecho relevante de trabalho multiagente, registrar:
 - Uma sessão local não deve escrever na mesma branch já leased por um executor automático (ver
   `docs/automation/AGENT_PROTOCOL.md`), mesmo que os arquivos em `.agents/` sugiram que a branch
   está livre — a checagem de lease automatizada, quando existir, é a fonte de verdade.
-- Um agente não edita caminhos cobertos por um lock ativo (`.agents/locks/README.md`) cujo owner
-  seja outro agente. Só o papel Work remove um lock, e apenas após confirmar o término do
-  escritor atual ou uma expiração já documentada no próprio lock — nunca por presunção.
+- Um agente não edita caminhos cobertos por um lock ativo (`.agents/locks/README.md`) de outra
+  sessão — inclusive quando o `Owner` é o mesmo tipo de agente (duas sessões Claude Code, por
+  exemplo), pois a unidade de exclusão é o `Session ID`, não o `Owner`. Antes de abrir um novo
+  lock, comparar seus `Caminhos permitidos` contra todo lock `Estado: ativo` existente e recusar
+  qualquer sobreposição.
+- Expiração de um lock nunca o libera sozinha. Um lock expirado passa para
+  `Estado: stale/blocked` e os caminhos continuam bloqueados. Só o papel Work move um lock para
+  `liberado`, e apenas depois de citar, no próprio arquivo de lock, a evidência escrita do
+  término do escritor anterior (`.agents/CLAUDE_REPORT.md`, `.agents/CODEX_REPORT.md` ou
+  `.agents/HANDOFF.md`). Sem essa confirmação, o lock permanece bloqueado e o impasse deve ser
+  registrado em `.agents/BLOCKERS.md` — nunca liberar por presunção de expiração.

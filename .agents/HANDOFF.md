@@ -22,5 +22,18 @@ Riscos conhecidos no momento do handoff:
 
 ## Entradas
 
-Nenhuma entrada registrada ainda. Este arquivo foi criado como parte da infraestrutura local de
-coordenação em `.agents/`.
+## 2026-09-17T19:43:58Z — de Claude Code (session claude-20260917T194358Z-infra-locks-hardening) para próxima sessão
+O que foi feito: aplicadas as duas correções apontadas pela revisão do Codex sobre os locks
+locais — (1) `Session ID` obrigatório em cada lock, com sobreposição de caminhos bloqueada entre
+quaisquer sessões ativas, inclusive do mesmo owner; (2) expiração deixou de liberar lock
+sozinha (`Estado: stale/blocked`), liberação exige Work registrar evidência de término. Alterados
+`.agents/locks/README.md`, `.claude/rules/agents-local-coordination.md`, `.agents/TASKS.md`,
+`.agents/HANDOFF.md`, `.agents/CLAUDE_REPORT.md`, `.agents/CHANGELOG_AGENT.md`, e criado
+`.agents/locks/INFRA-LOCKS-HARDENING.lock.md`.
+O que falta: lock `INFRA-LOCKS-HARDENING` ainda `Estado: ativo` — Work deve fechá-lo após
+confirmar término (esta mesma entrada serve de evidência de término, já que a tarefa terminou
+nesta sessão sem handoff pendente de código em andamento).
+Onde parar / próximo comando a rodar: nenhum comando pendente; próximo passo é o commit local
+`chore(agents): harden local task locks` já solicitado pelo usuário.
+Riscos conhecidos no momento do handoff: nenhum arquivo de código/produto tocado; sem push/merge
+realizado.

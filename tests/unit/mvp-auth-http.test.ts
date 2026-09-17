@@ -10,6 +10,8 @@ import {
   RecordingSimulatedSmsGateway,
   RequestCustomerOtp,
   VerifyCustomerOtp,
+  ValidateCustomerSession,
+  RevokeCustomerSession,
 } from '../../packages/application/src';
 import {
   MvpPersistenceDatabase,
@@ -87,11 +89,35 @@ const fakeHandlers = (overrides: {
       },
     }),
   },
+  validateSession: { execute: () => null },
+  revokeSession: { execute: () => false },
   correlationIds: { generate: () => CORRELATION_ID },
   clock: { now: () => new Date(NOW) },
 });
 
 describe('MVP Local 36 OTP HTTP transport', () => {
+  it('returns the safe 401 envelope without a cookie', async () => {
+    const response = await fakeHandlers().session(new Request('http://localhost/api/v1/auth/session'));
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({ code: 'SESSION_INVALID', message: 'The customer session is invalid.', correlationId: CORRELATION_ID });
+    expect(response.headers.get('cache-control')).toBe('no-store');
+  });
+  it.each(['', 'hielya_session=invalid', 'hielya_session=a; hielya_session=b'])('logs out idempotently without a valid session', async cookie => {
+    const response = await fakeHandlers().logout(jsonRequest('/api/v1/auth/logout', {}, { cookie }));
+    expect(response.status).toBe(204);
+    expect(response.headers.get('set-cookie')).toBe('hielya_session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0');
+  });
+  it('rejects form logout mutations', async () => {
+    const response = await fakeHandlers().logout(new Request('http://localhost/api/v1/auth/logout', { method: 'POST', headers: { 'content-type': 'text/plain' }, body: '{}' }));
+    expect(response.status).toBe(400);
+    expect(response.headers.get('set-cookie')).toBeNull();
+  });
+  it('derives cookie Max-Age from the existing absolute expiry', async () => {
+    const handlers = fakeHandlers({ verifyOtp: { execute: () => ({ customer: { customerId: CUSTOMER_ID, phoneE164: '+34612345678', phoneVerifiedAt: NOW.toISOString() }, session: { sessionId: CHALLENGE_ID, token: 'a'.repeat(64), expiresAt: '2030-01-01T12:01:30.000Z' } }) } });
+    const response = await handlers.verifyOtp(jsonRequest('/api/v1/auth/otp/verify', { challengeId: CHALLENGE_ID, code: '123456' }));
+    expect(response.headers.get('set-cookie')?.split('; ').slice(1)).toEqual(['HttpOnly', 'Secure', 'SameSite=Strict', 'Path=/', 'Max-Age=90']);
+    expect((await response.json()).expiresInSeconds).toBe(90);
+  });
   it('returns a strict 202 challenge without phone, OTP or internal state', async () => {
     const response = await fakeHandlers().requestOtp(jsonRequest('/api/v1/auth/otp/request', {
       phoneE164: '+34612345678',
@@ -218,7 +244,7 @@ describe('MVP Local 36 OTP HTTP transport', () => {
     expect(await second.json()).toMatchObject({ code: 'OTP_DELIVERY_UNAVAILABLE' });
   });
 
-  it('verifies with only challengeId and code and returns one opaque session', async () => {
+  it('verifies with only challengeId and code and returns authentication state and a secure cookie', async () => {
     let captured: Record<string, unknown> | undefined;
     const handlers = fakeHandlers({
       verifyOtp: {
@@ -247,8 +273,9 @@ describe('MVP Local 36 OTP HTTP transport', () => {
     expect(captured).toEqual({ challengeId: CHALLENGE_ID, otp: '123456', now: NOW });
     expect(captured).not.toHaveProperty('phone');
     const body = await response.json();
+    expect(JSON.stringify(body).includes('b'.repeat(64))).toBe(false);
+    expect(Object.keys(body).sort()).toEqual(['customer', 'expiresInSeconds']);
     expect(body).toEqual({
-      sessionToken: 'b'.repeat(64),
       expiresInSeconds: 2_592_000,
       customer: {
         id: CUSTOMER_ID,
@@ -258,6 +285,11 @@ describe('MVP Local 36 OTP HTTP transport', () => {
       },
     });
     expect(body).not.toHaveProperty('sessionId');
+    expect(body).not.toHaveProperty('sessionToken');
+    expect(JSON.stringify(body).includes('b'.repeat(64))).toBe(false);
+    const cookie = response.headers.get('set-cookie')!;
+    expect(cookie.split('; ').slice(1)).toEqual(['HttpOnly', 'Secure', 'SameSite=Strict', 'Path=/', 'Max-Age=2592000']);
+    expect(cookie.startsWith('hielya_session=')).toBe(true);
     expect(JSON.stringify(body)).not.toMatch(/accessToken|refreshToken|token_hash|salt|pepper/);
   });
 
@@ -308,7 +340,7 @@ describe('MVP Local 36 OTP HTTP transport', () => {
     const gateway = new RecordingSimulatedSmsGateway();
     let id = 0;
     const crypto = {
-      randomBytes: (size: number) => Buffer.alloc(size, id === 0 ? 1 : 2),
+      randomBytes: (size: number) => Buffer.alloc(size, id + 1),
       randomId: () => `00000000-0000-4000-8000-${String(++id).padStart(12, '0')}`,
       generateOtp: () => '654321',
     };
@@ -318,6 +350,8 @@ describe('MVP Local 36 OTP HTTP transport', () => {
     const handlers = createAuthHttpHandlers({
       requestOtp: requestUseCase,
       verifyOtp: verifyUseCase,
+      validateSession: new ValidateCustomerSession(repository),
+      revokeSession: new RevokeCustomerSession(repository),
       correlationIds: { generate: () => CORRELATION_ID },
       clock: { now: () => new Date(NOW) },
     });
@@ -333,15 +367,43 @@ describe('MVP Local 36 OTP HTTP transport', () => {
       code: gateway.messages[0]?.otp,
     }));
     expect(verified.status).toBe(200);
-    const result = await verified.json() as { sessionToken: string };
+    const result = await verified.json();
+    const cookie = verified.headers.get('set-cookie')!.split(';')[0];
+    const token = cookie.slice('hielya_session='.length);
+    expect(JSON.stringify(result).includes(token)).toBe(false);
     const session = persistence.db.prepare('SELECT token_hash FROM customer_sessions')
       .get<{ token_hash: string }>();
-    expect(session?.token_hash).toBe(createHash('sha256').update(result.sessionToken).digest('hex'));
-    expect(JSON.stringify(session)).not.toContain(result.sessionToken);
+    expect(session?.token_hash).toBe(createHash('sha256').update(token).digest('hex'));
+    expect(JSON.stringify(session).includes(token)).toBe(false);
     expect(persistence.db.prepare('SELECT COUNT(*) AS count FROM customers')
       .get<{ count: number }>()?.count).toBe(1);
     expect(persistence.db.prepare('SELECT COUNT(*) AS count FROM customer_sessions')
       .get<{ count: number }>()?.count).toBe(1);
+    const getSession = () => handlers.session(new Request('http://localhost/api/v1/auth/session', { headers: { cookie } }));
+    const restored = await getSession();
+    expect(restored.status).toBe(200);
+    const restoredBody = await restored.json();
+    expect(JSON.stringify(restoredBody).includes(token)).toBe(false);
+    expect(restoredBody).toEqual(result);
+    expect(restored.headers.get('set-cookie')).toBeNull();
+    const logout = () => handlers.logout(jsonRequest('/api/v1/auth/logout', {}, { cookie }));
+    for (let i = 0; i < 2; i++) {
+      const loggedOut = await logout();
+      expect(loggedOut.status).toBe(204);
+      expect(await loggedOut.text()).toBe('');
+      expect(loggedOut.headers.get('set-cookie')).toBe('hielya_session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0');
+    }
+    expect(persistence.db.prepare('SELECT status FROM customer_sessions').get<{ status: string }>()?.status).toBe('REVOKED');
+    expect((await getSession()).status).toBe(401);
+    const secondChallenge = await (await handlers.requestOtp(jsonRequest('/api/v1/auth/otp/request', { phoneE164: '+34612345679', locale: 'es-ES' }))).json();
+    const secondVerified = await handlers.verifyOtp(jsonRequest('/api/v1/auth/otp/verify', { challengeId: secondChallenge.challengeId, code: '654321' }));
+    const secondCookie = secondVerified.headers.get('set-cookie')!.split(';')[0];
+    const expiredHandlers = createAuthHttpHandlers({ requestOtp: requestUseCase, verifyOtp: verifyUseCase,
+      validateSession: new ValidateCustomerSession(repository), revokeSession: new RevokeCustomerSession(repository),
+      correlationIds: { generate: () => CORRELATION_ID }, clock: { now: () => new Date('2030-01-31T12:00:00.000Z') } });
+    const expired = await expiredHandlers.session(new Request('http://localhost/api/v1/auth/session', { headers: { cookie: secondCookie } }));
+    expect(expired.status).toBe(401);
+    expect(await expired.json()).toEqual({ code: 'SESSION_INVALID', message: 'The customer session is invalid.', correlationId: CORRELATION_ID });
     persistence.close();
   });
 

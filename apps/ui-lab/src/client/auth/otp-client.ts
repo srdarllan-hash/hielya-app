@@ -15,7 +15,7 @@ export function createOtpClient(fetcher: typeof fetch = globalThis.fetch, timeou
     try {
       const response = await fetcher(`/api/v1/auth/otp/${operation}`, {
         method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
-        signal: controller.signal, cache: 'no-store', credentials: 'omit', redirect: 'error',
+        signal: controller.signal, cache: 'no-store', credentials: 'same-origin', redirect: 'error',
       });
       let data: unknown;
       try { data = await response.json(); } catch { throw new AuthFailure(response.ok && operation === 'verify' ? 'NETWORK' : 'SERVICE'); }
@@ -46,8 +46,19 @@ export function createOtpClient(fetcher: typeof fetch = globalThis.fetch, timeou
     async verify(challengeId, code, signal) {
       if (!uuid(challengeId) || !/^[0-9]{6}$/.test(code)) throw new AuthFailure('INVALID_INPUT');
       const data = await post('verify', { challengeId, code }, signal);
-      if (!object(data) || typeof data.sessionToken !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(data.sessionToken) || !duration(data.expiresInSeconds) || data.expiresInSeconds === 0 || data.expiresInSeconds > 2592000 || !object(data.customer) || !uuid(data.customer.id) || typeof data.customer.phoneE164 !== 'string' || !/^\+34[0-9]{9}$/.test(data.customer.phoneE164) || typeof data.customer.phoneVerifiedAt !== 'string' || !Number.isFinite(Date.parse(data.customer.phoneVerifiedAt)) || data.customer.status !== 'ACTIVE') throw new AuthFailure('NETWORK');
-      return { sessionToken: data.sessionToken, expiresInSeconds: data.expiresInSeconds, customer: { id: data.customer.id, phoneE164: data.customer.phoneE164, phoneVerifiedAt: data.customer.phoneVerifiedAt, status: 'ACTIVE' } } satisfies VerificationResponse;
+      return parseAuthentication(data);
     },
   };
+}
+
+export function parseAuthentication(data: unknown): VerificationResponse {
+  if (!object(data) || !duration(data.expiresInSeconds) || data.expiresInSeconds === 0 || data.expiresInSeconds > 2592000 || !object(data.customer) || !uuid(data.customer.id) || typeof data.customer.phoneE164 !== 'string' || !/^\+34[0-9]{9}$/.test(data.customer.phoneE164) || typeof data.customer.phoneVerifiedAt !== 'string' || !Number.isFinite(Date.parse(data.customer.phoneVerifiedAt)) || data.customer.status !== 'ACTIVE') throw new AuthFailure('NETWORK');
+  return { expiresInSeconds: data.expiresInSeconds, customer: { id: data.customer.id, phoneE164: data.customer.phoneE164, phoneVerifiedAt: data.customer.phoneVerifiedAt, status: 'ACTIVE' } } satisfies VerificationResponse;
+}
+
+export async function restoreSession(signal: AbortSignal): Promise<VerificationResponse | undefined> {
+  const response = await fetch('/api/v1/auth/session', { credentials: 'same-origin', cache: 'no-store', redirect: 'error', signal });
+  if (response.status === 401) return undefined;
+  if (response.status !== 200) throw new AuthFailure('SERVICE');
+  return parseAuthentication(await response.json());
 }

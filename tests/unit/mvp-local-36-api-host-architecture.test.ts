@@ -53,6 +53,8 @@ const FROZEN_PUBLIC_ROUTE_HANDLERS: AuthorizedRouteHandler[] = [
 ];
 
 const AUTH_ROUTE_HANDLERS: AuthorizedRouteHandler[] = [
+  { method: 'GET', path: '/auth/session', file: 'apps/ui-lab/app/api/v1/auth/session/route.ts' },
+  { method: 'POST', path: '/auth/logout', file: 'apps/ui-lab/app/api/v1/auth/logout/route.ts' },
   {
     method: 'POST',
     path: '/auth/otp/request',
@@ -148,8 +150,9 @@ describe('MVP Local 36 API host architecture Gate', () => {
       expect(publicApiAdr).toContain(route.file);
     }
     for (const route of AUTH_ROUTE_HANDLERS) {
-      expect(authAdr).toContain(`POST /api/v1${route.path}`);
-      expect(authAdr).toContain(route.file);
+      const decision = route.path.startsWith('/auth/otp/') ? authAdr : readFileSync(join(process.cwd(), 'docs/decisions/ADR-CLIENT-SESSION-HTTPONLY-COOKIE.md'), 'utf8');
+      expect(decision).toContain(`${route.method} /api/v1${route.path}`);
+      expect(decision).toContain(route.file);
     }
     expect(publicApiAdr).toContain('category` resolve por `id` UUID persistido ou por `slug` persistido');
     expect(publicApiAdr).toContain('`q` pesquisa somente `sku` e `name`');

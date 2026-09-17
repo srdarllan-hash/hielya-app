@@ -4,8 +4,9 @@ import AxeBuilder from '@axe-core/playwright';
 // Synthetic fixtures only. No production SMS, tokens or phone numbers. Recording is disabled in config.
 const challengeId = '11111111-1111-4111-8111-111111111111';
 const response = { challengeId, expiresInSeconds: 300, resendAfterSeconds: 60 };
-const verified = { sessionToken: 'x'.repeat(43), expiresInSeconds: 2592000, customer: { id: '22222222-2222-4222-8222-222222222222', phoneE164: '+34612345678', phoneVerifiedAt: '2026-09-07T00:00:00Z', status: 'ACTIVE' } };
+const verified = { expiresInSeconds: 2592000, customer: { id: '22222222-2222-4222-8222-222222222222', phoneE164: '+34612345678', phoneVerifiedAt: '2026-09-07T00:00:00Z', status: 'ACTIVE' } };
 async function publicApis(page: Page) {
+  await page.route('**/api/v1/auth/session', route => route.fulfill({ status: 401, json: { code: 'SESSION_INVALID' } }));
   await page.route('**/api/v1/catalog/categories', route => route.fulfill({ json: [] }));
   await page.route('**/api/v1/catalog/products**', route => route.fulfill({ json: { items: [], page: 1, pageSize: 20, total: 0 } }));
   await page.route('**/api/v1/store/state', route => route.fulfill({ status: 503, json: { code: 'CONFIGURATION_UNAVAILABLE' } }));
@@ -32,15 +33,16 @@ test('public catalog and Ahora no never require OTP', async ({ page }) => {
   await page.goto('/login'); await page.getByRole('button', { name: 'Ahora no' }).click();
   await expect(page).toHaveURL(/\/$/); expect(requests).toBe(0);
 });
-test('automatic completion authenticates Home in memory; reload loses authentication without storage', async ({ page }) => {
-  let verifies = 0;
-  await page.route('**/api/v1/auth/otp/verify', route => { verifies++; return route.fulfill({ json: verified }); });
+test('automatic completion authenticates Home; reload restores server authentication without browser storage', async ({ page }) => {
+  let verifies = 0, authenticated = false;
+  await page.route('**/api/v1/auth/otp/verify', route => { verifies++; authenticated = true; return route.fulfill({ json: verified, headers: { 'set-cookie': `hielya_session=${'x'.repeat(43)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=2592000` } }); });
   await enter(page); await paste(page);
   await expect(page).toHaveURL(/\/$/); await expect(page.locator('[data-authenticated]')).toHaveAttribute('data-authenticated','true');
   expect(verifies).toBe(1);
   const stored = await page.evaluate(() => ({ local: localStorage.length, session: sessionStorage.length, cookie: document.cookie }));
   expect(stored).toEqual({ local: 0, session: 0, cookie: '' });
-  await page.reload(); await expect(page.locator('[data-authenticated]')).toHaveAttribute('data-authenticated','false');
+  await page.route('**/api/v1/auth/session', route => route.fulfill(authenticated ? { json: verified } : { status: 401, json: { code: 'SESSION_INVALID' } }));
+  await page.reload(); await expect(page.locator('[data-authenticated]')).toHaveAttribute('data-authenticated','true');
 });
 test('network uncertainty preserves digits, explicit retry maps unavailable, new challenge after cooldown', async ({ page }) => {
   let verifies = 0, requests = 0;

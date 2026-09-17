@@ -4,20 +4,22 @@ import { AuthFailure } from '../../packages/application/src/client-auth';
 const id = '11111111-1111-4111-8111-111111111111';
 const signal = () => new AbortController().signal;
 const challenge = { challengeId: id, expiresInSeconds: 300, resendAfterSeconds: 60 };
-const success = { sessionToken: 'x'.repeat(43), expiresInSeconds: 2592000, customer: { id, phoneE164: '+34612345678', phoneVerifiedAt: '2026-09-07T00:00:00Z', status: 'ACTIVE' } };
+const success = { expiresInSeconds: 2592000, customer: { id, phoneE164: '+34612345678', phoneVerifiedAt: '2026-09-07T00:00:00Z', status: 'ACTIVE' } };
 afterEach(() => vi.useRealTimers());
 describe('OTP HTTP adapter', () => {
-  it('uses the exact request contract and disables caching, cookies and redirects', async () => {
+  it('uses the exact request contract and uses same-origin credentials and disables caching and redirects', async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(Response.json(challenge, { status: 202 }));
     await createOtpClient(fetcher).request('+34612345678', signal());
     const [url, options] = fetcher.mock.calls[0];
-    expect(url).toBe('/api/v1/auth/otp/request'); expect(options).toMatchObject({ method: 'POST', cache: 'no-store', credentials: 'omit', redirect: 'error' });
+    expect(url).toBe('/api/v1/auth/otp/request'); expect(options).toMatchObject({ method: 'POST', cache: 'no-store', credentials: 'same-origin', redirect: 'error' });
     expect(Object.keys(JSON.parse(options!.body as string))).toEqual(['phoneE164','locale']);
   });
-  it('uses only challengeId and code for verify and validates the opaque session shape', async () => {
+  it('uses only challengeId and code for verify and validates authentication state without a credential', async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(Response.json(success));
     const result = await createOtpClient(fetcher).verify(id, '123456', signal());
     expect(Object.keys(JSON.parse(fetcher.mock.calls[0][1]!.body as string))).toEqual(['challengeId','code']);
+    expect(fetcher.mock.calls[0][1]?.credentials).toBe('same-origin');
+    expect(result).not.toHaveProperty('sessionToken');
     expect(result.customer.status).toBe('ACTIVE');
   });
   it.each(['OTP_INVALID','OTP_EXPIRED','OTP_UNAVAILABLE','OTP_LOCKED','OTP_RESEND_COOLDOWN'])('maps safe %s without trusting server text', async code => {
@@ -25,7 +27,7 @@ describe('OTP HTTP adapter', () => {
     await expect(createOtpClient(fetcher).verify(id, '123456', signal())).rejects.toMatchObject({ code, retryAfterSeconds: 120, message: 'Authentication operation failed.' });
   });
   it('rejects malformed success as uncertain, never as authenticated', async () => {
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ ...success, sessionToken: '' }));
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ ...success, expiresInSeconds: 0 }));
     await expect(createOtpClient(fetcher).verify(id, '123456', signal())).rejects.toMatchObject({ code: 'NETWORK' });
   });
   it('rejects malformed challenge data without entering OTP', async () => {

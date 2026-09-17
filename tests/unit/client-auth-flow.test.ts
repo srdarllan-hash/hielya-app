@@ -3,7 +3,7 @@ import { AuthFailure, createAuthFlow, createMemorySessionStore, type OtpTranspor
 // Synthetic fixtures only. Never record actual OTP/session values in test diagnostics or telemetry.
 const phone = '612345678';
 const challenge = { challengeId: '11111111-1111-4111-8111-111111111111', expiresInSeconds: 300, resendAfterSeconds: 60 };
-const verified: VerificationResponse = { sessionToken: 'x'.repeat(43), expiresInSeconds: 2592000, customer: { id: '22222222-2222-4222-8222-222222222222', phoneE164: `+34${phone}`, phoneVerifiedAt: '2026-09-07T00:00:00Z', status: 'ACTIVE' } };
+const verified: VerificationResponse = { expiresInSeconds: 2592000, customer: { id: '22222222-2222-4222-8222-222222222222', phoneE164: `+34${phone}`, phoneVerifiedAt: '2026-09-07T00:00:00Z', status: 'ACTIVE' } };
 function setup() {
   let now = 1000000;
   const sessions = createMemorySessionStore(() => now);

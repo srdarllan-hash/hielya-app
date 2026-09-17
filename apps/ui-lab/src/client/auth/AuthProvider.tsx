@@ -3,13 +3,23 @@
 import React, { createContext, useContext, useEffect, useState, useSyncExternalStore } from 'react';
 import { createMemorySessionStore, type SessionPort } from '@hielya/application/client-auth';
 
+import { restoreSession } from './otp-client';
+
 const AuthContext = createContext<SessionPort | null>(null);
-/** Per application mount, never a server-shared singleton. No cookie/storage/session replay integration. */
+/** Per application mount, never a server-shared singleton. Hydrates authentication state through the server-owned cookie. */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [store] = useState(() => createMemorySessionStore());
   useEffect(() => {
+    const controller = new AbortController();
+    const started = Date.now();
+    let changed = false;
+    const unsubscribe = store.subscribe(() => { changed = true; });
+    void restoreSession(controller.signal).then(session => {
+      if (controller.signal.aborted || changed) return;
+      if (session) store.write({ customer: session.customer, expiresAt: started + session.expiresInSeconds * 1000 });
+    }).catch(() => { /* Unavailable hydration leaves the cache unauthenticated. */ });
     const timer = setInterval(() => { if (!store.read()) store.clear(); }, 1000);
-    return () => clearInterval(timer);
+    return () => { controller.abort(); unsubscribe(); clearInterval(timer); };
   }, [store]);
   return <AuthContext.Provider value={store}>{children}</AuthContext.Provider>;
 }

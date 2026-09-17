@@ -1,9 +1,12 @@
 import type {
   CorrelationIdPort,
+  ValidatedCustomerSession,
+  VerifiedCustomer,
   OtpChallengeResult,
   OtpVerificationResult,
 } from '@hielya/application';
 import { CustomerAuthenticationError } from '@hielya/application';
+import { readSessionCookie, sessionCookie } from './session-cookie';
 
 const MAX_JSON_BODY_BYTES = 16_384;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -12,6 +15,7 @@ const OTP_PATTERN = /^[0-9]{6}$/;
 const LOCALES = new Set(['es-ES', 'en-GB', 'pt-BR']);
 
 type AuthErrorCode =
+  | 'SESSION_INVALID'
   | 'INVALID_INPUT'
   | 'INVALID_PHONE'
   | 'OTP_INVALID'
@@ -41,11 +45,15 @@ export interface AuthClockPort {
 export interface AuthHttpHandlerDependencies {
   requestOtp: RequestOtpService;
   verifyOtp: VerifyOtpService;
+  validateSession: { execute(token: string, now: Date): ValidatedCustomerSession | null | Promise<ValidatedCustomerSession | null> };
+  revokeSession: { execute(token: string, now: Date): boolean | Promise<boolean> };
   correlationIds: CorrelationIdPort;
   clock: AuthClockPort;
 }
 
 export interface AuthHttpHandlers {
+  session(request: Request): Promise<Response>;
+  logout(request: Request): Promise<Response>;
   requestOtp(request: Request): Promise<Response>;
   verifyOtp(request: Request): Promise<Response>;
 }
@@ -203,11 +211,11 @@ const secondsUntil = (timestamp: string, now: Date, minimum = 0): number => {
 
 const errorResponse = (
   error: unknown,
-  operation: 'request' | 'verify',
+  operation: 'request' | 'verify' | 'session',
   correlationId: string,
 ): Response => {
   let code: AuthErrorCode;
-  let status: 400 | 429 | 503;
+  let status: 400 | 401 | 429 | 503;
   let field: string | undefined;
   let retryAfterSeconds: number | undefined;
 
@@ -218,6 +226,8 @@ const errorResponse = (
   } else if (error instanceof CustomerAuthenticationError) {
     retryAfterSeconds = error.retryAfterSeconds;
     switch (error.code) {
+      case 'SESSION_INVALID':
+        code = 'SESSION_INVALID'; status = 401; break;
       case 'INVALID_PHONE':
         code = 'INVALID_PHONE'; status = 400; field = 'phoneE164'; break;
       case 'INVALID_OTP':
@@ -243,6 +253,7 @@ const errorResponse = (
   }
 
   const messages: Record<AuthErrorCode, string> = {
+    SESSION_INVALID: 'The customer session is invalid.',
     INVALID_INPUT: 'The authentication request is invalid.',
     INVALID_PHONE: 'The phone number is invalid.',
     OTP_INVALID: 'The verification code is invalid.',
@@ -266,9 +277,46 @@ const errorResponse = (
   );
 };
 
+const authenticationBody = (customer: VerifiedCustomer, expiresInSeconds: number) => ({
+  expiresInSeconds,
+  customer: {
+    id: customer.customerId,
+    phoneE164: customer.phoneE164,
+    phoneVerifiedAt: customer.phoneVerifiedAt,
+    status: 'ACTIVE',
+  },
+});
+
 export const createAuthHttpHandlers = (
   dependencies: AuthHttpHandlerDependencies,
 ): AuthHttpHandlers => ({
+  async session(request) {
+    const correlationId = requestCorrelationId(request, dependencies.correlationIds);
+    try {
+      rejectQueryParameters(request);
+      const token = readSessionCookie(request);
+      const session = token ? await dependencies.validateSession.execute(token, dependencies.clock.now()) : null;
+      if (!session) throw new CustomerAuthenticationError('SESSION_INVALID');
+      return jsonResponse(authenticationBody(session.customer, secondsUntil(session.expiresAt, dependencies.clock.now())), 200, correlationId);
+    } catch (error) {
+      return errorResponse(error, 'session', correlationId);
+    }
+  },
+
+  async logout(request) {
+    const correlationId = requestCorrelationId(request, dependencies.correlationIds);
+    try {
+      rejectQueryParameters(request);
+      strictFields(await parseJsonObject(request), []);
+      const token = readSessionCookie(request);
+      if (token) await dependencies.revokeSession.execute(token, dependencies.clock.now());
+      return new Response(null, { status: 204, headers: {
+        ...authHeaders(correlationId), 'set-cookie': sessionCookie('', 0),
+      } });
+    } catch (error) {
+      return errorResponse(error, 'session', correlationId);
+    }
+  },
   async requestOtp(request) {
     const correlationId = requestCorrelationId(request, dependencies.correlationIds);
     try {
@@ -297,16 +345,12 @@ export const createAuthHttpHandlers = (
         otp: input.code,
         now,
       });
-      return jsonResponse({
-        sessionToken: verified.session.token,
-        expiresInSeconds: secondsUntil(verified.session.expiresAt, now, 1),
-        customer: {
-          id: verified.customer.customerId,
-          phoneE164: verified.customer.phoneE164,
-          phoneVerifiedAt: verified.customer.phoneVerifiedAt,
-          status: 'ACTIVE',
-        },
-      }, 200, correlationId);
+      // Reuse the request's single clock read, and keep the historical minimum of 1:
+      // Max-Age=0 would instruct the browser to delete the cookie it was just given.
+      const maxAge = secondsUntil(verified.session.expiresAt, now, 1);
+      const response = jsonResponse(authenticationBody(verified.customer, maxAge), 200, correlationId);
+      response.headers.set('set-cookie', sessionCookie(verified.session.token, maxAge));
+      return response;
     } catch (error) {
       return errorResponse(error, 'verify', correlationId);
     }

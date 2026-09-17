@@ -101,7 +101,7 @@ describe('cart runtime', () => {
     const f = setup(); const cart = f.make(); let allowed = true;
     f.ports.roadDistance = async () => { allowed = false; return 1; };
     const handle = createCartHttpHandler(() => ({ service: f.service, customer: () => allowed ? f.customer : null }));
-    const result = await handle(new Request('http://local/api/v1/checkout/reservations', { method: 'POST', headers: { authorization: 'Bearer synthetic', 'idempotency-key': randomUUID() }, body: JSON.stringify({ cartId: cart.id, addressId: f.address.id, revision: cart.revision }) }));
+    const result = await handle(new Request('http://local/api/v1/checkout/reservations', { method: 'POST', headers: { cookie: 'hielya_session=synthetic', 'content-type': 'application/json', 'idempotency-key': randomUUID() }, body: JSON.stringify({ cartId: cart.id, addressId: f.address.id, revision: cart.revision }) }));
     expect(result.status).toBe(401); expect(f.db.db.prepare('SELECT COUNT(*) AS n FROM inventory_reservations').get()).toEqual({ n: 0 });
   });
   it('HTTP cart responses match the dedicated public field contract without persistence fields', async () => {
@@ -109,7 +109,7 @@ describe('cart runtime', () => {
     const contract = JSON.parse(readFileSync('contracts/openapi/HIELYA_OPENAPI_CART_RUNTIME_V1_4.yaml', 'utf8'));
     const schema = contract.components.schemas.CartView;
     const handle = createCartHttpHandler(() => ({ service: f.service, customer: () => f.customer }));
-    const response = await handle(new Request(`http://local/api/v1/carts/${cart.id}`, { headers: { authorization: 'Bearer synthetic' } }));
+    const response = await handle(new Request(`http://local/api/v1/carts/${cart.id}`, { headers: { cookie: 'hielya_session=synthetic', 'content-type': 'application/json' } }));
     expect(response.status).toBe(200); expect(response.headers.get('cache-control')).toBe('no-store');
     const body = await response.json();
     expect(Object.keys(body).sort()).toEqual(Object.keys(schema.properties).sort());
@@ -117,5 +117,10 @@ describe('cart runtime', () => {
     expect(body.items[0].product.id).toBe(f.unit.id);
     expect(body).not.toHaveProperty('customerId'); expect(body).not.toHaveProperty('addressId');
   });
-  it('HTTP denies validation without a session and rejects client prices', async () => { const f = setup(); const handle = createCartHttpHandler(() => ({ service: f.service, customer: () => null })); expect((await handle(new Request('http://local/api/v1/checkout/reservations', { method: 'POST', body: JSON.stringify({ cartId: randomUUID(), addressId: randomUUID(), revision: 1 }) }))).status).toBe(401); expect((await handle(new Request('http://local/api/v1/carts', { method: 'POST', body: '{"price":1}' }))).status).toBe(400); });
+  it('rejects non-JSON cart mutations before invoking the service', async () => {
+    const f = setup(); const handle = createCartHttpHandler(() => ({ service: f.service, customer: () => f.customer }));
+    const response = await handle(new Request('http://local/api/v1/carts', { method: 'POST', headers: { cookie: 'hielya_session=synthetic', 'content-type': 'text/plain' }, body: '{}' }));
+    expect(response.status).toBe(400);
+  });
+  it('HTTP denies validation without a session and rejects client prices', async () => { const f = setup(); const handle = createCartHttpHandler(() => ({ service: f.service, customer: () => null })); expect((await handle(new Request('http://local/api/v1/checkout/reservations', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cartId: randomUUID(), addressId: randomUUID(), revision: 1 }) }))).status).toBe(401); expect((await handle(new Request('http://local/api/v1/carts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"price":1}' }))).status).toBe(400); });
 });

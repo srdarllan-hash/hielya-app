@@ -53,7 +53,8 @@ test.afterEach(async () => {
   expect(runtimeErrors.errors).toEqual([]);
   expect(apiRequests.every((request) => request.startsWith('GET '))).toBe(true);
   expect(apiRequests.every((request) => (
-    request === 'GET /api/v1/catalog/categories'
+    request === 'GET /api/v1/auth/session'
+    || request === 'GET /api/v1/catalog/categories'
     || request === 'GET /api/v1/catalog/products'
     || request === 'GET /api/v1/store/state'
     || /^GET \/api\/v1\/catalog\/products\/[0-9a-f-]+$/i.test(request)
@@ -70,6 +71,7 @@ test('canonical paused product follows the real HTTP path and fails closed as NO
   await expect(page.getByText('Este producto no está disponible en el catálogo público.')).toBeVisible();
   expect(apiRequests.length).toBeGreaterThanOrEqual(1);
   expect(new Set(apiRequests)).toEqual(new Set([
+    'GET /api/v1/auth/session',
     `GET /api/v1/catalog/products/${productId}`,
   ]));
 

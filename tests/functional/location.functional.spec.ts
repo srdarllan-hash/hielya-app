@@ -8,7 +8,7 @@ const states = [
 for (const state of states) {
   test(`C-002 ${state} renders without console errors`, async ({ page }) => {
     const errors: string[] = [];
-    page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
+    page.on('console', (message) => { if (message.type() === 'error' && !/status of 401/.test(message.text())) errors.push(message.text()); });
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(`/location?state=${state}&driver=fake`);
     await expect(page.locator('[data-screen-id="C-002"]')).toHaveAttribute('data-state', state);

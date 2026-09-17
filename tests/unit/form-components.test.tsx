@@ -1,11 +1,17 @@
 import React, { StrictMode, createRef, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { hydrateRoot } from 'react-dom/client';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { Input } from '../../packages/ui/src/components/Input';
 import { PhoneInput } from '../../packages/ui/src/components/PhoneInput';
 import { OtpInput, type OtpPositions } from '../../packages/ui/src/components/OtpInput';
 afterEach(cleanup);
 const paste = (input: HTMLElement, text: string) => fireEvent.paste(input, { clipboardData: { getData: () => text } });
+// Bypasses React's value tracker, the same way a browser applies a real
+// keystroke to the DOM before React has attached its listeners.
+const typeNatively = (field: HTMLInputElement, text: string) =>
+  Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!.call(field, text);
 const otpCells = () => screen.getAllByRole('textbox') as HTMLInputElement[];
 const code: OtpPositions = ['0', '1', '2', '3', '4', '5'];
 
@@ -80,6 +86,40 @@ describe('PhoneInput', () => {
   it.each(['disabled', 'readOnly', 'loading'] as const)('%s blocks paste', (state) => {
     const change = vi.fn(); render(<PhoneInput label="Teléfono" {...{ [state]: true }} onChange={change} />);
     paste(screen.getByRole('textbox'), '612345678'); expect(change).not.toHaveBeenCalled();
+  });
+  // Regression for the reproducible pre-existing hydration race documented in
+  // docs/qa/AUTH_HYDRATION_INVESTIGATION.md: a user can type into the
+  // server-rendered <input> before React attaches its onChange handler.
+  // React's hydration commit does not force the DOM value back to empty, so
+  // without reconciliation the control stays visually filled while its
+  // controlled state (and anything gated on it, e.g. "Continuar") stays empty.
+  it('reconciles digits typed natively before hydration attached', async () => {
+    const change = vi.fn();
+    const container = document.body.appendChild(document.createElement('div'));
+    container.innerHTML = renderToStaticMarkup(<PhoneInput label="Teléfono" onChange={change} />);
+    typeNatively(container.querySelector('input')!, '612345678');
+    await act(async () => { hydrateRoot(container, <PhoneInput label="Teléfono" onChange={change} />); });
+    expect(container.querySelector('input')).toHaveValue('612 345 678');
+    expect(change).toHaveBeenCalledWith({ nationalDigits: '612345678', e164: '+34612345678' });
+    container.remove();
+  });
+  it('a non-racy hydration with nothing pre-typed is a no-op', async () => {
+    const change = vi.fn();
+    const container = document.body.appendChild(document.createElement('div'));
+    container.innerHTML = renderToStaticMarkup(<PhoneInput label="Teléfono" onChange={change} />);
+    await act(async () => { hydrateRoot(container, <PhoneInput label="Teléfono" onChange={change} />); });
+    expect(container.querySelector('input')).toHaveValue('');
+    expect(change).not.toHaveBeenCalled();
+    container.remove();
+  });
+  it('disabled/readOnly/loading suppress hydration reconciliation, preserving the pre-typed DOM value', async () => {
+    const change = vi.fn();
+    const container = document.body.appendChild(document.createElement('div'));
+    container.innerHTML = renderToStaticMarkup(<PhoneInput label="Teléfono" loading onChange={change} />);
+    typeNatively(container.querySelector('input')!, '612345678');
+    await act(async () => { hydrateRoot(container, <PhoneInput label="Teléfono" loading onChange={change} />); });
+    expect(change).not.toHaveBeenCalled();
+    container.remove();
   });
 });
 

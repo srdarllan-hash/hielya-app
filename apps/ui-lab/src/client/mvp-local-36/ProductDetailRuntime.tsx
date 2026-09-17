@@ -1,4 +1,5 @@
 'use client';
+import { useOptionalCart } from '../cart/CartProvider';
 
 import React, {
   useEffect,
@@ -136,12 +137,14 @@ export function ProductDetailRuntime({
     };
   }, [machine, productId]);
 
+  const cart = useOptionalCart();
   const goBack = () => {
     if (onBack) {
       onBack();
       return;
     }
-    globalThis.location.assign('/');
+    if (cart) cart.navigate('/');
+    else globalThis.location.assign('/');
   };
 
   return (

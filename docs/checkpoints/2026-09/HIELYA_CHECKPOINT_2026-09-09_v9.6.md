@@ -1,7 +1,17 @@
-# HIELYA CHECKPOINT v9.4 — CODEX_PROOF_BUDGET_PREPARATION
+# HIELYA CHECKPOINT v9.6 — CODEX_PROOF_BUDGET_PREPARATION
 
 Date: 2026-09-09 UTC. Issue #72. Branch `hielya/codex-proof-budget`.
 Base main verified live: `5eed7ca5f8583dea94803e7494214bf9371c44ec`.
+
+Renumbered from the originally reserved v9.4 to v9.6 while syncing this PR with
+`main` on 2026-09-17: `main` had since merged v9.5 (`HIELYA_CHECKPOINT_2026-09-17_v9.5.md`,
+via PR #74) ahead of this PR's own merge. The repository's immutable-history guard
+(`scripts/automation/check-immutable-history.mjs`) requires `docs/checkpoints/INDEX.md`
+to stay strictly byte-append-only and every new checkpoint version to exceed the
+highest version already present on the target `main` at merge time — v9.4 was no
+longer a valid slot once v9.5 landed first. No other content below was changed from
+the original v9.4 draft; the authoring date and all evidence remain as originally
+recorded.
 
 ## State and authorization
 

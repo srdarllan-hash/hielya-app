@@ -31,11 +31,13 @@ const allowedApiPaths = new Set([
 ]);
 
 let apiRequests: string[];
+let expectedApiPaths: Set<string>;
 let runtimeErrors: RuntimeErrorCollector;
 
 test.beforeEach(async ({ page }) => {
   await installNormalStoreRoute(page);
   apiRequests = [];
+  expectedApiPaths = new Set(allowedApiPaths);
   runtimeErrors = collectRuntimeErrors(page);
   page.on('request', (request) => {
     const url = new URL(request.url());
@@ -46,7 +48,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.afterEach(async () => {
-  expect(new Set(apiRequests)).toEqual(allowedApiPaths);
+  expect(new Set(apiRequests)).toEqual(expectedApiPaths);
   expect(runtimeErrors.errors).toEqual([]);
 });
 
@@ -56,7 +58,7 @@ test('canonical Next HTTP path renders EMPTY without synthetic fallback or mutat
   await expect(page.locator('[data-home-catalog-state="HOME_CATALOG_EMPTY"]')).toBeVisible();
   await expect(page.getByText('Catálogo temporalmente vacío')).toBeVisible();
   await expect(page.getByText('Agua sintética fría')).toHaveCount(0);
-  expect(new Set(apiRequests)).toEqual(allowedApiPaths);
+  expect(new Set(apiRequests)).toEqual(expectedApiPaths);
 });
 
 test('synthetic fixtures exercise READY, unit, pack, ice, alcohol and availability presentation', async ({ page }) => {
@@ -70,19 +72,56 @@ test('synthetic fixtures exercise READY, unit, pack, ice, alcohol and availabili
   await expect(page.getByText('Venta 18+').first()).toBeVisible();
   await expect(page.getByText('Temporalmente no disponible')).toBeVisible();
 
+  // Cart runtime authorizes mutations after server eligibility revalidation.
+  // Synthetic HTTP responses keep this test independent of the production runtime guard.
+  const cartId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  const items: { id: string; product: typeof syntheticProducts[number]; quantity: number; unitPriceCents: number; lineTotalCents: number }[] = [];
+  const purchases: string[] = [];
+  await page.route('**/api/v1/carts**', async route => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    expect(request.method()).toBe('POST');
+    expect(request.headers()['idempotency-key']).toBeTruthy();
+    expect(request.headers().authorization).toBeUndefined();
+    if (path.endsWith('/items')) {
+      const body = request.postDataJSON();
+      expect(Object.keys(body).sort()).toEqual(['productId', 'quantity', 'revision']);
+      expect(body.quantity).toBe(1);
+      const product = syntheticProducts.find(value => value.id === body.productId)!;
+      expect(product).toBeDefined();
+      purchases.push(product.id);
+      items.push({ id: product.id, product, quantity: 1, unitPriceCents: product.salePriceCents, lineTotalCents: product.salePriceCents });
+    }
+    const subtotal = items.reduce((sum, item) => sum + item.lineTotalCents, 0);
+    await route.fulfill({ json: {
+      id: cartId, revision: items.length + 1, status: 'ACTIVE', items,
+      productSubtotalCents: subtotal, deliveryFeeCents: null, totalCents: null,
+      minimumReached: false, amountMissingForMinimumCents: 2500 - subtotal, reservation: null,
+      availability: { storeStatus: 'OPEN', demand: { level: 'NORMAL', estimate: null }, alcohol: { status: 'AVAILABLE', reason: 'ELIGIBLE', snapshot: null } },
+      serverNow: new Date().toISOString(), refreshAfterMs: 15000,
+    } });
+  });
+  expectedApiPaths.add('POST /api/v1/carts');
+  expectedApiPaths.add(`POST /api/v1/carts/${cartId}/items`);
   const requestsBeforeActions = apiRequests.length;
   await page.getByRole('button', { name: 'Abrir perfil' }).click();
-  await page.getByRole('button', { name: 'Abrir carrito' }).click();
   for (const name of ['Añadir Agua sintética fría al carrito','Añadir Pack sintético frío con hielo al carrito']) {
-    const validation = page.waitForResponse(response => new URL(response.url()).pathname === '/api/v1/store/state');
+    const added = page.waitForResponse(response => new URL(response.url()).pathname.endsWith('/items'));
     await page.getByRole('button', { name }).click();
-    await (await validation).finished();
+    await (await added).finished();
   }
-  // Phase5 authorizes exactly two read-only revalidations, not cart/profile mutations.
-  expect(apiRequests.slice(requestsBeforeActions)).toEqual(['GET /api/v1/store/state','GET /api/v1/store/state']);
+  expect(apiRequests.slice(requestsBeforeActions)).toEqual([
+    'GET /api/v1/store/state', 'POST /api/v1/carts', `POST /api/v1/carts/${cartId}/items`,
+    'GET /api/v1/store/state', `POST /api/v1/carts/${cartId}/items`,
+  ]);
+  expect(purchases).toEqual([syntheticProducts[0].id, syntheticProducts[2].id]);
 
   const body = await page.locator('body').innerText();
   for (const field of forbiddenPublicFields) expect(body).not.toContain(field);
+  await page.getByRole('button', { name: 'Abrir carrito' }).click();
+  await expect(page).toHaveURL(/\/cart$/);
+  await expect(page.getByRole('heading', { name: syntheticProducts[0].name })).toBeVisible();
+  await expect(page.getByRole('heading', { name: syntheticProducts[2].name })).toBeVisible();
 });
 
 test('search and category selection call the products API with the certified query contract', async ({ page }) => {

@@ -26,6 +26,7 @@ export function createOrderHttpHandler(dependencies: () => OrderHttpDependencies
       if (!customer) throw new OrderFoundationError('UNAUTHORIZED');
       const path = new URL(request.url).pathname.replace('/api/v1/', '').split('/');
       if (request.method === 'GET' && path[0] === 'orders' && path.length === 2) {
+        if (!uuid.test(path[1])) throw new OrderFoundationError('INVALID_REQUEST');
         const order = orders().findOwned(customer, path[1]);
         if (!order) throw new OrderFoundationError('NOT_FOUND');
         return Response.json(publicOrder(order), { status: 200, headers });

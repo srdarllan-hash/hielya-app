@@ -90,6 +90,11 @@ describe('customer order HTTP', () => {
     const foreign = await f.get(order.id, 'hielya_session=other'); const missing = await f.get(randomUUID(), 'hielya_session=other');
     expect([foreign.status, missing.status]).toEqual([404, 404]); expect(await foreign.text()).toBe(await missing.text()); expect([...foreign.headers]).toEqual([...missing.headers]);
   });
+  it('rejects a malformed order id before querying the order repository', async () => {
+    const f = setup(); const orders = vi.spyOn(f.dependencies, 'orders');
+    const response = await f.get('not-a-uuid');
+    expect(response.status).toBe(400); expect(await response.json()).toMatchObject({ code: 'INVALID_REQUEST' }); expect(orders).not.toHaveBeenCalled();
+  });
   it('refuses alcohol without an authoritative accepted snapshot', async () => {
     const f = setup(); const view = await f.reserve(f.make(true));
     const response = await f.post({ ...f.command(view), ageDeclarationsAccepted: true, acceptedAlcoholDecisionId: randomUUID() });

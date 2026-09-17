@@ -80,7 +80,12 @@ const CART_ROUTE_HANDLERS: AuthorizedRouteHandler[] = [
   { method: 'POST', path: '/addresses', file: 'apps/ui-lab/app/api/v1/addresses/route.ts' },
   { method: 'POST', path: '/checkout/reservations', file: 'apps/ui-lab/app/api/v1/checkout/reservations/route.ts' },
 ];
-const AUTHORIZED_ROUTE_HANDLERS = [...FROZEN_PUBLIC_ROUTE_HANDLERS, ...AUTH_ROUTE_HANDLERS, ...PHASE5_ROUTE_HANDLERS, ...CART_ROUTE_HANDLERS];
+// Issue78: owner-authorized customer order transport only. No advance(), no /admin, no payment.
+const ORDER_ROUTE_HANDLERS: AuthorizedRouteHandler[] = [
+  { method: 'POST', path: '/orders', file: 'apps/ui-lab/app/api/v1/orders/route.ts' },
+  { method: 'GET', path: '/orders/{orderId}', file: 'apps/ui-lab/app/api/v1/orders/[orderId]/route.ts' },
+];
+const AUTHORIZED_ROUTE_HANDLERS = [...FROZEN_PUBLIC_ROUTE_HANDLERS, ...AUTH_ROUTE_HANDLERS, ...PHASE5_ROUTE_HANDLERS, ...CART_ROUTE_HANDLERS, ...ORDER_ROUTE_HANDLERS];
 const normalizePath = (path: string): string => path.replaceAll('\\', '/');
 
 const sourceFiles = (root: string): string[] => {
@@ -153,6 +158,11 @@ describe('MVP Local 36 API host architecture Gate', () => {
       const decision = route.path.startsWith('/auth/otp/') ? authAdr : readFileSync(join(process.cwd(), 'docs/decisions/ADR-CLIENT-SESSION-HTTPONLY-COOKIE.md'), 'utf8');
       expect(decision).toContain(`${route.method} /api/v1${route.path}`);
       expect(decision).toContain(route.file);
+    }
+    const orderAdr = readFileSync(join(process.cwd(), 'docs/decisions/ADR-CUSTOMER-ORDER-HTTP-TRANSPORT.md'), 'utf8');
+    for (const route of ORDER_ROUTE_HANDLERS) {
+      expect(orderAdr).toContain(`${route.method} /api/v1${route.path}`);
+      expect(orderAdr).toContain(route.file);
     }
     expect(publicApiAdr).toContain('category` resolve por `id` UUID persistido ou por `slug` persistido');
     expect(publicApiAdr).toContain('`q` pesquisa somente `sku` e `name`');

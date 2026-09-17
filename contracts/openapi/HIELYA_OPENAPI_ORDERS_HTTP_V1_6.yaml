@@ -1,0 +1,792 @@
+{
+  "openapi": "3.1.1",
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "info": {
+    "title": "HIELYA customer orders HTTP cookie contract",
+    "version": "1.6.0",
+    "description": "Scoped successor to V1.3 customer orders using the V1.5 cookie session. Certified domain, commercial rules, migrations and production gates unchanged."
+  },
+  "servers": [
+    {
+      "url": "/api/v1",
+      "description": "Relative API base; the host is environment-specific."
+    }
+  ],
+  "paths": {
+    "/orders": {
+      "post": {
+        "tags": [
+          "Orders"
+        ],
+        "operationId": "createAlcoholAwareOrder",
+        "summary": "createAlcoholAwareOrder",
+        "description": "Cookie-authenticated customer checkout. Reconfirms with CartService.validate before the order transaction, without a second reservation. Requires an active reservation. Accepted alcohol snapshot remains null; alcohol fails closed. Idempotent replay uses OrderFoundation after successful preflight. No payment or workforce operations.",
+        "security": [
+          {
+            "customerSession": []
+          }
+        ],
+        "x-hielya-implementation-status": "CUSTOMER_HTTP_LOCAL_ONLY",
+        "x-hielya-domain-guards": [
+          "CURRENT_SLA",
+          "DYNAMIC_CUTOFF",
+          "CART_REVISION",
+          "SERVER_DERIVED_ALCOHOL",
+          "PAYMENT_CONFIRMATION_SEPARATE"
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128
+            },
+            "description": "Bound to authenticated actor, operation, object and payload. Same key+payload replay; different payload409; retry never reopens a refused delivery."
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful command/query. ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderCompliance"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wrong role or object access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Object not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain/revision/idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Authoritative service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAlcoholAwareOrder"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{orderId}": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "operationId": "getAlcoholAwareOrder",
+        "summary": "getAlcoholAwareOrder",
+        "description": "Only the owning customer. Missing and foreign orders return identical 404 responses. No courier identity or internal checkout data.",
+        "security": [
+          {
+            "customerSession": []
+          }
+        ],
+        "x-hielya-implementation-status": "CUSTOMER_HTTP_LOCAL_ONLY",
+        "x-hielya-domain-guards": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "orderId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful command/query. Only owning customer; no courier identity or document evidence.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderCompliance"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wrong role or object access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Object not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain/revision/idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Authoritative service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "customerSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "hielya_session",
+        "description": "Opaque revocable session. HttpOnly; Secure; SameSite=Strict; Path=/. Absolute expiry remains 2592000 seconds; never renewed."
+      }
+    },
+    "schemas": {
+      "CreateAlcoholAwareOrder": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "cartId",
+          "reservationId",
+          "addressId",
+          "expectedCartRevision",
+          "acceptedAlcoholDecisionId",
+          "ageDeclarationsAccepted"
+        ],
+        "properties": {
+          "cartId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reservationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "addressId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedCartRevision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "acceptedAlcoholDecisionId": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ageDeclarationsAccepted": {
+            "type": "boolean"
+          }
+        },
+        "description": "Server derives containsAlcohol from persisted item/bundle/substitution snapshots; requiresAgeVerification is not writable. Alcohol requires age declaration and current accepted decision ID. Re-evaluate real upper estimate at submit; changed promise ->409 with current availability for explicit reconfirmation before order/payment creation. No alcohol allows null decision and false declaration. Technical order can await payment, not a confirmed sale. Third-party hotel handover and redelivery of refused order prohibited."
+      },
+      "OrderCompliance": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "revision",
+          "status",
+          "containsAlcohol",
+          "requiresAgeVerification",
+          "alcoholSnapshot",
+          "promisedLatestHandoverAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "AWAITING_PAYMENT",
+              "PAYMENT_AUTHORIZED",
+              "AWAITING_PICKING",
+              "PREPARING",
+              "READY",
+              "OUT_FOR_DELIVERY",
+              "DELIVERED",
+              "CANCELLED",
+              "DELIVERY_FAILED",
+              "RETURNING",
+              "RETURNED"
+            ]
+          },
+          "containsAlcohol": {
+            "type": "boolean"
+          },
+          "requiresAgeVerification": {
+            "type": "boolean"
+          },
+          "alcoholSnapshot": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AlcoholQuoteSnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "promisedLatestHandoverAt": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "containsAlcohol": {
+                  "const": true
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "requiresAgeVerification": {
+                  "const": true
+                },
+                "alcoholSnapshot": {
+                  "$ref": "#/components/schemas/AlcoholQuoteSnapshot"
+                },
+                "promisedLatestHandoverAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "requiresAgeVerification": {
+                  "const": false
+                },
+                "alcoholSnapshot": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        ],
+        "description": "Customer-safe order view. requiresAgeVerification=containsAlcohol, including actual pack components. Original promise/snapshot retained; later eligibility uses real remaining time without silently extending original promise. No physical identity evidence exposed here."
+      },
+      "AlcoholQuoteSnapshot": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "decisionId",
+          "policyVersion",
+          "estimate",
+          "standardSlaMinutes",
+          "effectiveSlaMinutes",
+          "timezone",
+          "alcoholOrderCutoffAt",
+          "alcoholHandoverDeadlineAt"
+        ],
+        "properties": {
+          "decisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "policyVersion": {
+            "type": "string",
+            "minLength": 1
+          },
+          "estimate": {
+            "$ref": "#/components/schemas/SlaEstimate"
+          },
+          "standardSlaMinutes": {
+            "const": 45
+          },
+          "effectiveSlaMinutes": {
+            "type": "integer",
+            "minimum": 45
+          },
+          "timezone": {
+            "const": "Europe/Madrid"
+          },
+          "alcoholOrderCutoffAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "alcoholHandoverDeadlineAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "description": "Derived server decision: effectiveSlaMinutes=MAX(45, estimate.upperBoundMinutes); deadline is local service-date22:00; cutoff=deadline-effectiveSlaMinutes. Both timestamps are computed per decision, not a configured fixed21:15. Validity inherited from estimate. No maximum60 cap."
+      },
+      "SlaEstimate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "estimateId",
+          "version",
+          "source",
+          "calculatedAt",
+          "validUntil",
+          "minimumMinutes",
+          "upperBoundMinutes"
+        ],
+        "properties": {
+          "estimateId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "calculatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "minimumMinutes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "upperBoundMinutes": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "description": "Server-owned end-to-end estimate including queue, acceptance, preparation, travel, hotel encounter, ID and PIN. Minimum <= upper; calculatedAt <= serverNow < validUntil. No averaging or optimistic fallback. Cross-field/time checks are runtime invariants, not JSON Schema arithmetic."
+      },
+      "ComplianceError": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "message",
+          "currentAvailability"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "INVALID_REQUEST",
+              "UNAUTHORIZED",
+              "FORBIDDEN",
+              "NOT_FOUND",
+              "STALE_REVISION",
+              "SLA_UNAVAILABLE",
+              "CUTOFF_REACHED",
+              "PROMISE_RECONFIRMATION_REQUIRED",
+              "AGE_NOT_VERIFIED",
+              "PIN_INVALID",
+              "TERMINAL_REFUSAL",
+              "IDEMPOTENCY_CONFLICT",
+              "DELIVERY_DEADLINE_EXCEEDED",
+              "SERVICE_UNAVAILABLE",
+              "CHECKOUT_INVALID",
+              "RESERVATION_UNAVAILABLE",
+              "RESERVATION_MISMATCH",
+              "STORE_NOT_OPEN",
+              "ORDER_ALREADY_EXISTS"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "currentAvailability": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/OperationalAvailability"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "violations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Unmodified CartService.validate violations when checkout preflight is invalid."
+          }
+        },
+        "description": "No sensitive document data or PIN in message. Reconfirmation requires currentAvailability; do not create/charge order on quote conflict.",
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "code": {
+                  "const": "PROMISE_RECONFIRMATION_REQUIRED"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "currentAvailability": {
+                  "$ref": "#/components/schemas/OperationalAvailability"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "OperationalAvailability": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "storeStatus",
+          "demand",
+          "alcohol"
+        ],
+        "properties": {
+          "storeStatus": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "PAUSED",
+              "CLOSED"
+            ]
+          },
+          "demand": {
+            "$ref": "#/components/schemas/DemandState"
+          },
+          "alcohol": {
+            "$ref": "#/components/schemas/AlcoholAvailability"
+          }
+        },
+        "description": "Orthogonal dimensions for Phase5 C-005. UI must simultaneously render demand and alcohol notices: HIGH(45–60) plus UNAVAILABLE(cutoff21:00), without replacing one with the other. Public response must not depend on login.",
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "storeStatus": {
+                  "type": "string",
+                  "enum": [
+                    "PAUSED",
+                    "CLOSED"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "alcohol": {
+                  "properties": {
+                    "status": {
+                      "const": "UNAVAILABLE"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "demand": {
+                  "properties": {
+                    "level": {
+                      "const": "UNKNOWN"
+                    }
+                  }
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "alcohol": {
+                  "properties": {
+                    "status": {
+                      "const": "UNAVAILABLE"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "DemandState": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "level",
+          "estimate"
+        ],
+        "properties": {
+          "level": {
+            "type": "string",
+            "enum": [
+              "NORMAL",
+              "HIGH",
+              "UNKNOWN"
+            ]
+          },
+          "estimate": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SlaEstimate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "description": "Independent from alcohol availability. HIGH can coexist with UNAVAILABLE; UNKNOWN or stale/missing estimate cannot authorize alcohol.",
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "level": {
+                  "const": "UNKNOWN"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "estimate": {
+                  "type": "null"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "estimate": {
+                  "$ref": "#/components/schemas/SlaEstimate"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "AlcoholAvailability": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "reason",
+          "snapshot"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "AVAILABLE",
+              "UNAVAILABLE"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "ELIGIBLE",
+              "CUTOFF_REACHED",
+              "STORE_NOT_OPEN",
+              "SLA_UNAVAILABLE"
+            ]
+          },
+          "snapshot": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AlcoholQuoteSnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "AVAILABLE"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "reason": {
+                  "const": "ELIGIBLE"
+                },
+                "snapshot": {
+                  "$ref": "#/components/schemas/AlcoholQuoteSnapshot"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "reason": {
+                  "type": "string",
+                  "enum": [
+                    "CUTOFF_REACHED",
+                    "STORE_NOT_OPEN",
+                    "SLA_UNAVAILABLE"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "reason": {
+                  "const": "SLA_UNAVAILABLE"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "snapshot": {
+                  "type": "null"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "reason": {
+                  "const": "CUTOFF_REACHED"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "snapshot": {
+                  "$ref": "#/components/schemas/AlcoholQuoteSnapshot"
+                }
+              }
+            }
+          }
+        ],
+        "description": "AVAILABLE is informational, never purchase authorization. At serverNow >= computed cutoff use CUTOFF_REACHED. Invalid/stale/missing estimate => SLA_UNAVAILABLE, null snapshot, no 45-minute fallback."
+      }
+    }
+  }
+}

@@ -1,0 +1,1845 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "HIELYA cart runtime — dev/test only",
+    "version": "1.4.0",
+    "description": "Scoped successor for cart routes. Historical V1.0/V1.3 are unchanged. Production remains prohibited. No coupons, recommendations, orders or payments."
+  },
+  "servers": [
+    {
+      "url": "/api/v1"
+    }
+  ],
+  "paths": {
+    "/carts": {
+      "post": {
+        "operationId": "createRuntimeCart",
+        "description": "Opaque cart ID is an anonymous capability, held only in client memory. No cookie or storage. Creation key also stays in memory. Claim removes anonymous access.",
+        "security": [
+          {},
+          {
+            "customerBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128,
+              "pattern": "^[!-~]+$"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Current server result; an idempotent replay never renews a reservation. For reserve, valid=false means no reservation was created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing resource or ownership mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain or revision conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Configuration/provider unavailable or production blocked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {},
+                "required": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "/carts/{cartId}": {
+      "get": {
+        "operationId": "readRuntimeCart",
+        "description": "After claim customerBearer and ownership are mandatory. No stock reservation is created by reading.",
+        "security": [
+          {},
+          {
+            "customerBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cartId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current server result; an idempotent replay never renews a reservation. For reserve, valid=false means no reservation was created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing resource or ownership mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain or revision conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Configuration/provider unavailable or production blocked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/carts/{cartId}/claim": {
+      "post": {
+        "operationId": "claimRuntimeCart",
+        "description": "Idempotently binds the current anonymous cart to the authenticated customer. No merging with another cart.",
+        "security": [
+          {
+            "customerBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cartId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current server result; an idempotent replay never renews a reservation. For reserve, valid=false means no reservation was created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing resource or ownership mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain or revision conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Configuration/provider unavailable or production blocked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {},
+                "required": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "/carts/{cartId}/items": {
+      "post": {
+        "operationId": "addRuntimeCartItem",
+        "description": "Rechecks server alcohol eligibility and aggregate component stock. Atomic edit cancels whole active reservation. Invalid commands roll back all writes.",
+        "security": [
+          {},
+          {
+            "customerBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cartId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128,
+              "pattern": "^[!-~]+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current server result; an idempotent replay never renews a reservation. For reserve, valid=false means no reservation was created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing resource or ownership mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain or revision conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Configuration/provider unavailable or production blocked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "productId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "productId",
+                  "quantity",
+                  "revision"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/carts/{cartId}/items/{itemId}": {
+      "patch": {
+        "operationId": "updateRuntimeCartItem",
+        "description": "Quantity zero removes. Any successful mutation cancels the entire active reservation without renewal. Revision and idempotency protect concurrency.",
+        "security": [
+          {},
+          {
+            "customerBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cartId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128,
+              "pattern": "^[!-~]+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current server result; an idempotent replay never renews a reservation. For reserve, valid=false means no reservation was created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing resource or ownership mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain or revision conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Configuration/provider unavailable or production blocked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "quantity": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "quantity",
+                  "revision"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteRuntimeCartItem",
+        "description": "",
+        "security": [
+          {},
+          {
+            "customerBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cartId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128,
+              "pattern": "^[!-~]+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current server result; an idempotent replay never renews a reservation. For reserve, valid=false means no reservation was created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing resource or ownership mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain or revision conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Configuration/provider unavailable or production blocked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "revision"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/addresses": {
+      "post": {
+        "operationId": "createRuntimeAddress",
+        "description": "Minimal immutable address owned by authenticated customer. Client coordinates are a destination, never authority for distance, fee or eligibility. C-002 geocoding/routing remain explicitly development integrations.",
+        "security": [
+          {
+            "customerBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128,
+              "pattern": "^[!-~]+$"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Current server result; an idempotent replay never renews a reservation. For reserve, valid=false means no reservation was created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuntimeAddress"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing resource or ownership mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain or revision conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Configuration/provider unavailable or production blocked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RuntimeAddressInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/carts/{cartId}/validate": {
+      "post": {
+        "operationId": "validateRuntimeCart",
+        "description": "Server checks stock and pack components, minimum EUR25 products-only, road radius <=4km, operation [10:00,22:00) Madrid, existing dynamic alcohol policy and public-space restriction. No inventory held. Old coupon/tip fields are not accepted in this scoped contract.",
+        "security": [
+          {
+            "customerBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cartId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current server result; an idempotent replay never renews a reservation. For reserve, valid=false means no reservation was created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuntimeCartValidation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing resource or ownership mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain or revision conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Configuration/provider unavailable or production blocked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "addressId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "addressId"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/checkout/reservations": {
+      "post": {
+        "operationId": "reserveRuntimeCart",
+        "description": "Revalidates after routing within SQLite write transaction. Reservation TTL600seconds. At expiration preserve cart/items and release stock; explicit new action/key revalidates everything. No order/payment. Same key cannot renew after expiration/edit; replay returns current cart. Existing active reservation is never extended; conflicting address fails. HTTP409 with valid=false returns the failed validation and creates no reservation.",
+        "security": [
+          {
+            "customerBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 128,
+              "pattern": "^[!-~]+$"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Current reservation result; an idempotent replay never renews an expired or cancelled reservation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuntimeCartValidation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing resource or ownership mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain or revision conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/CartError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RuntimeCartValidation"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Configuration/provider unavailable or production blocked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "cartId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "addressId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "cartId",
+                  "addressId",
+                  "revision"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "customerBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "OpaqueSessionToken",
+        "description": "Opaque token; only its hash is stored server-side. The revocable session has an absolute 30-day lifetime, is not a JSON Web Token, and has no refresh token."
+      },
+      "courierBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "OpaqueCourierCredential",
+        "description": "Future workforce identity, separate from customer session. Never accept customerBearer for courier commands. Require assigned courier and object-level access; no admin remote age override. Not implemented/issued in Phase1."
+      },
+      "operatorBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "OpaqueOperatorCredential",
+        "description": "Future store operator authorization for order acceptance/preparation, not permission to bypass handover or impersonate courier. Not implemented in Phase1."
+      }
+    },
+    "schemas": {
+      "AlcoholAvailability": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "reason",
+          "snapshot"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "AVAILABLE",
+              "UNAVAILABLE"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "ELIGIBLE",
+              "CUTOFF_REACHED",
+              "STORE_NOT_OPEN",
+              "SLA_UNAVAILABLE"
+            ]
+          },
+          "snapshot": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AlcoholQuoteSnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "AVAILABLE"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "reason": {
+                  "const": "ELIGIBLE"
+                },
+                "snapshot": {
+                  "$ref": "#/components/schemas/AlcoholQuoteSnapshot"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "reason": {
+                  "type": "string",
+                  "enum": [
+                    "CUTOFF_REACHED",
+                    "STORE_NOT_OPEN",
+                    "SLA_UNAVAILABLE"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "reason": {
+                  "const": "SLA_UNAVAILABLE"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "snapshot": {
+                  "type": "null"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "reason": {
+                  "const": "CUTOFF_REACHED"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "snapshot": {
+                  "$ref": "#/components/schemas/AlcoholQuoteSnapshot"
+                }
+              }
+            }
+          }
+        ],
+        "description": "AVAILABLE is informational, never purchase authorization. At serverNow >= computed cutoff use CUTOFF_REACHED. Invalid/stale/missing estimate => SLA_UNAVAILABLE, null snapshot, no 45-minute fallback."
+      },
+      "AlcoholQuoteSnapshot": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "decisionId",
+          "policyVersion",
+          "estimate",
+          "standardSlaMinutes",
+          "effectiveSlaMinutes",
+          "timezone",
+          "alcoholOrderCutoffAt",
+          "alcoholHandoverDeadlineAt"
+        ],
+        "properties": {
+          "decisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "policyVersion": {
+            "type": "string",
+            "minLength": 1
+          },
+          "estimate": {
+            "$ref": "#/components/schemas/SlaEstimate"
+          },
+          "standardSlaMinutes": {
+            "const": 45
+          },
+          "effectiveSlaMinutes": {
+            "type": "integer",
+            "minimum": 45
+          },
+          "timezone": {
+            "const": "Europe/Madrid"
+          },
+          "alcoholOrderCutoffAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "alcoholHandoverDeadlineAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "description": "Derived server decision: effectiveSlaMinutes=MAX(45, estimate.upperBoundMinutes); deadline is local service-date22:00; cutoff=deadline-effectiveSlaMinutes. Both timestamps are computed per decision, not a configured fixed21:15. Validity inherited from estimate. No maximum60 cap."
+      },
+      "CartError": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "CartView": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "RESERVED"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "product": {
+                  "$ref": "#/components/schemas/PublicProduct"
+                },
+                "quantity": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "unitPriceCents": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "lineTotalCents": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "id",
+                "product",
+                "quantity",
+                "unitPriceCents",
+                "lineTotalCents"
+              ]
+            }
+          },
+          "productSubtotalCents": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "deliveryFeeCents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "totalCents": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "minimumReached": {
+            "type": "boolean"
+          },
+          "amountMissingForMinimumCents": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "reservation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RuntimeReservation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "availability": {
+            "$ref": "#/components/schemas/OperationalAvailability"
+          },
+          "serverNow": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "refreshAfterMs": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "status",
+          "items",
+          "productSubtotalCents",
+          "deliveryFeeCents",
+          "totalCents",
+          "minimumReached",
+          "amountMissingForMinimumCents",
+          "reservation",
+          "availability",
+          "serverNow",
+          "refreshAfterMs"
+        ]
+      },
+      "DemandState": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "level",
+          "estimate"
+        ],
+        "properties": {
+          "level": {
+            "type": "string",
+            "enum": [
+              "NORMAL",
+              "HIGH",
+              "UNKNOWN"
+            ]
+          },
+          "estimate": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SlaEstimate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "description": "Independent from alcohol availability. HIGH can coexist with UNAVAILABLE; UNKNOWN or stale/missing estimate cannot authorize alcohol.",
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "level": {
+                  "const": "UNKNOWN"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "estimate": {
+                  "type": "null"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "estimate": {
+                  "$ref": "#/components/schemas/SlaEstimate"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "OperationalAvailability": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "storeStatus",
+          "demand",
+          "alcohol"
+        ],
+        "properties": {
+          "storeStatus": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "PAUSED",
+              "CLOSED"
+            ]
+          },
+          "demand": {
+            "$ref": "#/components/schemas/DemandState"
+          },
+          "alcohol": {
+            "$ref": "#/components/schemas/AlcoholAvailability"
+          }
+        },
+        "description": "Orthogonal dimensions for Phase5 C-005. UI must simultaneously render demand and alcohol notices: HIGH(45–60) plus UNAVAILABLE(cutoff21:00), without replacing one with the other. Public response must not depend on login.",
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "storeStatus": {
+                  "type": "string",
+                  "enum": [
+                    "PAUSED",
+                    "CLOSED"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "alcohol": {
+                  "properties": {
+                    "status": {
+                      "const": "UNAVAILABLE"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "demand": {
+                  "properties": {
+                    "level": {
+                      "const": "UNKNOWN"
+                    }
+                  }
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "alcohol": {
+                  "properties": {
+                    "status": {
+                      "const": "UNAVAILABLE"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PublicAvailability": {
+        "type": "string",
+        "enum": [
+          "AVAILABLE",
+          "UNAVAILABLE",
+          "TEMPORARILY_UNAVAILABLE"
+        ]
+      },
+      "PublicBundleComponent": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Commercial composition only. quantity is the number of units included in the pack, never an inventory balance.",
+        "required": [
+          "productId",
+          "sku",
+          "name",
+          "quantity"
+        ],
+        "properties": {
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Commercial quantity included in the pack."
+          }
+        }
+      },
+      "PublicProduct": {
+        "type": "object",
+        "additionalProperties": false,
+        "x-hielya-dto-boundary": "PUBLIC_ONLY",
+        "required": [
+          "id",
+          "sku",
+          "name",
+          "categoryId",
+          "salePriceCents",
+          "currency",
+          "availability",
+          "isPack",
+          "iceIncluded",
+          "maxPerOrder",
+          "containsAlcohol"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "ean": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "brand": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subcategory": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "volumeLabel": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "grossWeightKg": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "estimatedVolumeLiters": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "salePriceCents": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Persisted total sale price in euro cents."
+          },
+          "currency": {
+            "type": "string",
+            "const": "EUR"
+          },
+          "unitPriceLabel": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "availability": {
+            "$ref": "#/components/schemas/PublicAvailability"
+          },
+          "maxPerOrder": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "temperatureProfile": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "CHILLED",
+              "FROZEN",
+              "CELLAR",
+              "AMBIENT",
+              null
+            ]
+          },
+          "readyToConsume": {
+            "type": "boolean"
+          },
+          "containsAlcohol": {
+            "type": "boolean"
+          },
+          "minimumAge": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 18
+          },
+          "alcoholPercentage": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "imageUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          },
+          "keywords": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "isPack": {
+            "type": "boolean"
+          },
+          "iceIncluded": {
+            "type": "boolean"
+          },
+          "bundleComponents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicBundleComponent"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "isPack": {
+                  "const": true
+                }
+              },
+              "required": [
+                "isPack"
+              ]
+            },
+            "then": {
+              "properties": {
+                "iceIncluded": {
+                  "const": true
+                },
+                "bundleComponents": {
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "iceIncluded",
+                "bundleComponents"
+              ]
+            }
+          }
+        ]
+      },
+      "RuntimeAddress": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "customerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "formatted": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "kind": {
+            "enum": [
+              "residential",
+              "hotel",
+              "condominium",
+              "business",
+              "public_space",
+              "unknown"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "customerId",
+          "formatted",
+          "latitude",
+          "longitude",
+          "kind"
+        ]
+      },
+      "RuntimeAddressInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "formatted": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "kind": {
+            "enum": [
+              "residential",
+              "hotel",
+              "condominium",
+              "business",
+              "public_space",
+              "unknown"
+            ]
+          }
+        },
+        "required": [
+          "formatted",
+          "latitude",
+          "longitude",
+          "kind"
+        ]
+      },
+      "RuntimeCartValidation": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "valid": {
+            "type": "boolean"
+          },
+          "violations": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "EMPTY_CART",
+                "MINIMUM_NOT_REACHED",
+                "OUTSIDE_AREA",
+                "PUBLIC_SPACE_BLOCKED",
+                "STORE_CLOSED",
+                "ALCOHOL_CUTOFF",
+                "OUT_OF_STOCK"
+              ]
+            }
+          },
+          "cart": {
+            "$ref": "#/components/schemas/CartView"
+          }
+        },
+        "required": [
+          "valid",
+          "violations",
+          "cart"
+        ]
+      },
+      "RuntimeReservation": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "EXPIRED",
+              "CANCELLED"
+            ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "expiresAt"
+        ]
+      },
+      "SlaEstimate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "estimateId",
+          "version",
+          "source",
+          "calculatedAt",
+          "validUntil",
+          "minimumMinutes",
+          "upperBoundMinutes"
+        ],
+        "properties": {
+          "estimateId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "calculatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "minimumMinutes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "upperBoundMinutes": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "description": "Server-owned end-to-end estimate including queue, acceptance, preparation, travel, hotel encounter, ID and PIN. Minimum <= upper; calculatedAt <= serverNow < validUntil. No averaging or optimistic fallback. Cross-field/time checks are runtime invariants, not JSON Schema arithmetic."
+      }
+    }
+  }
+}

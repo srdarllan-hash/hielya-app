@@ -127,3 +127,5 @@ Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POL
 | v9.6 | 2026-09-09 | CODEX_PROOF_BUDGET_PREPARATION — Issue #72; offline module only, runtime unverified | `5eed7ca5f8583dea94803e7494214bf9371c44ec` (base) | [v9.6](./2026-09/HIELYA_CHECKPOINT_2026-09-09_v9.6.md) | criado no repositório — renumbered from the originally reserved v9.4 to v9.6 during sync, since v9.5 landed on main first; see the file's own note |
 
 | v9.7 | 2026-09-17 | CLIENT_SESSION_HTTPONLY_COOKIE_CANDIDATE — Issue #75; supersedes parts of opaque-session ADR V1.2; implemented by Codex, reviewed by Claude | `6251c0b99376daac3a86b20156fa44d22229a09f` (base) | [v9.7](./2026-09/HIELYA_CHECKPOINT_2026-09-17_v9.7.md) | criado no repositório |
+
+| v9.8 | 2026-09-17 | CUSTOMER_ORDER_HTTP_TRANSPORT_CANDIDATE — Issue #78; stacked on PR #76; allowlist extended only under owner authorization | `6251c0b99376daac3a86b20156fa44d22229a09f` (base) | [v9.8](./2026-09/HIELYA_CHECKPOINT_2026-09-17_v9.8.md) | criado no repositório |

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { forwardRef, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import { Input, type InputProps } from './Input';
 
 export interface PhoneValue { nationalDigits: string; e164: string | null; }
@@ -59,6 +59,22 @@ export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(function
       caret.current = null;
     }
   });
+  // Hydration reconciliation: the server-rendered <input> can already hold
+  // digits a user typed natively before React attached its onChange handler
+  // (see docs/qa/AUTH_HYDRATION_INVESTIGATION.md). React's hydration commit
+  // does not force the DOM value back to the pre-hydration empty state, so
+  // once mounted we read whatever the DOM actually shows and reconcile it
+  // into controlled state exactly once via the normal commit path (which
+  // notifies onChange, so an externally-controlled `value` stays in sync
+  // too). A non-racy mount is a no-op: the DOM already matches `current`.
+  useEffect(() => {
+    if (blocked || !input.current) return;
+    const domValue = input.current.value;
+    const next = normalize(domValue);
+    if (next !== null && next !== current) commit(next, digitCount(domValue));
+    // Runs once on mount by design; commit/current/blocked intentionally excluded.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const validate = () => { validated.current = true; setLocalError(formatError(current, required)); };
   return <Input {...rest} ref={input} label={label} helper={helper} placeholder={placeholder} prefix="+34"
     type="tel" inputMode="tel" autoComplete="tel" value={draft ?? mask(current)} required={required}

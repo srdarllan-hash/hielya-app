@@ -1,0 +1,99 @@
+name: Claude Code
+
+# Official Claude Code GitHub Actions integration for HIELYA.
+#
+# Pilot scope (intentionally minimal):
+#   - Runs ONLY on explicit "@claude" mentions in issue comments and PR review
+#     comments created by a user who already has write-level association with
+#     this repository (OWNER / MEMBER / COLLABORATOR).
+#   - Does NOT run on `issues`, `pull_request_review`, `pull_request`, `push`,
+#     labels, or any automatic per-PR execution.
+#   - No auto-merge. `main` remains protected by the "Protect main — HIELYA"
+#     ruleset; this workflow never writes to `main`.
+#
+# The repository is PUBLIC. Third-party issue/PR content is untrusted; the
+# `author_association` gate below is a defence-in-depth check in addition to the
+# action's own actor-permission verification.
+#
+# Authentication uses the repository secret ANTHROPIC_API_KEY, referenced only
+# as ${{ secrets.ANTHROPIC_API_KEY }}. The previous CLAUDE_CODE_OAUTH_TOKEN path
+# returned HTTP 401 both locally and in GitHub Actions and is not used here.
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+concurrency:
+  group: claude-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+# Minimum permissions required for the mention-driven assistant. No other scope.
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: read
+  id-token: write
+
+jobs:
+  claude:
+    # Explicit "@claude" mention AND a trusted repository association.
+    if: >
+      contains(github.event.comment.body, '@claude') &&
+      (
+        github.event.comment.author_association == 'OWNER' ||
+        github.event.comment.author_association == 'MEMBER' ||
+        github.event.comment.author_association == 'COLLABORATOR'
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Claude Code
+        id: claude
+        uses: anthropics/claude-code-action@v1.0.217
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          trigger_phrase: "@claude"
+          # Disable label-based triggering for the pilot.
+          label_trigger: ""
+          # Do not allow bots or non-write users to invoke Claude.
+          allowed_bots: ""
+          # Diagnostics stay filtered: never publish the raw SDK stream or the
+          # rendered step-summary report. See the diagnosis step below.
+          show_full_output: false
+          display_report: false
+
+      # Filtered failure triage for the Issue #62 smoke test ONLY.
+      #
+      # Reads the action's `execution_file` output on the runner (where the file
+      # is unredacted) and emits a whitelist of fields — diagnosis status,
+      # is_error, HTTP status codes, a fixed error category. It NEVER prints raw
+      # SDK text. It exits 0 so the original job failure is preserved as-is; it
+      # is not wrapped in continue-on-error and it is not a required check.
+      - name: Filtered failure diagnosis (Issue #62 smoke test only)
+        id: claude_diagnosis
+        if: >
+          always() &&
+          steps.claude.outcome == 'failure' &&
+          github.event_name == 'issue_comment' &&
+          github.event.issue.number == 62 &&
+          github.actor == 'srdarllan-hash'
+        shell: bash
+        env:
+          CLAUDE_EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
+          MAX_EXECUTION_FILE_BYTES: "5242880"
+        run: node scripts/automation/diagnose-claude-failure.mjs

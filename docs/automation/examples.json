@@ -1,0 +1,92 @@
+{
+  "notice": "SYNTHETIC EXAMPLES ONLY. These SHAs are placeholders, not attestations or approvals.",
+  "payloads": [
+    {
+      "protocol_version": "1.0",
+      "repository": "srdarllan-hash/hielya-app",
+      "task_id": "HLY-900001",
+      "base_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "auto_merge": false,
+      "production_allowed": false,
+      "kind": "TASK",
+      "status": "DRAFT",
+      "branch": "hielya/agent/synthetic-fixture",
+      "objective": "Synthetic schema fixture; not a real authorized task.",
+      "allowed_paths": [
+        "docs/qa/synthetic-fixture.md"
+      ],
+      "forbidden_paths": [
+        ".github/**",
+        ".dev-migrations/**",
+        "apps/**",
+        "packages/**"
+      ],
+      "acceptance": [
+        "The synthetic document is clearly marked as a fixture."
+      ],
+      "required_checks": [
+        "synthetic-only"
+      ],
+      "owner_authorization_ref": null,
+      "max_correction_rounds": 2,
+      "owner_merge_required": true
+    },
+    {
+      "protocol_version": "1.0",
+      "repository": "srdarllan-hash/hielya-app",
+      "task_id": "HLY-900001",
+      "base_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "auto_merge": false,
+      "production_allowed": false,
+      "head_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "contract_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "checks": [
+        {
+          "name": "synthetic-only",
+          "head_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "outcome": "NOT_RUN",
+          "evidence": null
+        }
+      ],
+      "blockers": [
+        {
+          "id": "B1",
+          "detail": "Synthetic fixture only. No actual task, authorization or CI execution.",
+          "evidence": null
+        }
+      ],
+      "suggestions": [],
+      "kind": "IMPLEMENTATION",
+      "status": "BLOCKED",
+      "changed_paths": []
+    },
+    {
+      "protocol_version": "1.0",
+      "repository": "srdarllan-hash/hielya-app",
+      "task_id": "HLY-900001",
+      "base_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "auto_merge": false,
+      "production_allowed": false,
+      "head_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "contract_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "checks": [
+        {
+          "name": "synthetic-only",
+          "head_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "outcome": "NOT_RUN",
+          "evidence": null
+        }
+      ],
+      "blockers": [
+        {
+          "id": "B1",
+          "detail": "Synthetic fixture only. No actual task, authorization or CI execution.",
+          "evidence": null
+        }
+      ],
+      "suggestions": [],
+      "kind": "REVIEW",
+      "status": "BLOCKED"
+    }
+  ]
+}

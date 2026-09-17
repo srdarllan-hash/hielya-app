@@ -1,0 +1,396 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HIELYA agent payloads v1 (shape, not authorization)",
+  "description": "Cross-record SHA equality, provenance, complete required checks and authorization must be verified independently by a trusted controller.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/task"
+    },
+    {
+      "$ref": "#/$defs/implementation"
+    },
+    {
+      "$ref": "#/$defs/review"
+    }
+  ],
+  "$defs": {
+    "check": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "head_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "outcome": {
+          "enum": [
+            "SUCCESS",
+            "FAILURE",
+            "SKIPPED",
+            "NOT_RUN",
+            "DIAGNOSTIC_ONLY"
+          ]
+        },
+        "evidence": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "head_sha",
+        "outcome",
+        "evidence"
+      ],
+      "additionalProperties": false
+    },
+    "blocker": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "detail",
+        "evidence"
+      ],
+      "additionalProperties": false
+    },
+    "task": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "1.0"
+        },
+        "repository": {
+          "const": "srdarllan-hash/hielya-app"
+        },
+        "task_id": {
+          "type": "string",
+          "pattern": "^HLY-[1-9][0-9]*$"
+        },
+        "base_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "auto_merge": {
+          "const": false
+        },
+        "production_allowed": {
+          "const": false
+        },
+        "kind": {
+          "const": "TASK"
+        },
+        "status": {
+          "enum": [
+            "DRAFT",
+            "AUTHORIZED"
+          ]
+        },
+        "branch": {
+          "type": "string",
+          "pattern": "^hielya/agent/[a-z0-9-]+$"
+        },
+        "objective": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allowed_paths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "forbidden_paths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "acceptance": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required_checks": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "owner_authorization_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "max_correction_rounds": {
+          "const": 2
+        },
+        "owner_merge_required": {
+          "const": true
+        }
+      },
+      "required": [
+        "protocol_version",
+        "repository",
+        "task_id",
+        "base_sha",
+        "auto_merge",
+        "production_allowed",
+        "kind",
+        "status",
+        "branch",
+        "objective",
+        "allowed_paths",
+        "forbidden_paths",
+        "acceptance",
+        "required_checks",
+        "owner_authorization_ref",
+        "max_correction_rounds",
+        "owner_merge_required"
+      ],
+      "additionalProperties": false
+    },
+    "implementation": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "1.0"
+        },
+        "repository": {
+          "const": "srdarllan-hash/hielya-app"
+        },
+        "task_id": {
+          "type": "string",
+          "pattern": "^HLY-[1-9][0-9]*$"
+        },
+        "base_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "auto_merge": {
+          "const": false
+        },
+        "production_allowed": {
+          "const": false
+        },
+        "head_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "contract_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/check"
+          }
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/blocker"
+          }
+        },
+        "suggestions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "kind": {
+          "const": "IMPLEMENTATION"
+        },
+        "status": {
+          "enum": [
+            "IMPLEMENTED",
+            "BLOCKED"
+          ]
+        },
+        "changed_paths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "protocol_version",
+        "repository",
+        "task_id",
+        "base_sha",
+        "auto_merge",
+        "production_allowed",
+        "head_sha",
+        "contract_sha256",
+        "checks",
+        "blockers",
+        "suggestions",
+        "kind",
+        "status",
+        "changed_paths"
+      ],
+      "additionalProperties": false
+    },
+    "review": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "1.0"
+        },
+        "repository": {
+          "const": "srdarllan-hash/hielya-app"
+        },
+        "task_id": {
+          "type": "string",
+          "pattern": "^HLY-[1-9][0-9]*$"
+        },
+        "base_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "auto_merge": {
+          "const": false
+        },
+        "production_allowed": {
+          "const": false
+        },
+        "head_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "contract_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/check"
+          }
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/blocker"
+          }
+        },
+        "suggestions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "kind": {
+          "const": "REVIEW"
+        },
+        "status": {
+          "enum": [
+            "READY_FOR_OWNER",
+            "CHANGES_REQUIRED",
+            "BLOCKED"
+          ]
+        }
+      },
+      "required": [
+        "protocol_version",
+        "repository",
+        "task_id",
+        "base_sha",
+        "auto_merge",
+        "production_allowed",
+        "head_sha",
+        "contract_sha256",
+        "checks",
+        "blockers",
+        "suggestions",
+        "kind",
+        "status"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "READY_FOR_OWNER"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "blockers": {
+                "maxItems": 0
+              },
+              "checks": {
+                "minItems": 1,
+                "items": {
+                  "properties": {
+                    "outcome": {
+                      "const": "SUCCESS"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "CHANGES_REQUIRED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "blockers": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

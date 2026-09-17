@@ -123,3 +123,5 @@ Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POL
 | v9.3 | 2026-09-09 | CLAUDE_DIAGNOSTIC_CLOSEOUT — Issue #70; API/CLI/Action PASS, temporary workflow removal candidate | `f82f89293da54a2dd4e6de7d631e1809f4ffa63a` (base) | [v9.3](./2026-09/HIELYA_CHECKPOINT_2026-09-09_v9.3.md) | criado no repositório |
 
 | v9.5 | 2026-09-17 | PHONE_INPUT_HYDRATION_RACE_FIX_CANDIDATE — pre-existing bug found by PR #58; v9.4 reserved by PR #73 | `5eed7ca5f8583dea94803e7494214bf9371c44ec` (base) | [v9.5](./2026-09/HIELYA_CHECKPOINT_2026-09-17_v9.5.md) | criado no repositório |
+
+| v9.6 | 2026-09-09 | CODEX_PROOF_BUDGET_PREPARATION — Issue #72; offline module only, runtime unverified | `5eed7ca5f8583dea94803e7494214bf9371c44ec` (base) | [v9.6](./2026-09/HIELYA_CHECKPOINT_2026-09-09_v9.6.md) | criado no repositório — renumbered from the originally reserved v9.4 to v9.6 during sync, since v9.5 landed on main first; see the file's own note |

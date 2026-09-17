@@ -8,7 +8,8 @@ const contractPath = join(
   process.cwd(),
   'contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_2.yaml',
 );
-const source = readFileSync(contractPath, 'utf8');
+const frozenSource = readFileSync(contractPath, 'utf8');
+const source = readFileSync(join(process.cwd(), 'contracts/openapi/HIELYA_OPENAPI_CLIENT_SESSION_V1_5.yaml'), 'utf8');
 const contract = JSON.parse(source) as {
   openapi: string;
   jsonSchemaDialect: string;
@@ -54,7 +55,7 @@ const resolveReference = (reference: string): unknown => {
   ), contract);
 };
 
-describe('MVP Local 36 OpenAPI V1.2 opaque authentication contract', () => {
+describe('V1.5 cookie authentication and frozen V1.2 lineage', () => {
   it('preserves the frozen V1.0 and V1.1 byte hashes and records lineage', () => {
     const expected = {
       'contracts/openapi/HIELYA_OPENAPI_V1_0.yaml':
@@ -63,7 +64,7 @@ describe('MVP Local 36 OpenAPI V1.2 opaque authentication contract', () => {
         '92e1ebcc1d817718a7f2fe9ef1ce93df60194e049d3e0349855bd4ddd24d2ec8',
     };
     for (const [file, digest] of Object.entries(expected)) expect(hash(file)).toBe(digest);
-    expect(contract['x-hielya-lineage']).toEqual([
+    expect(contract['x-hielya-lineage'].slice(0, 2)).toEqual([
       expect.objectContaining({
         file: 'contracts/openapi/HIELYA_OPENAPI_V1_0.yaml',
         sha256: expected['contracts/openapi/HIELYA_OPENAPI_V1_0.yaml'],
@@ -80,7 +81,7 @@ describe('MVP Local 36 OpenAPI V1.2 opaque authentication contract', () => {
   it('is OpenAPI 3.1.1 with JSON Schema 2020-12 and valid local references', () => {
     expect(contract.openapi).toBe('3.1.1');
     expect(contract.jsonSchemaDialect).toBe('https://json-schema.org/draft/2020-12/schema');
-    expect(contract.info.version).toBe('1.2.0');
+    expect(contract.info.version).toBe('1.5.0');
     expect(contract.servers).toEqual([
       expect.objectContaining({ url: '/api/v1' }),
     ]);
@@ -89,20 +90,20 @@ describe('MVP Local 36 OpenAPI V1.2 opaque authentication contract', () => {
     }
   });
 
-  it('adds exactly two auth operations and preserves unique operationIds', () => {
+  it('defines exactly four auth operations and preserves unique operationIds', () => {
     const v11 = JSON.parse(readFileSync(
       join(process.cwd(), 'contracts/openapi/HIELYA_OPENAPI_MVP_LOCAL_36_V1_1.yaml'),
       'utf8',
     )) as { paths: Record<string, unknown> };
     const added = Object.keys(contract.paths).filter((path) => !(path in v11.paths));
-    expect(added.sort()).toEqual(['/auth/otp/request', '/auth/otp/verify']);
+    expect(added.sort()).toEqual(['/auth/logout', '/auth/otp/request', '/auth/otp/verify', '/auth/session']);
     const operationIds = Object.values(contract.paths).flatMap((path) => (
       Object.values(path).flatMap((operation) => operation.operationId ? [operation.operationId] : [])
     ));
     expect(new Set(operationIds).size).toBe(operationIds.length);
     expect(operationIds).toContain('requestCustomerOtp');
     expect(operationIds).toContain('verifyCustomerOtp');
-    expect(contract.paths['/carts/{cartId}/validate']).toMatchObject({
+    expect(JSON.parse(frozenSource).paths['/carts/{cartId}/validate']).toMatchObject({
       post: { 'x-hielya-implementation-status': 'DEFERRED_AUTH_CART_LAYER' },
     });
   });
@@ -130,17 +131,28 @@ describe('MVP Local 36 OpenAPI V1.2 opaque authentication contract', () => {
     expect(contract.components.schemas.OpaqueSessionAuthentication).toMatchObject({
       type: 'object',
       additionalProperties: false,
-      required: ['sessionToken', 'expiresInSeconds', 'customer'],
+      required: ['expiresInSeconds', 'customer'],
     });
-    expect(contract.components.securitySchemes.customerBearer).toMatchObject({
-      type: 'http',
-      scheme: 'bearer',
-      bearerFormat: 'OpaqueSessionToken',
+    expect(contract.components.securitySchemes.customerSession).toMatchObject({
+      type: 'apiKey',
+      in: 'cookie',
+      name: 'hielya_session',
     });
+  });
+
+  it('preserves every recorded historical contract hash', () => {
+    for (const entry of contract['x-hielya-lineage']) expect(hash(entry.file)).toBe(entry.sha256);
+  });
+
+  it('declares cookie delivery, logout clearing, JSON mutation and unauthorized session', () => {
+    expect(contract.paths['/auth/otp/verify']).toMatchObject({ post: { responses: { '200': { headers: { 'Set-Cookie': expect.any(Object) } } } } });
+    expect(contract.paths['/auth/session']).toMatchObject({ get: { security: [{ customerSession: [] }], responses: { '401': expect.any(Object) } } });
+    expect(contract.paths['/auth/logout']).toMatchObject({ post: { requestBody: { required: true, content: { 'application/json': expect.any(Object) } }, responses: { '204': { headers: { 'Set-Cookie': expect.any(Object) } } } } });
   });
 
   it('contains no historical token-pair or renewal contract', () => {
     for (const forbidden of [
+      'sessionToken',
       'TokenPair',
       'accessToken',
       'refreshToken',

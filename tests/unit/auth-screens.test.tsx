@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { PhoneLoginScreen } from '../../packages/ui/src/screens/auth/PhoneLoginScreen';
 import { OtpVerificationScreen, formatAuthCountdown } from '../../packages/ui/src/screens/auth/OtpVerificationScreen';
 import type { OtpPositions, OtpStatus } from '../../packages/ui/src/components/OtpInput';
-afterEach(cleanup);
+import { AuthProvider, useAuthSessionPort, useIsAuthenticated } from '../../apps/ui-lab/src/client/auth/AuthProvider';
+
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 const none = () => undefined;
 const empty: OtpPositions = ['','','','','',''];
 function Otp({ status = 'idle', onComplete = none, onRetry = none }: { status?: OtpStatus; onComplete?: (code: string) => void; onRetry?: () => void }) {
@@ -42,4 +44,41 @@ describe('authentication screen compositions', () => {
   render(<Otp status="unavailable" />); expect(screen.getByRole('alert')).toHaveTextContent('Este código no está disponible. Solicita otro cuando puedas.'); expect(screen.getAllByRole('textbox').every(el => (el as HTMLInputElement).disabled)).toBe(true);
  });
  it('formats expiration without negative time', () => { expect(formatAuthCountdown(0)).toBe('00:00'); expect(formatAuthCountdown(61)).toBe('01:01'); expect(formatAuthCountdown(-3)).toBe('00:00'); });
+});
+
+const restoredState = { expiresInSeconds: 3600, customer: { id: '22222222-2222-4222-8222-222222222222', phoneE164: '+34612345678', phoneVerifiedAt: '2026-09-07T00:00:00Z', status: 'ACTIVE' as const } };
+function AuthenticationProbe() {
+ const authenticated = useIsAuthenticated();
+ const store = useAuthSessionPort();
+ return <><output data-testid="authentication">{String(authenticated)}</output><button onClick={() => store.write({ customer: restoredState.customer, expiresAt: Date.now() + 3600000 })}>Authenticate</button></>;
+}
+describe('server session hydration', () => {
+ it('restores only authentication state on each mount using same-origin credentials', async () => {
+  const fetcher = vi.fn<typeof fetch>().mockImplementation(async () => Response.json(restoredState)); vi.stubGlobal('fetch', fetcher);
+  const first = render(<AuthProvider><AuthenticationProbe /></AuthProvider>);
+  await waitFor(() => expect(screen.getByTestId('authentication')).toHaveTextContent('true'));
+  expect(fetcher).toHaveBeenCalledWith('/api/v1/auth/session', expect.objectContaining({ credentials: 'same-origin', cache: 'no-store', signal: expect.any(AbortSignal) }));
+  expect(screen.queryByText(restoredState.customer.phoneE164)).toBeNull();
+  first.unmount(); render(<AuthProvider><AuthenticationProbe /></AuthProvider>);
+  await waitFor(() => expect(screen.getByTestId('authentication')).toHaveTextContent('true'));
+  expect(fetcher).toHaveBeenCalledTimes(2);
+ });
+ it.each([401, 503])('leaves authentication empty for HTTP %s', async status => {
+  const fetcher = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ code: 'SESSION_INVALID' }, { status })); vi.stubGlobal('fetch', fetcher);
+  await act(async () => { render(<AuthProvider><AuthenticationProbe /></AuthProvider>); });
+  expect(screen.getByTestId('authentication')).toHaveTextContent('false');
+ });
+ it('does not overwrite a newer login with a late hydration result', async () => {
+  let resolve!: (response: Response) => void;
+  vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockImplementation(() => new Promise(r => { resolve = r; })));
+  render(<AuthProvider><AuthenticationProbe /></AuthProvider>);
+  fireEvent.click(screen.getByRole('button', { name: 'Authenticate' }));
+  await act(async () => resolve(Response.json({ code: 'SESSION_INVALID' }, { status: 401 })));
+  expect(screen.getByTestId('authentication')).toHaveTextContent('true');
+ });
+ it('aborts hydration on unmount', () => {
+  const fetcher = vi.fn<typeof fetch>().mockImplementation(() => new Promise(() => undefined)); vi.stubGlobal('fetch', fetcher);
+  const view = render(<AuthProvider><AuthenticationProbe /></AuthProvider>); view.unmount();
+  expect(fetcher.mock.calls[0][1]?.signal?.aborted).toBe(true);
+ });
 });

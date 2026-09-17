@@ -5,6 +5,8 @@ import {
   CustomerAuthenticationError,
   RequestCustomerOtp,
   VerifyCustomerOtp,
+  ValidateCustomerSession,
+  RevokeCustomerSession,
   type CorrelationIdPort,
   type OtpDeliveryPort,
   type SimulatedSmsMessage,
@@ -63,6 +65,14 @@ class RuntimeAuthComposition {
     };
   }
 
+  validate(token: string, now: Date) {
+    return new ValidateCustomerSession(this.configuration().repository).execute(token, now);
+  }
+
+  revoke(token: string, now: Date) {
+    return new RevokeCustomerSession(this.configuration().repository).execute(token, now);
+  }
+
   request(phone: string, now: Date | string) {
     if (!this.requestUseCase) {
       const { repository, pepper } = this.configuration();
@@ -98,6 +108,8 @@ export const createRuntimeAuthHandlers = () => {
         now: input.now ?? new Date(),
       }),
     },
+    validateSession: { execute: (token, now) => composition.validate(token, now) },
+    revokeSession: { execute: (token, now) => composition.revoke(token, now) },
     correlationIds: new CryptoCorrelationIdPort(),
     clock: { now: () => new Date() },
   });

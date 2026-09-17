@@ -38,7 +38,7 @@ test('anonymous cart survives Ahora no and is lost after reload without browser 
 });
 async function authenticateFromCart(page: Page) {
   await page.route('**/auth/otp/request', r => r.fulfill({status:202,json:{challengeId:'11111111-1111-4111-8111-111111111111',expiresInSeconds:300,resendAfterSeconds:60}}));
-  await page.route('**/auth/otp/verify', r => r.fulfill({json:{sessionToken:'x'.repeat(43),expiresInSeconds:600,customer:{id:'22222222-2222-4222-8222-222222222222',phoneE164:'+34600000001',phoneVerifiedAt:new Date().toISOString(),status:'ACTIVE'}}}));
+  await page.route('**/auth/otp/verify', r => r.fulfill({json:{expiresInSeconds:600,customer:{id:'22222222-2222-4222-8222-222222222222',phoneE164:'+34600000001',phoneVerifiedAt:new Date().toISOString(),status:'ACTIVE'}},headers:{'set-cookie':`hielya_session=${'x'.repeat(43)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`}}));
   await page.getByRole('button',{name:'Continuar',exact:true}).click(); await page.getByRole('textbox',{name:'Número de teléfono'}).fill('600000001'); await page.getByRole('button',{name:'Continuar',exact:true}).click();
   await page.getByRole('textbox',{name:'Dígito 1 de 6'}).evaluate(el => { const data=new DataTransfer(); data.setData('text','123456'); el.dispatchEvent(new ClipboardEvent('paste',{clipboardData:data,bubbles:true,cancelable:true})); });
   await expect(page).toHaveURL(/\/cart$/);

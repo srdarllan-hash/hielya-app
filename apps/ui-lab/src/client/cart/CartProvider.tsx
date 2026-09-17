@@ -33,11 +33,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const creationKey = useRef<string | null>(null); const uncertain = useRef<{ signature: string; key: string } | null>(null);
   const publish = (value: CartView) => { current.current = value; setCart(value); };
   async function request<T>(path: string, method = 'GET', body?: unknown, key?: string): Promise<T> {
-    const token = sessions.read()?.sessionToken;
     const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 15_000);
     try {
-      const response = await fetch(`/api/v1/${path}`, { method, cache: 'no-store', signal: controller.signal,
-        headers: { ...(body ? { 'content-type': 'application/json' } : {}), ...(token ? { authorization: `Bearer ${token}` } : {}), ...(key ? { 'idempotency-key': key } : {}) }, body: body ? JSON.stringify(body) : undefined });
+      const response = await fetch(`/api/v1/${path}`, { method, credentials: 'same-origin', cache: 'no-store', signal: controller.signal,
+        headers: { ...(body ? { 'content-type': 'application/json' } : {}), ...(key ? { 'idempotency-key': key } : {}) }, body: body ? JSON.stringify(body) : undefined });
       const result = await response.json();
       if (!response.ok) { if (result.cart && Array.isArray(result.violations)) publish(result.cart); uncertain.current = null; if (response.status === 401) sessions.clear(); throw new Error(result.code ?? result.violations?.[0] ?? 'SERVICE_UNAVAILABLE'); }
       return result as T;

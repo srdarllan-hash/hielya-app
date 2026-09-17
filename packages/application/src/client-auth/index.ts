@@ -1,6 +1,5 @@
 /** Browser-safe application boundary. Never log, persist or serialize OTP/session values. */
 export interface AuthSession {
-  sessionToken: string;
   expiresAt: number;
   customer: { id: string; phoneE164: string; phoneVerifiedAt: string; status: 'ACTIVE' };
 }
@@ -10,7 +9,7 @@ export interface SessionPort {
   clear(): void;
   subscribe(listener: () => void): () => void;
 }
-/** Integration seam for a future secure-storage ADR. This adapter intentionally loses state on reload. */
+/** Per-mount authentication-state cache; the host restores it from the server session. */
 export function createMemorySessionStore(now: () => number = Date.now): SessionPort {
   let session: AuthSession | undefined;
   const listeners = new Set<() => void>();
@@ -30,7 +29,7 @@ export class AuthFailure extends Error {
   }
 }
 export interface ChallengeResponse { challengeId: string; expiresInSeconds: number; resendAfterSeconds: number; }
-export interface VerificationResponse { sessionToken: string; expiresInSeconds: number; customer: AuthSession['customer']; }
+export interface VerificationResponse { expiresInSeconds: number; customer: AuthSession['customer']; }
 export interface OtpTransportPort {
   request(phoneE164: string, signal: AbortSignal): Promise<ChallengeResponse>;
   verify(challengeId: string, code: string, signal: AbortSignal): Promise<VerificationResponse>;
@@ -114,7 +113,7 @@ export function createAuthFlow(transport: OtpTransportPort, sessions: SessionPor
       const response = await transport.verify(challenge.id, code, controller.signal);
       if (attempt !== sequence) return;
       if (response.customer.phoneE164 !== `+34${snapshot.nationalDigits}`) throw new AuthFailure('NETWORK');
-      sessions.write({ sessionToken: response.sessionToken, customer: response.customer, expiresAt: started + response.expiresInSeconds * 1000 });
+      sessions.write({ customer: response.customer, expiresAt: started + response.expiresInSeconds * 1000 });
       retryCode = undefined; challenge = undefined;
       publish({ screen: 'success', verification: 'success', nationalDigits: '', maskedPhone: '', expiresSeconds: 0 });
     } catch (error) {

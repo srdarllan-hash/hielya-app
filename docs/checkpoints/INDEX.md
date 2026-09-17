@@ -119,3 +119,5 @@ Antes de qualquer trabalho relevante, leia a [política](./HIELYA_CHECKPOINT_POL
 | v9.2 | 2026-09-08 | PHASE_4A_2_DIFFERENTIAL_PREPARATION — Issue #68; no dispatch authorized | `329f2915b6e752e276e005309de27329b5551dd0` (base) | [v9.2](./2026-09/HIELYA_CHECKPOINT_2026-09-08_v9.2.md) | criado no repositório |
 
 | v9.3 | 2026-09-09 | CLAUDE_DIAGNOSTIC_CLOSEOUT — Issue #70; API/CLI/Action PASS, temporary workflow removal candidate | `f82f89293da54a2dd4e6de7d631e1809f4ffa63a` (base) | [v9.3](./2026-09/HIELYA_CHECKPOINT_2026-09-09_v9.3.md) | criado no repositório |
+
+| v9.5 | 2026-09-17 | PHONE_INPUT_HYDRATION_RACE_FIX_CANDIDATE — pre-existing bug found by PR #58; v9.4 reserved by PR #73 | `5eed7ca5f8583dea94803e7494214bf9371c44ec` (base) | [v9.5](./2026-09/HIELYA_CHECKPOINT_2026-09-17_v9.5.md) | criado no repositório |

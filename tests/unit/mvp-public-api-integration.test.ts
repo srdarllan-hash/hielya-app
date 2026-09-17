@@ -1,3 +1,4 @@
+import { DatabaseSync } from 'node:sqlite';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -26,9 +27,19 @@ const settings = {
 const directory = mkdtempSync(join(tmpdir(), 'hielya-public-api-integration-'));
 const filename = join(directory, 'catalog.sqlite');
 let productId = '';
+const connections = new Set<DatabaseSync>();
+const originalPrepare = DatabaseSync.prototype.prepare;
+const originalClose = DatabaseSync.prototype.close;
+
 
 describe('MVP Local 36 Route Handler read-only integration', () => {
   beforeAll(() => {
+    vi.spyOn(DatabaseSync.prototype, 'prepare').mockImplementation(function (this: DatabaseSync, ...args) {
+      connections.add(this); return originalPrepare.apply(this, args);
+    });
+    vi.spyOn(DatabaseSync.prototype, 'close').mockImplementation(function (this: DatabaseSync) {
+      connections.delete(this); originalClose.call(this);
+    });
     const setup = new MvpPersistenceDatabase(filename);
     setup.migrate();
     setup.seed(settings);
@@ -39,6 +50,8 @@ describe('MVP Local 36 Route Handler read-only integration', () => {
 
   afterAll(() => {
     delete process.env.HIELYA_MVP_LOCAL_36_DATABASE_PATH;
+    for (const connection of connections) connection.close();
+    vi.restoreAllMocks();
     rmSync(directory, { recursive: true, force: true });
   });
 

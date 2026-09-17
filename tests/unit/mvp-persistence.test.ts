@@ -17,19 +17,19 @@ const createDb = () => { const persistence = new MvpPersistenceDatabase(); persi
 
 describe('MVP Local 36 persistence contracts', () => {
   it('resolves the development migration without requiring a file URL', () => {
-    expect(resolveDevelopmentMigrationPath('http://vitest.invalid/module.ts')).toMatch(/\.dev-migrations\/0001_mvp_local_36_persistence\.sql$/);
+    expect(resolveDevelopmentMigrationPath('http://vitest.invalid/module.ts').replaceAll('\\', '/')).toMatch(/\.dev-migrations\/0001_mvp_local_36_persistence\.sql$/);
     expect(resolveDevelopmentMigrationPath(
       'http://vitest.invalid/module.ts',
       DEVELOPMENT_MIGRATIONS[1],
-    )).toMatch(/\.dev-migrations\/0002_mvp_local_36_catalog_read_model\.sql$/);
+    ).replaceAll('\\', '/')).toMatch(/\.dev-migrations\/0002_mvp_local_36_catalog_read_model\.sql$/);
     expect(resolveDevelopmentMigrationPath(
       'http://vitest.invalid/module.ts',
       DEVELOPMENT_MIGRATIONS[2],
-    )).toMatch(/\.dev-migrations\/0003_mvp_local_36_inventory_reservation_lifecycle\.sql$/);
+    ).replaceAll('\\', '/')).toMatch(/\.dev-migrations\/0003_mvp_local_36_inventory_reservation_lifecycle\.sql$/);
     expect(resolveDevelopmentMigrationPath(
       'http://vitest.invalid/module.ts',
       DEVELOPMENT_MIGRATIONS[3],
-    )).toMatch(/\.dev-migrations\/0004_mvp_local_36_customer_authentication_foundation\.sql$/);
+    ).replaceAll('\\', '/')).toMatch(/\.dev-migrations\/0004_mvp_local_36_customer_authentication_foundation\.sql$/);
   });
 
   it('seeds 30 selected original SKUs, six composites and preserves 30 deferred baseline SKUs', () => {
